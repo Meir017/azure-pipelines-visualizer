@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { parseAdoUrl } from '../../src/parser/ado-url-parser.js';
+import { parseAdoUrl, buildAdoFileUrl } from '../../src/parser/ado-url-parser.js';
 
 describe('parseAdoUrl', () => {
   test('parses standard ADO file URL', () => {
@@ -64,5 +64,38 @@ describe('parseAdoUrl', () => {
     expect(result!.org).toBe('my org');
     expect(result!.project).toBe('my project');
     expect(result!.repoName).toBe('my repo');
+  });
+});
+
+describe('buildAdoFileUrl', () => {
+  test('builds URL without branch', () => {
+    const url = buildAdoFileUrl({
+      org: 'microsoft',
+      project: 'WDATP',
+      repoName: 'MyRepo',
+      filePath: '/.pipelines/build.yml',
+    });
+    expect(url).toBe(
+      'https://dev.azure.com/microsoft/WDATP/_git/MyRepo?path=%2F.pipelines%2Fbuild.yml',
+    );
+  });
+
+  test('builds URL with branch', () => {
+    const url = buildAdoFileUrl({
+      org: 'microsoft',
+      project: 'WDATP',
+      repoName: 'MyRepo',
+      filePath: '/build.yml',
+      branch: 'main',
+    });
+    expect(url).toContain('version=GBmain');
+    expect(url).toContain('path=%2Fbuild.yml');
+  });
+
+  test('round-trips with parseAdoUrl', () => {
+    const parts = { org: 'myorg', project: 'myproj', repoName: 'myrepo', filePath: '/ci.yml', branch: 'develop' };
+    const url = buildAdoFileUrl(parts);
+    const parsed = parseAdoUrl(url);
+    expect(parsed).toEqual(parts);
   });
 });

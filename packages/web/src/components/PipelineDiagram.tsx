@@ -18,6 +18,7 @@ import {
   detectTemplateReferences,
   resolveTemplateSource,
   getEffectiveRepoAlias,
+  buildAdoFileUrl,
   type TemplateReference,
   type ResourceRepository,
 } from '@apv/core';
@@ -25,7 +26,7 @@ import {
 import { usePipelineStore } from '../store/pipeline-store.js';
 import { fetchFileByRepoName } from '../services/api-client.js';
 import { getLayoutedElements } from './diagram-layout.js';
-import FileNode, { type FileNodeData } from './FileNode.js';
+import FileNode, { type FileNodeData, type RepoInfo } from './FileNode.js';
 
 const nodeTypes = { fileNode: FileNode };
 
@@ -89,6 +90,13 @@ export default function PipelineDiagram() {
       'Pipeline';
     const rootBaseDir = dirOf(rootPath);
 
+    // Build ADO URL for root node
+    const rootRepoName = selectedPipeline.definition?.repository?.name ?? '';
+    const rootBranch = selectedPipeline.definition?.repository?.defaultBranch?.replace(/^refs\/heads\//, '');
+    const rootAdoUrl = org && project && rootRepoName
+      ? buildAdoFileUrl({ org, project, repoName: rootRepoName, filePath: rootPath, branch: rootBranch })
+      : undefined;
+
     const rootNode: Node = {
       id: 'root',
       type: 'fileNode',
@@ -100,6 +108,7 @@ export default function PipelineDiagram() {
         status: 'root',
         isRoot: true,
         baseDir: rootBaseDir,
+        adoUrl: rootAdoUrl,
       } satisfies FileNodeData,
     };
 
@@ -107,6 +116,10 @@ export default function PipelineDiagram() {
       'root',
       refs,
       rootBaseDir,
+      org,
+      project,
+      defaultRepoName,
+      rootResources,
     );
 
     const allNodes = [rootNode, ...templateNodes];
@@ -198,6 +211,10 @@ export default function PipelineDiagram() {
           node.id,
           nestedRefs,
           expandedFileDir,
+          org,
+          project,
+          defaultRepoName,
+          rootResources,
         );
 
         // Atomic update: add new nodes with layout, then add new edges
@@ -317,6 +334,10 @@ function buildTemplateNodesAndEdges(
   parentId: string,
   refs: TemplateReference[],
   parentBaseDir: string,
+  org: string,
+  project: string,
+  defaultRepoName: string,
+  repositories: ResourceRepository[],
 ): { templateNodes: Node[]; templateEdges: Edge[] } {
   // De-duplicate by rawPath to avoid duplicate nodes for the same template
   const seen = new Set<string>();
@@ -341,6 +362,22 @@ function buildTemplateNodesAndEdges(
         ? `...${ref.normalizedPath.slice(-37)}`
         : ref.normalizedPath;
 
+    // Resolve repo info and ADO URL
+    const { repoInfo, adoUrl } = resolveNodeMetadata(
+      ref,
+      effectiveRepoAlias,
+      resolvedPath,
+      org,
+      project,
+      defaultRepoName,
+      repositories,
+    );
+
+    // Extract parameter names
+    const parameterNames = ref.parameters
+      ? Object.keys(ref.parameters)
+      : undefined;
+
     templateNodes.push({
       id: nodeId,
       type: 'fileNode',
@@ -353,6 +390,11 @@ function buildTemplateNodesAndEdges(
         status: 'collapsed',
         isRoot: false,
         baseDir: dirOf(resolvedPath),
+        adoUrl,
+        repoInfo,
+        templateLocation: ref.location,
+        conditional: ref.conditional || undefined,
+        parameterNames,
         // Stash the full ref for expansion
         _ref: ref,
       },
@@ -455,4 +497,57 @@ function resolvePath(baseDir: string, templatePath: string): string {
   if (templatePath.startsWith('/')) return templatePath;
   if (!baseDir) return templatePath;
   return `${baseDir}/${templatePath}`;
+}
+
+/** Resolve ADO URL and repo info for a template reference node. */
+function resolveNodeMetadata(
+  ref: TemplateReference,
+  effectiveRepoAlias: string | undefined,
+  resolvedPath: string,
+  org: string,
+  project: string,
+  defaultRepoName: string,
+  repositories: ResourceRepository[],
+): { repoInfo?: RepoInfo; adoUrl?: string } {
+  let targetProject = project;
+  let targetRepo = defaultRepoName;
+  let targetRef: string | undefined;
+  let repoInfo: RepoInfo | undefined;
+
+  if (effectiveRepoAlias && repositories.length) {
+    const source = resolveTemplateSource(effectiveRepoAlias, repositories);
+    const repoResource = repositories.find((r) => r.repository === effectiveRepoAlias);
+    if (source) {
+      targetProject = source.project || project;
+      targetRepo = source.repoName;
+      targetRef = source.ref;
+    } else {
+      targetRepo = effectiveRepoAlias;
+    }
+    if (repoResource) {
+      repoInfo = {
+        alias: effectiveRepoAlias,
+        fullName: repoResource.name,
+        type: repoResource.type,
+        ref: repoResource.ref,
+        project: source?.project,
+      };
+    }
+  } else if (effectiveRepoAlias) {
+    targetRepo = effectiveRepoAlias;
+  }
+
+  // Build ADO URL
+  const cleanRef = targetRef?.replace(/^refs\/heads\//, '').replace(/^refs\/tags\//, '');
+  const adoUrl = org && targetProject && targetRepo
+    ? buildAdoFileUrl({
+        org,
+        project: targetProject,
+        repoName: targetRepo,
+        filePath: resolvedPath,
+        branch: cleanRef,
+      })
+    : undefined;
+
+  return { repoInfo, adoUrl };
 }

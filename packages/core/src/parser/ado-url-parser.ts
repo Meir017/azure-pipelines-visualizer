@@ -39,3 +39,15 @@ export function parseAdoUrl(url: string): AdoUrlParts | null {
     return null;
   }
 }
+
+/**
+ * Builds an Azure DevOps file URL from its components.
+ */
+export function buildAdoFileUrl(parts: AdoUrlParts): string {
+  const base = `https://dev.azure.com/${encodeURIComponent(parts.org)}/${encodeURIComponent(parts.project)}/_git/${encodeURIComponent(parts.repoName)}`;
+  const params = new URLSearchParams({ path: parts.filePath });
+  if (parts.branch) {
+    params.set('version', `GB${parts.branch}`);
+  }
+  return `${base}?${params}`;
+}

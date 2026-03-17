@@ -1,8 +1,8 @@
 import dagre from '@dagrejs/dagre';
 import type { Node, Edge } from '@xyflow/react';
 
-const NODE_WIDTH = 280;
-const NODE_HEIGHT = 80;
+const NODE_WIDTH = 300;
+const NODE_HEIGHT = 100;
 
 /**
  * Auto-layout nodes and edges using dagre (top → bottom).

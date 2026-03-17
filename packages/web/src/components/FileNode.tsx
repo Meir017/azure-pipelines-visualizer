@@ -1,5 +1,19 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
+
+/** Resolved repo info for tooltip display */
+export interface RepoInfo {
+  /** Alias used in the pipeline (e.g., "GovernedTemplates") */
+  alias: string;
+  /** Full repo name from resources (e.g., "OneBranch.Pipelines/GovernedTemplates") */
+  fullName: string;
+  /** Type: git, github, etc. */
+  type: string;
+  /** Git ref/branch */
+  ref?: string;
+  /** Resolved project (if cross-project) */
+  project?: string;
+}
 
 export interface FileNodeData {
   label: string;
@@ -12,10 +26,21 @@ export interface FileNodeData {
   isRoot?: boolean;
   /** Directory of the file this node represents (for resolving relative template paths) */
   baseDir?: string;
+  /** Azure DevOps URL to open this file in the browser */
+  adoUrl?: string;
+  /** Resolved repo details for hover tooltip */
+  repoInfo?: RepoInfo;
+  /** Template location: extends, stages, jobs, steps */
+  templateLocation?: string;
+  /** Whether this template is inside a conditional block */
+  conditional?: boolean;
+  /** Names of parameters passed to this template */
+  parameterNames?: string[];
 }
 
 function FileNode({ data }: NodeProps) {
   const d = data as unknown as FileNodeData;
+  const [showRepoTooltip, setShowRepoTooltip] = useState(false);
 
   const statusClass =
     d.status === 'root'
@@ -41,13 +66,82 @@ function FileNode({ data }: NodeProps) {
         <span className="file-node__label" title={d.filePath}>
           {d.label}
         </span>
+        {/* Action buttons */}
+        <span className="file-node__actions">
+          {d.adoUrl && (
+            <a
+              href={d.adoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="file-node__action-btn"
+              title="Open in Azure DevOps"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <AdoIcon />
+            </a>
+          )}
+        </span>
       </div>
 
       {d.repoAlias && (
-        <div className="file-node__repo">@{d.repoAlias}</div>
+        <div
+          className="file-node__repo-row"
+          onMouseEnter={() => setShowRepoTooltip(true)}
+          onMouseLeave={() => setShowRepoTooltip(false)}
+        >
+          <span className="file-node__repo">@{d.repoAlias}</span>
+          {d.repoInfo && showRepoTooltip && (
+            <div className="file-node__repo-tooltip">
+              <div className="file-node__repo-tooltip-row">
+                <span className="file-node__repo-tooltip-label">Repo</span>
+                <span>{d.repoInfo.fullName}</span>
+              </div>
+              <div className="file-node__repo-tooltip-row">
+                <span className="file-node__repo-tooltip-label">Type</span>
+                <span>{d.repoInfo.type}</span>
+              </div>
+              {d.repoInfo.ref && (
+                <div className="file-node__repo-tooltip-row">
+                  <span className="file-node__repo-tooltip-label">Ref</span>
+                  <span>{d.repoInfo.ref}</span>
+                </div>
+              )}
+              {d.repoInfo.project && (
+                <div className="file-node__repo-tooltip-row">
+                  <span className="file-node__repo-tooltip-label">Project</span>
+                  <span>{d.repoInfo.project}</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       )}
 
       <div className="file-node__meta">
+        {/* Badges row */}
+        {(d.templateLocation || d.conditional || d.parameterNames?.length) && (
+          <div className="file-node__badges">
+            {d.templateLocation && (
+              <span className={`file-node__badge file-node__badge--${d.templateLocation}`}>
+                {d.templateLocation}
+              </span>
+            )}
+            {d.conditional && (
+              <span className="file-node__badge file-node__badge--conditional" title="Inside conditional block">
+                conditional
+              </span>
+            )}
+            {d.parameterNames && d.parameterNames.length > 0 && (
+              <span
+                className="file-node__badge file-node__badge--params"
+                title={`Parameters: ${d.parameterNames.join(', ')}`}
+              >
+                {d.parameterNames.length} param{d.parameterNames.length > 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+        )}
+
         {d.status === 'loading' && <span className="file-node__spinner">⏳ Loading...</span>}
         {d.status === 'error' && (
           <span className="file-node__error" title={d.errorMessage}>
@@ -64,6 +158,21 @@ function FileNode({ data }: NodeProps) {
 
       <Handle type="source" position={Position.Bottom} />
     </div>
+  );
+}
+
+/** Azure DevOps logo as inline SVG */
+function AdoIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 16 16"
+      fill="currentColor"
+      className="file-node__ado-icon"
+    >
+      <path d="M0 11.899l1.778 2.101 5.143-1.869V14L10.356 14.898V1.102L6.921 2.001V3.87L1.778 2 0 4.1v7.799zM10.356 3.478l3.2-1.478L16 4.621V11.38l-2.444 2.621-3.2-2.327v-8.196zM5.333 5.466v5.067L1.778 9.257V6.743l3.555-1.277z" />
+    </svg>
   );
 }
 

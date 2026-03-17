@@ -428,13 +428,111 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.file-node__actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.file-node__action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+}
+
+.file-node__action-btn:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+
+.file-node__ado-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.file-node__repo-row {
+  position: relative;
+  margin-bottom: 2px;
 }
 
 .file-node__repo {
   font-size: 11px;
   color: var(--accent);
-  margin-bottom: 2px;
+  cursor: default;
 }
+
+.file-node__repo-tooltip {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  z-index: 100;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  min-width: 200px;
+  max-width: 320px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  font-size: 11px;
+}
+
+.file-node__repo-tooltip-row {
+  display: flex;
+  gap: 8px;
+  padding: 2px 0;
+  color: var(--text);
+}
+
+.file-node__repo-tooltip-label {
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  min-width: 48px;
+  flex-shrink: 0;
+}
+
+.file-node__badges {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 3px;
+}
+
+.file-node__badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.file-node__badge--extends { background: var(--badge-extends); color: var(--bg); }
+.file-node__badge--extends-parameters { background: var(--badge-extends); color: var(--bg); }
+.file-node__badge--stages { background: var(--badge-stage); color: var(--bg); }
+.file-node__badge--jobs { background: var(--badge-job); color: var(--bg); }
+.file-node__badge--steps { background: var(--badge-step); color: var(--bg); }
+.file-node__badge--variables { background: var(--badge-variables); color: var(--bg); }
+.file-node__badge--conditional { background: color-mix(in srgb, var(--badge-trigger) 30%, transparent); color: var(--badge-trigger); }
+.file-node__badge--params { background: color-mix(in srgb, var(--accent) 25%, transparent); color: var(--accent); }
 
 .file-node__meta {
   font-size: 11px;
