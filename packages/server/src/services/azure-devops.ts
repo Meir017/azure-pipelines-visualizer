@@ -29,6 +29,11 @@ export interface RepositoryInfo {
   project: { id: string; name: string };
 }
 
+interface VersionDescriptor {
+  version: string;
+  versionType: 'branch' | 'tag' | 'commit';
+}
+
 async function adoFetch(url: string): Promise<Response> {
   const token = await getAzureDevOpsToken();
   const response = await fetch(url, {
@@ -46,6 +51,27 @@ async function adoFetch(url: string): Promise<Response> {
 
 function baseUrl(org: string, project: string): string {
   return `https://dev.azure.com/${encodeURIComponent(org)}/${encodeURIComponent(project)}/_apis`;
+}
+
+export function getVersionDescriptor(ref: string): VersionDescriptor {
+  if (ref.startsWith('refs/heads/')) {
+    return {
+      version: ref.slice('refs/heads/'.length),
+      versionType: 'branch',
+    };
+  }
+
+  if (ref.startsWith('refs/tags/')) {
+    return {
+      version: ref.slice('refs/tags/'.length),
+      versionType: 'tag',
+    };
+  }
+
+  return {
+    version: ref,
+    versionType: 'commit',
+  };
 }
 
 export async function listPipelines(org: string, project: string): Promise<PipelineInfo[]> {
@@ -105,8 +131,8 @@ export async function getFileContent(
 ): Promise<string> {
   let url = `${baseUrl(org, project)}/git/repositories/${encodeURIComponent(repoId)}/items?scopePath=${encodeURIComponent(path)}&api-version=${API_VERSION}&$format=text`;
   if (branch) {
-    const cleanBranch = branch.replace(/^refs\/heads\//, '');
-    url += `&versionDescriptor.version=${encodeURIComponent(cleanBranch)}&versionDescriptor.versionType=branch`;
+    const descriptor = getVersionDescriptor(branch);
+    url += `&versionDescriptor.version=${encodeURIComponent(descriptor.version)}&versionDescriptor.versionType=${descriptor.versionType}`;
   }
   const resp = await adoFetch(url);
   return resp.text();

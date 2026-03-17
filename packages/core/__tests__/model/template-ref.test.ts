@@ -97,4 +97,15 @@ describe('createTemplateRef', () => {
     expect(ref.repoAlias).toBe('GovernedTemplates');
     expect(ref.normalizedPath).toBe('v2/OneBranch.Official.CrossPlat.yml');
   });
+
+  test('inherits repo context for local references in external templates', () => {
+    const ref = createTemplateRef('./Core.Template.yml', 'extends', undefined, false, {
+      contextRepoAlias: 'GovernedTemplates',
+      sourcePath: 'v2/OneBranch.NonOfficial.CrossPlat.yml',
+    });
+
+    expect(ref.repoAlias).toBeUndefined();
+    expect(ref.contextRepoAlias).toBe('GovernedTemplates');
+    expect(ref.sourcePath).toBe('v2/OneBranch.NonOfficial.CrossPlat.yml');
+  });
 });

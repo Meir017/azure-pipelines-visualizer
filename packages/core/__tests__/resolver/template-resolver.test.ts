@@ -185,6 +185,50 @@ jobs:
     expect(resolved[0].error).toContain('Unknown repository alias');
   });
 
+  test('resolves local nested templates relative to the external template repo', async () => {
+    const provider = new InMemoryFileProvider(
+      new Map([
+        [
+          'shared/repo:v2/OneBranch.NonOfficial.CrossPlat.yml',
+          `
+extends:
+  template: ./Core.Template.yml
+`,
+        ],
+        [
+          'shared/repo:v2/Core.Template.yml',
+          `
+steps:
+  - script: echo inherited repo context
+`,
+        ],
+      ]),
+    );
+
+    const repositories: ResourceRepository[] = [
+      {
+        repository: 'GovernedTemplates',
+        type: 'git',
+        name: 'shared/repo',
+        ref: 'refs/heads/main',
+      },
+    ];
+
+    const refs = [
+      createTemplateRef(
+        'v2/OneBranch.NonOfficial.CrossPlat.yml@GovernedTemplates',
+        'extends',
+      ),
+    ];
+    const resolved = await resolveTemplateReferences(refs, provider, { repositories });
+
+    expect(resolved).toHaveLength(1);
+    expect(resolved[0].error).toBeUndefined();
+    expect(resolved[0].children).toHaveLength(1);
+    expect(resolved[0].children[0].error).toBeUndefined();
+    expect(resolved[0].children[0].content).toContain('inherited repo context');
+  });
+
   test('resolves multiple refs in parallel', async () => {
     const provider = new InMemoryFileProvider(
       new Map([

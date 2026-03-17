@@ -1,5 +1,11 @@
 import { useCallback } from 'react';
-import { parseYaml, detectTemplateReferences, resolveTemplateSource } from '@apv/core';
+import {
+  parseYaml,
+  detectTemplateReferences,
+  resolveTemplateSource,
+  getEffectiveRepoAlias,
+  resolveTemplateRefPath,
+} from '@apv/core';
 import type { TemplateReference, ResourceRepository } from '@apv/core';
 import { usePipelineStore } from '../store/pipeline-store.js';
 import { fetchFileByRepoName } from '../services/api-client.js';
@@ -9,13 +15,18 @@ export function useTemplateExpansion() {
 
   const expandTemplate = useCallback(
     async (ref: TemplateReference, repositories?: ResourceRepository[]) => {
-      const cacheKey = `${ref.repoAlias || ''}:${ref.normalizedPath}`;
+      const effectiveRepoAlias = getEffectiveRepoAlias(ref);
+      const resolvedPath = resolveTemplateRefPath(ref);
+      const cacheKey = `${effectiveRepoAlias || ''}:${resolvedPath}`;
       const cached = expandedTemplates.get(cacheKey);
       if (cached) {
         const parsed = (parseYaml(cached) ?? {}) as Record<string, unknown>;
         return {
           content: cached,
-          nestedRefs: detectTemplateReferences(parsed),
+          nestedRefs: detectTemplateReferences(parsed, {
+            contextRepoAlias: effectiveRepoAlias,
+            sourcePath: resolvedPath,
+          }),
         };
       }
 
@@ -24,26 +35,26 @@ export function useTemplateExpansion() {
       let targetRepo = '';
       let targetRef: string | undefined;
 
-      if (ref.repoAlias && repositories?.length) {
-        const source = resolveTemplateSource(ref.repoAlias, repositories);
+      if (effectiveRepoAlias && repositories?.length) {
+        const source = resolveTemplateSource(effectiveRepoAlias, repositories);
         if (source) {
           targetProject = source.project || project;
           targetRepo = source.repoName;
           targetRef = source.ref;
         } else {
           // Fallback: use alias directly as repo name
-          targetRepo = ref.repoAlias;
+          targetRepo = effectiveRepoAlias;
         }
-      } else if (ref.repoAlias) {
+      } else if (effectiveRepoAlias) {
         // No resources available, use alias as repo name
-        targetRepo = ref.repoAlias;
+        targetRepo = effectiveRepoAlias;
       }
 
       const resp = await fetchFileByRepoName(
         org,
         targetProject,
         targetRepo || '',
-        ref.normalizedPath,
+        resolvedPath,
         targetRef,
       );
       setExpandedTemplate(cacheKey, resp.content);
@@ -51,7 +62,10 @@ export function useTemplateExpansion() {
       const parsed = (parseYaml(resp.content) ?? {}) as Record<string, unknown>;
       return {
         content: resp.content,
-        nestedRefs: detectTemplateReferences(parsed),
+        nestedRefs: detectTemplateReferences(parsed, {
+          contextRepoAlias: effectiveRepoAlias,
+          sourcePath: resolvedPath,
+        }),
       };
     },
     [org, project, expandedTemplates, setExpandedTemplate],

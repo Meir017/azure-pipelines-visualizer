@@ -157,6 +157,10 @@ export interface TemplateReference {
   readonly normalizedPath: string;
   /** Repository alias if referencing an external repo (the part after `@`), or undefined for same-repo. */
   readonly repoAlias?: string;
+  /** Repository context of the referenced file when no explicit `@alias` is present. */
+  readonly contextRepoAlias?: string;
+  /** Path of the file that declared this reference, used for resolving relative local templates. */
+  readonly sourcePath?: string;
   /** Parameters passed to the template. */
   readonly parameters?: Record<string, unknown>;
   /** Where in the tree this reference was found. */

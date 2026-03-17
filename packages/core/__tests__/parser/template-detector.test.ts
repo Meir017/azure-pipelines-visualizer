@@ -81,6 +81,23 @@ describe('detectTemplateReferences', () => {
     expect(armRef!.conditional).toBe(true);
   });
 
+  test('detects template references in else branches', () => {
+    const refs = detectTemplateReferences(
+      parseYaml(`
+steps:
+  - \${{ if eq(parameters.useA, true) }}:
+    - template: templates/a.yml
+  - \${{ else }}:
+    - template: templates/b.yml
+`) as Record<string, unknown>,
+    );
+
+    expect(refs).toHaveLength(2);
+    expect(refs.every((ref) => ref.conditional)).toBe(true);
+    expect(refs.map((ref) => ref.normalizedPath)).toContain('templates/a.yml');
+    expect(refs.map((ref) => ref.normalizedPath)).toContain('templates/b.yml');
+  });
+
   test('detects variable template references', () => {
     const refs = detectFromFixture('variable-templates.yml');
 
@@ -89,6 +106,25 @@ describe('detectTemplateReferences', () => {
     expect(varRefs[0].normalizedPath).toBe('variables/common.yml');
     expect(varRefs[1].normalizedPath).toBe('variables/env-specific.yml');
     expect(varRefs[1].parameters).toEqual({ environment: 'production' });
+  });
+
+  test('inherits source repo context for local refs found inside external templates', () => {
+    const refs = detectTemplateReferences(
+      {
+        extends: {
+          template: './Core.Template.yml',
+        },
+      },
+      {
+        contextRepoAlias: 'GovernedTemplates',
+        sourcePath: 'v2/OneBranch.NonOfficial.CrossPlat.yml',
+      },
+    );
+
+    expect(refs).toHaveLength(1);
+    expect(refs[0].repoAlias).toBeUndefined();
+    expect(refs[0].contextRepoAlias).toBe('GovernedTemplates');
+    expect(refs[0].sourcePath).toBe('v2/OneBranch.NonOfficial.CrossPlat.yml');
   });
 
   test('detects same template used with different params', () => {

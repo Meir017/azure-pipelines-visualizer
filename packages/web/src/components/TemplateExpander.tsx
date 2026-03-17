@@ -1,6 +1,11 @@
 import { useState, useCallback } from 'react';
 import type { TemplateReference } from '@apv/core';
-import { parseYaml, detectTemplateReferences } from '@apv/core';
+import {
+  parseYaml,
+  detectTemplateReferences,
+  getEffectiveRepoAlias,
+  resolveTemplateRefPath,
+} from '@apv/core';
 import { usePipelineStore } from '../store/pipeline-store.js';
 import { fetchFileContent } from '../services/api-client.js';
 import TreeNode from './TreeNode.js';
@@ -22,14 +27,19 @@ export default function TemplateExpander({ templateRef, nodeId }: TemplateExpand
   const [error, setError] = useState<string | null>(null);
   const [expandedData, setExpandedData] = useState<ExpandedData | null>(null);
 
-  const cacheKey = `${templateRef.repoAlias || ''}:${templateRef.normalizedPath}`;
+  const effectiveRepoAlias = getEffectiveRepoAlias(templateRef);
+  const resolvedPath = resolveTemplateRefPath(templateRef);
+  const cacheKey = `${effectiveRepoAlias || ''}:${resolvedPath}`;
   const cachedContent = expandedTemplates.get(cacheKey);
 
   const handleExpand = useCallback(async () => {
     if (expandedData || cachedContent) {
       if (cachedContent && !expandedData) {
         const parsed = (parseYaml(cachedContent) ?? {}) as Record<string, unknown>;
-        const nestedRefs = detectTemplateReferences(parsed);
+        const nestedRefs = detectTemplateReferences(parsed, {
+          contextRepoAlias: effectiveRepoAlias,
+          sourcePath: resolvedPath,
+        });
         setExpandedData({ content: cachedContent, nestedRefs });
       }
       return;
@@ -39,17 +49,20 @@ export default function TemplateExpander({ templateRef, nodeId }: TemplateExpand
     setError(null);
     try {
       // TODO: resolve repoAlias to actual repoId via resources.repositories
-      const repoId = templateRef.repoAlias || '';
+      const repoId = effectiveRepoAlias || '';
       const resp = await fetchFileContent(
         org,
         project,
         repoId,
-        templateRef.normalizedPath,
+        resolvedPath,
       );
       setExpandedTemplate(cacheKey, resp.content);
 
       const parsed = (parseYaml(resp.content) ?? {}) as Record<string, unknown>;
-      const nestedRefs = detectTemplateReferences(parsed);
+      const nestedRefs = detectTemplateReferences(parsed, {
+        contextRepoAlias: effectiveRepoAlias,
+        sourcePath: resolvedPath,
+      });
       setExpandedData({ content: resp.content, nestedRefs });
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

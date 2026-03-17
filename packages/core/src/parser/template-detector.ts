@@ -1,5 +1,5 @@
 import type { TemplateReference, TemplateLocation } from '../model/pipeline.js';
-import { createTemplateRef } from '../model/template-ref.js';
+import { createTemplateRef, type TemplateRefContext } from '../model/template-ref.js';
 
 /**
  * Walks a raw parsed YAML pipeline object and extracts all template references.
@@ -10,7 +10,10 @@ import { createTemplateRef } from '../model/template-ref.js';
  * - Templates nested inside extends.parameters
  * - Conditional ${{ if }} blocks wrapping template refs
  */
-export function detectTemplateReferences(raw: Record<string, unknown>): TemplateReference[] {
+export function detectTemplateReferences(
+  raw: Record<string, unknown>,
+  context: TemplateRefContext = {},
+): TemplateReference[] {
   const refs: TemplateReference[] = [];
 
   // 1. Extends block
@@ -18,13 +21,19 @@ export function detectTemplateReferences(raw: Record<string, unknown>): Template
     const ext = raw.extends as Record<string, unknown>;
     if (typeof ext.template === 'string') {
       refs.push(
-        createTemplateRef(ext.template, 'extends', ext.parameters as Record<string, unknown>),
+        createTemplateRef(
+          ext.template,
+          'extends',
+          ext.parameters as Record<string, unknown>,
+          false,
+          context,
+        ),
       );
     }
 
     // Walk extends.parameters for nested template refs
     if (ext.parameters && typeof ext.parameters === 'object') {
-      walkExtendsParameters(ext.parameters as Record<string, unknown>, refs);
+      walkExtendsParameters(ext.parameters as Record<string, unknown>, refs, context);
     }
   }
 
@@ -37,6 +46,8 @@ export function detectTemplateReferences(raw: Record<string, unknown>): Template
             v.template,
             'variables',
             v.parameters as Record<string, unknown> | undefined,
+            false,
+            context,
           ),
         );
       }
@@ -45,17 +56,17 @@ export function detectTemplateReferences(raw: Record<string, unknown>): Template
 
   // 3. Stages
   if (Array.isArray(raw.stages)) {
-    walkItems(raw.stages, 'stages', refs);
+    walkItems(raw.stages, 'stages', refs, context);
   }
 
   // 4. Jobs (top-level, when no stages)
   if (Array.isArray(raw.jobs)) {
-    walkItems(raw.jobs, 'jobs', refs);
+    walkItems(raw.jobs, 'jobs', refs, context);
   }
 
   // 5. Steps (top-level, when no stages or jobs)
   if (Array.isArray(raw.steps)) {
-    walkItems(raw.steps, 'steps', refs);
+    walkItems(raw.steps, 'steps', refs, context);
   }
 
   return refs;
@@ -69,6 +80,7 @@ function walkItems(
   items: unknown[],
   location: TemplateLocation,
   refs: TemplateReference[],
+  context: TemplateRefContext,
 ): void {
   for (const item of items) {
     if (!item || typeof item !== 'object') continue;
@@ -81,30 +93,45 @@ function walkItems(
           obj.template,
           location,
           obj.parameters as Record<string, unknown> | undefined,
+          false,
+          context,
         ),
       );
       continue;
     }
 
-    // Check for conditional expression blocks: ${{ if ... }}
+    // Check for Azure Pipelines directive blocks: ${{ if ... }}, ${{ else }}, etc.
     for (const key of Object.keys(obj)) {
-      if (key.startsWith('${{') && key.includes('if')) {
+      if (isDirectiveKey(key)) {
         const conditionalBlock = obj[key];
-        if (Array.isArray(conditionalBlock)) {
-          walkConditionalItems(conditionalBlock, location, refs);
-        }
+        walkConditionalValue(conditionalBlock, location, refs, context);
       }
     }
 
     // Recurse into nested stages → jobs → steps
     if (Array.isArray(obj.jobs)) {
-      walkItems(obj.jobs, location === 'extends-parameters' ? 'extends-parameters' : 'jobs', refs);
+      walkItems(
+        obj.jobs,
+        location === 'extends-parameters' ? 'extends-parameters' : 'jobs',
+        refs,
+        context,
+      );
     }
     if (Array.isArray(obj.steps)) {
-      walkItems(obj.steps, location === 'extends-parameters' ? 'extends-parameters' : 'steps', refs);
+      walkItems(
+        obj.steps,
+        location === 'extends-parameters' ? 'extends-parameters' : 'steps',
+        refs,
+        context,
+      );
     }
     if (Array.isArray(obj.stages)) {
-      walkItems(obj.stages, location === 'extends-parameters' ? 'extends-parameters' : 'stages', refs);
+      walkItems(
+        obj.stages,
+        location === 'extends-parameters' ? 'extends-parameters' : 'stages',
+        refs,
+        context,
+      );
     }
   }
 }
@@ -113,10 +140,27 @@ function walkItems(
  * Walk items inside a conditional ${{ if }} block.
  * These template refs are marked as conditional.
  */
+function walkConditionalValue(
+  value: unknown,
+  location: TemplateLocation,
+  refs: TemplateReference[],
+  context: TemplateRefContext,
+): void {
+  if (Array.isArray(value)) {
+    walkConditionalItems(value, location, refs, context);
+    return;
+  }
+
+  if (value && typeof value === 'object') {
+    walkConditionalItems([value], location, refs, context);
+  }
+}
+
 function walkConditionalItems(
   items: unknown[],
   location: TemplateLocation,
   refs: TemplateReference[],
+  context: TemplateRefContext,
 ): void {
   for (const item of items) {
     if (!item || typeof item !== 'object') continue;
@@ -129,7 +173,33 @@ function walkConditionalItems(
           location,
           obj.parameters as Record<string, unknown> | undefined,
           true, // conditional
+          context,
         ),
+      );
+    }
+
+    if (Array.isArray(obj.jobs)) {
+      walkItems(
+        obj.jobs,
+        location === 'extends-parameters' ? 'extends-parameters' : 'jobs',
+        refs,
+        context,
+      );
+    }
+    if (Array.isArray(obj.steps)) {
+      walkItems(
+        obj.steps,
+        location === 'extends-parameters' ? 'extends-parameters' : 'steps',
+        refs,
+        context,
+      );
+    }
+    if (Array.isArray(obj.stages)) {
+      walkItems(
+        obj.stages,
+        location === 'extends-parameters' ? 'extends-parameters' : 'stages',
+        refs,
+        context,
       );
     }
   }
@@ -142,16 +212,17 @@ function walkConditionalItems(
 function walkExtendsParameters(
   params: Record<string, unknown>,
   refs: TemplateReference[],
+  context: TemplateRefContext,
 ): void {
   // Check for stages/jobs/steps arrays inside parameters
   if (Array.isArray(params.stages)) {
-    walkItems(params.stages, 'extends-parameters', refs);
+    walkItems(params.stages, 'extends-parameters', refs, context);
   }
   if (Array.isArray(params.jobs)) {
-    walkItems(params.jobs, 'extends-parameters', refs);
+    walkItems(params.jobs, 'extends-parameters', refs, context);
   }
   if (Array.isArray(params.steps)) {
-    walkItems(params.steps, 'extends-parameters', refs);
+    walkItems(params.steps, 'extends-parameters', refs, context);
   }
 
   // Also walk any parameter that looks like a step/job/stage list
@@ -165,6 +236,8 @@ function walkExtendsParameters(
               obj.template as string,
               'extends-parameters',
               obj.parameters as Record<string, unknown> | undefined,
+              false,
+              context,
             ),
           );
         }
@@ -172,10 +245,10 @@ function walkExtendsParameters(
         if (item && typeof item === 'object') {
           const obj = item as Record<string, unknown>;
           if (Array.isArray(obj.jobs)) {
-            walkItems(obj.jobs, 'extends-parameters', refs);
+            walkItems(obj.jobs, 'extends-parameters', refs, context);
           }
           if (Array.isArray(obj.steps)) {
-            walkItems(obj.steps, 'extends-parameters', refs);
+            walkItems(obj.steps, 'extends-parameters', refs, context);
           }
         }
       }
@@ -183,15 +256,6 @@ function walkExtendsParameters(
   }
 }
 
-function getChildLocation(
-  location: TemplateLocation,
-): TemplateLocation | null {
-  switch (location) {
-    case 'stages':
-      return 'jobs';
-    case 'jobs':
-      return 'steps';
-    default:
-      return null;
-  }
+function isDirectiveKey(key: string): boolean {
+  return key.startsWith('${{');
 }

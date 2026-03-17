@@ -3,6 +3,7 @@ import type { IFileProvider } from './types.js';
 import { parseYaml } from '../parser/yaml-parser.js';
 import { detectTemplateReferences } from '../parser/template-detector.js';
 import { resolveRepoAlias } from '../model/resources.js';
+import { getEffectiveRepoAlias, resolveTemplateRefPath } from '../model/template-ref.js';
 
 /** A resolved template with its content and any nested template references. */
 export interface ResolvedTemplate {
@@ -68,8 +69,9 @@ async function resolveSingle(
   maxDepth: number,
 ): Promise<ResolvedTemplate> {
   // Build a unique key for cycle detection
-  const repoKey = ref.repoAlias ?? '';
-  const cacheKey = `${repoKey}:${ref.normalizedPath}`;
+  const repoKey = getEffectiveRepoAlias(ref) ?? '';
+  const resolvedPath = resolveTemplateRefPath(ref);
+  const cacheKey = `${repoKey}:${resolvedPath}`;
 
   // Cycle detection
   if (visited.has(cacheKey)) {
@@ -98,9 +100,10 @@ async function resolveSingle(
   // Determine the repo to fetch from
   let repoId = '';
   let gitRef: string | undefined;
+  const effectiveRepoAlias = getEffectiveRepoAlias(ref);
 
-  if (ref.repoAlias) {
-    const repoResource = resolveRepoAlias(ref.repoAlias, repositories);
+  if (effectiveRepoAlias) {
+    const repoResource = resolveRepoAlias(effectiveRepoAlias, repositories);
     if (repoResource) {
       repoId = repoResource.name;
       gitRef = repoResource.ref;
@@ -111,15 +114,18 @@ async function resolveSingle(
         parsed: {},
         nestedRefs: [],
         children: [],
-        error: `Unknown repository alias: ${ref.repoAlias}`,
+        error: `Unknown repository alias: ${effectiveRepoAlias}`,
       };
     }
   }
 
   try {
-    const content = await fileProvider.getFileContent(repoId, ref.normalizedPath, gitRef);
+    const content = await fileProvider.getFileContent(repoId, resolvedPath, gitRef);
     const parsed = (parseYaml(content) ?? {}) as Record<string, unknown>;
-    const nestedRefs = detectTemplateReferences(parsed);
+    const nestedRefs = detectTemplateReferences(parsed, {
+      contextRepoAlias: effectiveRepoAlias,
+      sourcePath: resolvedPath,
+    });
 
     // Track this path as visited for cycle detection in this branch
     const branchVisited = new Set(visited);

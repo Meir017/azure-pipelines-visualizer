@@ -17,6 +17,7 @@ import {
   parseYaml,
   detectTemplateReferences,
   resolveTemplateSource,
+  getEffectiveRepoAlias,
   type TemplateReference,
   type ResourceRepository,
 } from '@apv/core';
@@ -80,8 +81,8 @@ export default function PipelineDiagram() {
     }
 
     const raw = parseYaml(selectedPipeline.yaml) as Record<string, unknown>;
-    const refs = detectTemplateReferences(raw ?? {});
     const rootPath = selectedPipeline.definition?.path ?? '';
+    const refs = detectTemplateReferences(raw ?? {}, { sourcePath: rootPath });
     const rootName =
       selectedPipeline.definition?.name ??
       rootPath.split('/').pop() ??
@@ -139,8 +140,10 @@ export default function PipelineDiagram() {
 
       // Already expanded: just show its cached content
       if (d.status === 'expanded') {
-        const ref = (d as unknown as Record<string, unknown>)._ref as { repoAlias?: string; normalizedPath: string } | undefined;
-        const cacheKey = `${ref?.repoAlias || ''}:${d.filePath}`;
+        const ref = (d as unknown as Record<string, unknown>)._ref as
+          | TemplateReference
+          | undefined;
+        const cacheKey = `${getEffectiveRepoAlias(ref ?? {}) || ''}:${d.filePath}`;
         const cached = expandedTemplates.get(cacheKey);
         if (cached) {
           setSelectedNodeDetail({
@@ -179,7 +182,13 @@ export default function PipelineDiagram() {
         );
 
         const parsed = (parseYaml(content) ?? {}) as Record<string, unknown>;
-        const nestedRefs = detectTemplateReferences(parsed);
+        const parentRef = (d as unknown as Record<string, unknown>)._ref as
+          | TemplateReference
+          | undefined;
+        const nestedRefs = detectTemplateReferences(parsed, {
+          contextRepoAlias: getEffectiveRepoAlias(parentRef ?? {}),
+          sourcePath: d.filePath,
+        });
 
         // Determine the baseDir for this expanded template
         const expandedFileDir = dirOf(d.filePath);
@@ -315,8 +324,9 @@ function buildTemplateNodesAndEdges(
     seen.add(ref.rawPath);
 
     // For same-repo templates, resolve the full path relative to parent directory
+    const effectiveRepoAlias = getEffectiveRepoAlias(ref);
     const resolvedPath = ref.repoAlias
-      ? ref.normalizedPath // cross-repo: path is relative to target repo root
+      ? ref.normalizedPath
       : resolvePath(parentBaseDir, ref.normalizedPath);
 
     const label =
@@ -331,7 +341,7 @@ function buildTemplateNodesAndEdges(
       data: {
         label,
         filePath: resolvedPath,
-        repoAlias: ref.repoAlias,
+        repoAlias: effectiveRepoAlias,
         templateCount: 0,
         status: 'collapsed',
         isRoot: false,
@@ -380,7 +390,8 @@ async function fetchTemplateContent(
 
   // Use the resolved filePath from node data (already resolved relative to parent dir)
   const fetchPath = nodeData.filePath;
-  const cacheKey = `${ref.repoAlias || ''}:${fetchPath}`;
+  const effectiveRepoAlias = getEffectiveRepoAlias(ref);
+  const cacheKey = `${effectiveRepoAlias || ''}:${fetchPath}`;
   const cached = cache.get(cacheKey);
   if (cached) return cached;
 
@@ -389,17 +400,17 @@ async function fetchTemplateContent(
   let targetRepo = defaultRepoName;
   let targetRef: string | undefined;
 
-  if (ref.repoAlias && repositories.length) {
-    const source = resolveTemplateSource(ref.repoAlias, repositories);
+  if (effectiveRepoAlias && repositories.length) {
+    const source = resolveTemplateSource(effectiveRepoAlias, repositories);
     if (source) {
       targetProject = source.project || project;
       targetRepo = source.repoName;
       targetRef = source.ref;
     } else {
-      targetRepo = ref.repoAlias;
+      targetRepo = effectiveRepoAlias;
     }
-  } else if (ref.repoAlias) {
-    targetRepo = ref.repoAlias;
+  } else if (effectiveRepoAlias) {
+    targetRepo = effectiveRepoAlias;
   }
 
   const resp = await fetchFileByRepoName(
