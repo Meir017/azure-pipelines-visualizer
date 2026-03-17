@@ -1,5 +1,7 @@
 import { Hono } from 'hono';
 import { listRepositories, getRepository, getFileContent } from '../services/azure-devops.js';
+import { getLocalRepoPath } from '../config.js';
+import { getLocalFileContent } from '../services/local-files.js';
 
 const files = new Hono();
 
@@ -23,8 +25,8 @@ files.get('/:org/:project/repos/:repoId/file', async (c) => {
 });
 
 /**
- * Fetch a file by repo name (not ID). Resolves repo name → ID first.
- * Used by the URL-based pipeline selector.
+ * Fetch a file by repo name (not ID).
+ * Checks local filesystem mappings first, falls back to ADO API.
  */
 files.get('/:org/:project/file-by-repo-name', async (c) => {
   const { org, project } = c.req.param();
@@ -36,7 +38,21 @@ files.get('/:org/:project/file-by-repo-name', async (c) => {
     return c.json({ error: 'repo and path query parameters are required' }, 400);
   }
 
-  // Look up the single repo by name (much faster than listing all repos)
+  // Check if this repo is mapped to a local directory
+  const localPath = getLocalRepoPath(org, project, repoName);
+  if (localPath) {
+    const content = await getLocalFileContent(localPath, path);
+    return c.json({
+      content,
+      path,
+      repoId: `local:${repoName}`,
+      repoName,
+      branch: branch || 'local',
+      local: true,
+    });
+  }
+
+  // Fall back to Azure DevOps API
   const repo = await getRepository(org, project, repoName);
   if (!repo) {
     return c.json({ error: `Repository not found: ${repoName}` }, 404);

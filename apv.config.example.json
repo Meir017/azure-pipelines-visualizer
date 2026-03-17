@@ -1,0 +1,5 @@
+{
+  "localRepos": {
+    "org/project/RepoName": "/path/to/local/clone"
+  }
+}

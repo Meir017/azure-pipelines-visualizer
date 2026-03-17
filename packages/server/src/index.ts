@@ -3,6 +3,10 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { pipelines } from './routes/pipelines.js';
 import { files } from './routes/files.js';
+import { getConfig } from './config.js';
+
+// Load config on startup
+getConfig();
 
 const app = new Hono();
 
