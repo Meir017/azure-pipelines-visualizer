@@ -61,6 +61,9 @@ export default function PipelineDiagram() {
   // Track which nodes are being loaded to prevent double-clicks
   const [loadingNodes, setLoadingNodes] = useState<Set<string>>(new Set());
 
+  // Track which nodes we've already attempted auto-expansion on
+  const autoExpandAttempted = useRef<Set<string>>(new Set());
+
   // The default repo name for same-repo template lookups
   const defaultRepoName = selectedPipeline?.definition?.repository?.name ?? '';
 
@@ -138,7 +141,75 @@ export default function PipelineDiagram() {
 
     setNodes(layouted);
     setEdges(layoutedEdges);
+    autoExpandAttempted.current = new Set();
   }, [selectedPipeline, setNodes, setEdges]);
+
+  // Auto-expand collapsed nodes in the background to detect leaf templates.
+  // Leaf templates (0 nested refs) are immediately shown as expanded.
+  useEffect(() => {
+    const collapsedNodes = nodes.filter(
+      (n) =>
+        (n.data as unknown as FileNodeData).status === 'collapsed' &&
+        !autoExpandAttempted.current.has(n.id) &&
+        !loadingNodes.has(n.id),
+    );
+    if (collapsedNodes.length === 0) return;
+
+    // Mark as attempted so we don't retry
+    for (const n of collapsedNodes) {
+      autoExpandAttempted.current.add(n.id);
+    }
+
+    // Fire off parallel fetches for all collapsed nodes
+    for (const node of collapsedNodes) {
+      const d = node.data as unknown as FileNodeData;
+      // Skip nodes with unresolved dynamic paths — can't auto-expand
+      if (d.dynamicPath && !d.expressionResolved) continue;
+
+      (async () => {
+        try {
+          const content = await fetchTemplateContent(
+            org,
+            project,
+            defaultRepoName,
+            d,
+            rootResources,
+            expandedTemplates,
+            setExpandedTemplate,
+          );
+
+          const parsed = (parseYaml(content) ?? {}) as Record<string, unknown>;
+          const parentRef = (d as unknown as Record<string, unknown>)._ref as
+            | TemplateReference
+            | undefined;
+          const nestedRefs = detectTemplateReferences(parsed, {
+            contextRepoAlias: getEffectiveRepoAlias(parentRef ?? {}),
+            sourcePath: d.filePath,
+          });
+
+          // Only auto-mark as expanded if it's a leaf (no nested template refs)
+          if (nestedRefs.length === 0) {
+            setNodes((nds) =>
+              nds.map((n) =>
+                n.id === node.id
+                  ? {
+                      ...n,
+                      data: {
+                        ...n.data,
+                        status: 'expanded',
+                        templateCount: 0,
+                      },
+                    }
+                  : n,
+              ),
+            );
+          }
+        } catch {
+          // Silently ignore — user can still click to expand manually
+        }
+      })();
+    }
+  }, [nodes, org, project, defaultRepoName, rootResources, expandedTemplates, setExpandedTemplate, loadingNodes, setNodes]);
 
   // Handle clicking a node:
   // - Root/expanded node → show details in panel

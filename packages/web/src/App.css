@@ -555,6 +555,11 @@ body {
   font-style: italic;
 }
 
+.file-node__leaf {
+  color: #66bb6a;
+  font-size: 10px;
+}
+
 .file-node__error {
   color: var(--error);
 }

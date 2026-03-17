@@ -186,6 +186,9 @@ function FileNode({ data }: NodeProps) {
         {d.status === 'collapsed' && (
           <span className="file-node__hint">Click to expand</span>
         )}
+        {d.status === 'expanded' && d.templateCount === 0 && !d.isRoot && (
+          <span className="file-node__leaf">✓ no nested templates</span>
+        )}
         {(d.status === 'root' || d.status === 'expanded') && d.templateCount > 0 && (
           <span className="file-node__count">{d.templateCount} template ref(s)</span>
         )}
