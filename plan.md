@@ -221,35 +221,55 @@ template: helm-ev2/sharedEv2-build-steps.yaml@templates
 
 **44 tests passing across 6 test files (141 assertions)**
 
-### Phase 2: Backend — 🔜 Next
-| # | Task | Status | Depends On |
-|---|------|--------|------------|
-| 8 | **server-auth** — Hono + @azure/identity DefaultAzureCredential | ⬜ Ready | scaffolding |
-| 9 | **server-ado-client** — AzureDevOpsFileProvider implementing IFileProvider | ⬜ Pending | server-auth |
-| 10 | **server-api-routes** — Hono REST endpoints for pipelines, files, repos | ⬜ Pending | server-ado-client |
+### Phase 2: Backend — ✅ COMPLETE
+| # | Task | Status |
+|---|------|--------|
+| 8 | **server-auth** — Hono + @azure/identity DefaultAzureCredential | ✅ Done |
+| 9 | **server-ado-client** — AzureDevOpsFileProvider implementing IFileProvider | ✅ Done |
+| 10 | **server-api-routes** — Hono REST endpoints for pipelines, files, repos | ✅ Done |
 
-### Phase 3: Frontend — 🔜 Blocked on Phase 2
-| # | Task | Status | Depends On |
-|---|------|--------|------------|
-| 11 | **web-scaffold** — Vite + React + Zustand app shell | ⬜ Ready | scaffolding |
-| 12 | **web-pipeline-selector** — Org/project input → pipeline list | ⬜ Pending | web-scaffold, server-api-routes |
-| 13 | **web-tree-visualization** — Recursive TreeNode component | ⬜ Pending | web-scaffold, core-yaml-parser |
-| 14 | **web-yaml-highlighting** — highlight.js YAML rendering | ⬜ Pending | web-tree-visualization |
-| 15 | **web-template-expansion** — Lazy expand template refs via API | ⬜ Pending | web-tree-visualization, core-resolver, server-api-routes |
+### Phase 3: Frontend — ✅ COMPLETE
+| # | Task | Status |
+|---|------|--------|
+| 11 | **web-scaffold** — Vite + React + Zustand app shell | ✅ Done |
+| 12 | **web-pipeline-selector** — Org/project input → pipeline list | ✅ Done |
+| 13 | **web-tree-visualization** — Recursive TreeNode component | ✅ Done |
+| 14 | **web-yaml-highlighting** — highlight.js YAML rendering | ✅ Done |
+| 15 | **web-template-expansion** — Lazy expand template refs via API | ✅ Done |
 
-### Phase 4: Polish & Integration
-| # | Task | Status | Depends On |
-|---|------|--------|------------|
-| 16 | **e2e-integration** — Wire frontend ↔ backend ↔ ADO API end-to-end | ⬜ Pending | web-pipeline-selector, web-template-expansion, web-yaml-highlighting |
-| 17 | **template-caching** — In-memory + localStorage caching | ⬜ Pending | web-template-expansion |
-| 18 | **error-handling** — Missing templates, auth failures, rate limits, cycles | ⬜ Pending | e2e-integration |
-| 19 | **cross-repo-resolution** — Resolve @alias using resources.repositories | ⬜ Pending | core-resolver, server-ado-client |
+### Phase 4: Polish & Integration — ✅ COMPLETE
+| # | Task | Status |
+|---|------|--------|
+| 16 | **e2e-integration** — Frontend ↔ backend ↔ ADO API wired end-to-end | ✅ Done |
+| 17 | **template-caching** — In-memory + localStorage caching (100 entry cap) | ✅ Done |
+| 18 | **error-handling** — Auth errors, ADO status forwarding, ErrorBoundary | ✅ Done |
+| 19 | **cross-repo-resolution** — @alias resolved via resources.repositories | ✅ Done |
+
+**All 19 tasks complete. 44 tests passing. Web build: 77KB gzipped.**
 
 ### Future: Azure DevOps Extension
 - Extract `packages/core` + `packages/web` components into an ADO extension
 - Use `azure-devops-extension-sdk` for auth (no backend needed in extension context)
 - Inject into PR diff page to show "before vs after" pipeline expansion
 - Use ADO extension data service for caching
+
+## How to Run
+
+```bash
+# Install dependencies
+bun install
+
+# Run tests
+bun test --recursive
+
+# Start the server (port 3001)
+bun run dev:server
+
+# Start the frontend dev server (port 3000, proxies /api to :3001)
+bun run dev:web
+```
+
+**Prerequisites**: `az login` for Azure DevOps authentication.
 
 ## Notes
 - The core package has **zero** Azure DevOps dependencies — it only parses YAML and builds trees. This makes it testable and reusable.
