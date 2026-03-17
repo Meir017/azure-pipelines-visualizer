@@ -6,3 +6,6 @@ dist
 .env.local
 bun.lock
 apv.config.json
+.playwright-mcp/
+*.png
+*.jpeg
