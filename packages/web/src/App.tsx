@@ -1,5 +1,5 @@
 import PipelineSelector from './components/PipelineSelector.js';
-import PipelineTree from './components/PipelineTree.js';
+import PipelineDiagram from './components/PipelineDiagram.js';
 import ErrorBoundary from './components/ErrorBoundary.js';
 import './App.css';
 
@@ -17,7 +17,7 @@ export default function App() {
         </aside>
         <section className="app__content">
           <ErrorBoundary>
-            <PipelineTree />
+            <PipelineDiagram />
           </ErrorBoundary>
         </section>
       </main>
