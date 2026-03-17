@@ -196,17 +196,20 @@ function FileNode({ data }: NodeProps) {
   );
 }
 
-/** Azure DevOps logo as inline SVG */
+/** Azure DevOps logo as inline SVG (official icon path, 18×18 viewBox) */
 function AdoIcon() {
   return (
     <svg
       width="14"
       height="14"
-      viewBox="0 0 16 16"
-      fill="currentColor"
+      viewBox="0 0 18 18"
       className="file-node__ado-icon"
+      aria-label="Azure DevOps"
     >
-      <path d="M0 11.899l1.778 2.101 5.143-1.869V14L10.356 14.898V1.102L6.921 2.001V3.87L1.778 2 0 4.1v7.799zM10.356 3.478l3.2-1.478L16 4.621V11.38l-2.444 2.621-3.2-2.327v-8.196zM5.333 5.466v5.067L1.778 9.257V6.743l3.555-1.277z" />
+      <path
+        d="M17 4v9.74l-4 3.28-6.2-2.26V17l-3.51-4.59 10.23.8V4.44zm-3.41.49L7.85 1v2.29L2.58 4.84 1 6.87v4.61l2.26 1V6.57z"
+        fill="#3c91e5"
+      />
     </svg>
   );
 }
