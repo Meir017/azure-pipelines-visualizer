@@ -52,11 +52,12 @@ export const usePipelineStore = create<PipelineStore>((set) => ({
   setSelectedPipelineLoading: (selectedPipelineLoading) => set({ selectedPipelineLoading }),
   setSelectedPipelineError: (selectedPipelineError) => set({ selectedPipelineError }),
 
-  expandedTemplates: new Map(),
+  expandedTemplates: new Map(loadCachedTemplates()),
   setExpandedTemplate: (key, content) =>
     set((state) => {
       const next = new Map(state.expandedTemplates);
       next.set(key, content);
+      persistCachedTemplates(next);
       return { expandedTemplates: next };
     }),
 
@@ -72,3 +73,28 @@ export const usePipelineStore = create<PipelineStore>((set) => ({
       return { expandedNodes: next };
     }),
 }));
+
+const CACHE_KEY = 'apv-template-cache';
+
+function loadCachedTemplates(): [string, string][] {
+  try {
+    const stored = localStorage.getItem(CACHE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return [];
+}
+
+function persistCachedTemplates(map: Map<string, string>): void {
+  try {
+    const entries = Array.from(map.entries());
+    // Cap at 100 entries to avoid bloating localStorage
+    const capped = entries.slice(-100);
+    localStorage.setItem(CACHE_KEY, JSON.stringify(capped));
+  } catch {
+    // Ignore storage errors (quota, etc.)
+  }
+}
