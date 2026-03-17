@@ -1,0 +1,18 @@
+# Various path formats that all reference the same repo
+trigger:
+  - main
+
+stages:
+  - stage: Build
+    jobs:
+      - template: .pipelines/build-template.yml@self
+        parameters:
+          config: release
+      - template: ./build-template.yml@self
+        parameters:
+          config: debug
+      - template: build-template.yml
+        parameters:
+          config: test
+      - template: .pipelines/templates/steps.yml@self
+      - template: templates/steps.yml

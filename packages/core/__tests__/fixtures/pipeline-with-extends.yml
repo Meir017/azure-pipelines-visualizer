@@ -1,0 +1,29 @@
+trigger:
+  - main
+
+resources:
+  repositories:
+    - repository: GovernedTemplates
+      type: git
+      name: OneBranch.Pipelines/GovernedTemplates
+      ref: refs/heads/master
+
+extends:
+  template: v2/OneBranch.Official.CrossPlat.yml@GovernedTemplates
+  parameters:
+    globalSdl:
+      binskim:
+        enabled: true
+    stages:
+      - stage: buildStage
+        jobs:
+          - job: buildJob
+            steps:
+              - template: .pipelines/build-template.yml@self
+                parameters:
+                  enableSigning: true
+      - template: ./validation-stage-template.yml@self
+        parameters:
+          chartNames:
+            - chart-a
+            - chart-b

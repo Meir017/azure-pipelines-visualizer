@@ -1,0 +1,17 @@
+trigger:
+  - main
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage: Build
+    jobs:
+      - job: buildJob
+        steps:
+          - ${{ if eq(parameters.enablePSSA, true) }}:
+            - template: templates/pssa-steps-template.yml@self
+          - ${{ if eq(parameters.enableArmTests, true) }}:
+            - template: templates/arm-ev2-test-steps-template.yml@self
+          - script: echo "Always runs"
+            displayName: Final step

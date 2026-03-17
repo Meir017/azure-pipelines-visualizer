@@ -1,0 +1,10 @@
+trigger:
+  - main
+
+variables:
+  - template: variables/common.yml
+  - template: variables/env-specific.yml
+    parameters:
+      environment: production
+  - name: buildNumber
+    value: '1.0.0'

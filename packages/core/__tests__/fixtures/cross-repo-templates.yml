@@ -1,0 +1,28 @@
+trigger:
+  - main
+
+resources:
+  repositories:
+    - repository: templates
+      type: github
+      name: org/shared-templates
+      ref: refs/tags/3.stable
+      endpoint: github-connection
+    - repository: GovernedTemplates
+      type: git
+      name: OneBranch.Pipelines/GovernedTemplates
+      ref: refs/heads/master
+
+stages:
+  - stage: Build
+    jobs:
+      - template: jobs/build.yml@templates
+        parameters:
+          config: release
+      - job: validate
+        steps:
+          - template: helm-ev2/sharedEv2-build-steps.yaml@templates
+
+  - template: stages/compliance.yml@GovernedTemplates
+    parameters:
+      scanType: full

@@ -1,0 +1,16 @@
+{
+  "name": "@apv/server",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@apv/core": "workspace:*",
+    "@azure/identity": "^4.0.0",
+    "hono": "^4.0.0"
+  }
+}

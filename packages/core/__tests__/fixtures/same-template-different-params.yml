@@ -1,0 +1,27 @@
+# Same template used 5 times with different parameters
+trigger:
+  - main
+
+stages:
+  - stage: Validation
+    jobs:
+      - template: ./validation-job-template.yml@self
+        parameters:
+          chartName: chart-alpha
+          region: westus2
+      - template: ./validation-job-template.yml@self
+        parameters:
+          chartName: chart-beta
+          region: eastus
+      - template: ./validation-job-template.yml@self
+        parameters:
+          chartName: chart-gamma
+          region: westeurope
+      - template: ./validation-job-template.yml@self
+        parameters:
+          chartName: chart-delta
+          region: southeastasia
+      - template: ./validation-job-template.yml@self
+        parameters:
+          chartName: chart-epsilon
+          region: brazilsouth

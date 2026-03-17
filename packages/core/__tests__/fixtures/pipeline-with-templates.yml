@@ -1,0 +1,20 @@
+trigger:
+  - main
+
+stages:
+  - stage: Build
+    jobs:
+      - template: jobs/build.yml
+        parameters:
+          buildConfig: release
+
+  - stage: Test
+    dependsOn: Build
+    jobs:
+      - template: jobs/test.yml
+        parameters:
+          testType: unit
+
+  - template: stages/deploy.yml
+    parameters:
+      environment: production

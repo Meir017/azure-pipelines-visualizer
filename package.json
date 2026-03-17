@@ -1,0 +1,13 @@
+{
+  "name": "azure-pipelines-visualizer",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "test": "bun test --recursive",
+    "lint": "bunx @biomejs/biome check .",
+    "lint:fix": "bunx @biomejs/biome check --write .",
+    "format": "bunx @biomejs/biome format --write .",
+    "dev:server": "bun run --filter @apv/server dev",
+    "dev:web": "bun run --filter @apv/web dev"
+  }
+}

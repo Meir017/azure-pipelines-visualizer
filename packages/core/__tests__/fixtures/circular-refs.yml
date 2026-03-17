@@ -1,0 +1,10 @@
+# Template A references Template B, which references Template A again.
+# The resolver must detect this cycle and stop.
+
+trigger:
+  - main
+
+stages:
+  - template: templates/stage-a.yml
+    parameters:
+      depth: 1
