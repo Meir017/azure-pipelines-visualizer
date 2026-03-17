@@ -594,6 +594,35 @@ body {
   background: var(--bg);
 }
 
+/* ---- Auto-Expand Toggle ---- */
+.auto-expand-toggle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.15s;
+}
+
+.auto-expand-toggle:hover {
+  border-color: var(--accent);
+}
+
+.auto-expand-toggle input[type="checkbox"] {
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
 /* ---- Detail Panel ---- */
 .detail-panel {
   display: flex;

@@ -64,6 +64,9 @@ export default function PipelineDiagram() {
   // Track which nodes we've already attempted auto-expansion on
   const autoExpandAttempted = useRef<Set<string>>(new Set());
 
+  // Auto-expand all nodes recursively when enabled
+  const [autoExpandAll, setAutoExpandAll] = useState(false);
+
   // The default repo name for same-repo template lookups
   const defaultRepoName = selectedPipeline?.definition?.repository?.name ?? '';
 
@@ -144,8 +147,9 @@ export default function PipelineDiagram() {
     autoExpandAttempted.current = new Set();
   }, [selectedPipeline, setNodes, setEdges]);
 
-  // Auto-expand collapsed nodes in the background to detect leaf templates.
-  // Leaf templates (0 nested refs) are immediately shown as expanded.
+  // Auto-expand collapsed nodes in the background.
+  // - Always: detect leaf templates (0 nested refs) and mark as expanded.
+  // - When autoExpandAll: fully expand non-leaf nodes too (add child nodes/edges).
   useEffect(() => {
     const collapsedNodes = nodes.filter(
       (n) =>
@@ -187,8 +191,8 @@ export default function PipelineDiagram() {
             sourcePath: d.filePath,
           });
 
-          // Only auto-mark as expanded if it's a leaf (no nested template refs)
           if (nestedRefs.length === 0) {
+            // Leaf node — mark as expanded with no children
             setNodes((nds) =>
               nds.map((n) =>
                 n.id === node.id
@@ -203,13 +207,50 @@ export default function PipelineDiagram() {
                   : n,
               ),
             );
+          } else if (autoExpandAll) {
+            // Non-leaf with auto-expand enabled — fully expand
+            const fileDefaults = extractParameterDefaults(parsed);
+            const callerParams = parentRef?.parameters as Record<string, unknown> | undefined;
+            const paramContext = { ...fileDefaults, ...callerParams };
+            const expandedFileDir = dirOf(d.filePath);
+
+            const { templateNodes, templateEdges } = buildTemplateNodesAndEdges(
+              node.id,
+              nestedRefs,
+              expandedFileDir,
+              org,
+              project,
+              defaultRepoName,
+              rootResources,
+              paramContext,
+            );
+
+            setNodes((currentNodes) => {
+              const updated = currentNodes.map((n) =>
+                n.id === node.id
+                  ? {
+                      ...n,
+                      data: {
+                        ...n.data,
+                        status: 'expanded',
+                        templateCount: nestedRefs.length,
+                      },
+                    }
+                  : n,
+              );
+              const allNodes = [...updated, ...templateNodes];
+              const allEdges = [...edgesRef.current, ...templateEdges];
+              return getLayoutedElements(allNodes, allEdges).nodes;
+            });
+
+            setEdges((currentEdges) => [...currentEdges, ...templateEdges]);
           }
         } catch {
           // Silently ignore — user can still click to expand manually
         }
       })();
     }
-  }, [nodes, org, project, defaultRepoName, rootResources, expandedTemplates, setExpandedTemplate, loadingNodes, setNodes]);
+  }, [nodes, org, project, defaultRepoName, rootResources, expandedTemplates, setExpandedTemplate, loadingNodes, setNodes, setEdges, autoExpandAll]);
 
   // Handle clicking a node:
   // - Root/expanded node → show details in panel
@@ -366,6 +407,16 @@ export default function PipelineDiagram() {
     ],
   );
 
+  const handleAutoExpandToggle = useCallback(() => {
+    setAutoExpandAll((prev) => {
+      if (!prev) {
+        // Turning ON: reset attempted set so existing collapsed nodes get expanded
+        autoExpandAttempted.current = new Set();
+      }
+      return !prev;
+    });
+  }, []);
+
   if (selectedPipelineLoading) {
     return (
       <div className="pipeline-tree__empty">
@@ -388,7 +439,7 @@ export default function PipelineDiagram() {
   }
 
   return (
-    <div style={{ width: '100%', height: '100%' }}>
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -406,6 +457,14 @@ export default function PipelineDiagram() {
         <Background variant={BackgroundVariant.Dots} color="var(--border)" gap={20} />
         <Controls />
       </ReactFlow>
+      <label className="auto-expand-toggle">
+        <input
+          type="checkbox"
+          checked={autoExpandAll}
+          onChange={handleAutoExpandToggle}
+        />
+        <span>Auto-expand all</span>
+      </label>
     </div>
   );
 }
