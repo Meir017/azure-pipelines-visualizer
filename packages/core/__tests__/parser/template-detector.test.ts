@@ -160,4 +160,66 @@ steps:
     const stepsRefs = refs.filter((r) => r.normalizedPath === 'templates/steps.yml');
     expect(stepsRefs).toHaveLength(2);
   });
+
+  test('detects conditional extends template references', () => {
+    const refs = detectTemplateReferences(
+      parseYaml(`
+extends:
+  \${{ if eq(parameters.mode, 'dialtone') }}:
+    template: /v2/Core.Dialtone.OnPrem.Template.yml
+  \${{ else }}:
+    template: /v2/Core.Template.yml
+  parameters:
+    stages: \${{ parameters.stages }}
+`) as Record<string, unknown>,
+    );
+
+    expect(refs).toHaveLength(2);
+    expect(refs[0].normalizedPath).toBe('/v2/Core.Dialtone.OnPrem.Template.yml');
+    expect(refs[0].location).toBe('extends');
+    expect(refs[0].conditional).toBe(true);
+    expect(refs[1].normalizedPath).toBe('/v2/Core.Template.yml');
+    expect(refs[1].location).toBe('extends');
+    expect(refs[1].conditional).toBe(true);
+  });
+
+  test('detects conditional extends with shared parameters fallback', () => {
+    const refs = detectTemplateReferences(
+      parseYaml(`
+extends:
+  \${{ if eq(parameters.mode, 'a') }}:
+    template: templates/a.yml
+  \${{ else }}:
+    template: templates/b.yml
+  parameters:
+    env: production
+`) as Record<string, unknown>,
+    );
+
+    expect(refs).toHaveLength(2);
+    // Both should pick up the shared parameters since their conditional blocks have none
+    for (const ref of refs) {
+      expect(ref.location).toBe('extends');
+      expect(ref.conditional).toBe(true);
+      expect(ref.parameters).toBeDefined();
+      expect(ref.parameters?.env).toBe('production');
+    }
+  });
+
+  test('non-conditional extends still works', () => {
+    const refs = detectTemplateReferences(
+      parseYaml(`
+extends:
+  template: base-pipeline.yml
+  parameters:
+    env: dev
+`) as Record<string, unknown>,
+    );
+
+    expect(refs).toHaveLength(1);
+    expect(refs[0].normalizedPath).toBe('base-pipeline.yml');
+    expect(refs[0].location).toBe('extends');
+    expect(refs[0].conditional).toBe(false);
+    expect(refs[0].parameters?.env).toBe('dev');
+  });
 });

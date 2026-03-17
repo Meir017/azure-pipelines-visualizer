@@ -31,6 +31,29 @@ export function detectTemplateReferences(
       );
     }
 
+    // Check for conditional blocks inside extends: ${{ if }}, ${{ else }}, etc.
+    // These wrap { template: "...", parameters: {...} } objects
+    for (const key of Object.keys(ext)) {
+      if (isDirectiveKey(key)) {
+        const block = ext[key];
+        if (block && typeof block === 'object' && !Array.isArray(block)) {
+          const condObj = block as Record<string, unknown>;
+          if (typeof condObj.template === 'string') {
+            refs.push(
+              createTemplateRef(
+                condObj.template,
+                'extends',
+                // Use parameters from the conditional block, or fall back to shared parameters
+                (condObj.parameters ?? ext.parameters) as Record<string, unknown>,
+                true, // conditional
+                context,
+              ),
+            );
+          }
+        }
+      }
+    }
+
     // Walk extends.parameters for nested template refs
     if (ext.parameters && typeof ext.parameters === 'object') {
       walkExtendsParameters(ext.parameters as Record<string, unknown>, refs, context);
