@@ -9,3 +9,10 @@ export {
   pascalToKebab,
   type TaskReference,
 } from './task-resolver.js';
+export {
+  substituteParameters,
+  findExpressions,
+  type SubstitutionContext,
+  type SubstitutionResult,
+  type Expression,
+} from './expression-substitutor.js';

@@ -28,6 +28,24 @@ describe('parseYaml', () => {
   test('handles empty/null input', () => {
     expect(parseYaml('')).toBeUndefined();
   });
+
+  test('parses repeated Azure Pipelines directive keys in the same mapping', () => {
+    const content =
+      'steps:\n' +
+      '  - task: Example@1\n' +
+      '    inputs:\n' +
+      '      ${{ if eq(parameters.useTestSdlExtension, true) }}:\n' +
+      '        sdlExtensionPrefix: test\n' +
+      '      ${{ else }}:\n' +
+      '        sdlExtensionPrefix: prod\n' +
+      '      ${{ if eq(parameters.isOfficial, true) }}:\n' +
+      '        buildType: official\n' +
+      '      ${{ else }}:\n' +
+      '        buildType: buddy\n';
+
+    const result = parseYaml(content) as Record<string, unknown>;
+    expect(Array.isArray(result.steps)).toBe(true);
+  });
 });
 
 describe('toYaml', () => {
