@@ -36,6 +36,14 @@ export interface FileNodeData {
   conditional?: boolean;
   /** Names of parameters passed to this template */
   parameterNames?: string[];
+  /** Whether this path originally contained `${{ }}` expressions */
+  dynamicPath?: boolean;
+  /** The original raw path before expression resolution */
+  originalPath?: string;
+  /** Whether the expression was fully resolved */
+  expressionResolved?: boolean;
+  /** Unresolved expression parameter names */
+  unresolvedExpressions?: string[];
 }
 
 function FileNode({ data }: NodeProps) {
@@ -54,16 +62,27 @@ function FileNode({ data }: NodeProps) {
             : 'file-node--collapsed';
 
   const crossRepoClass = d.repoAlias ? 'file-node--cross-repo' : '';
+  const dynamicClass = d.dynamicPath && !d.expressionResolved ? 'file-node--dynamic' : '';
 
   return (
-    <div className={`file-node ${statusClass} ${crossRepoClass}`}>
+    <div className={`file-node ${statusClass} ${crossRepoClass} ${dynamicClass}`}>
       {!d.isRoot && <Handle type="target" position={Position.Top} />}
 
       <div className="file-node__header">
         <span className="file-node__icon">
-          {d.isRoot ? '📄' : d.status === 'expanded' ? '📋' : d.repoAlias ? '🔗' : '📁'}
+          {d.isRoot
+            ? '📄'
+            : d.dynamicPath && !d.expressionResolved
+              ? '⚠️'
+              : d.dynamicPath && d.expressionResolved
+                ? '🔮'
+                : d.status === 'expanded'
+                  ? '📋'
+                  : d.repoAlias
+                    ? '🔗'
+                    : '📁'}
         </span>
-        <span className="file-node__label" title={d.filePath}>
+        <span className="file-node__label" title={d.originalPath ?? d.filePath}>
           {d.label}
         </span>
         {/* Action buttons */}
@@ -119,7 +138,7 @@ function FileNode({ data }: NodeProps) {
 
       <div className="file-node__meta">
         {/* Badges row */}
-        {(d.templateLocation || d.conditional || d.parameterNames?.length) && (
+        {(d.templateLocation || d.conditional || d.parameterNames?.length || d.dynamicPath) && (
           <div className="file-node__badges">
             {d.templateLocation && (
               <span className={`file-node__badge file-node__badge--${d.templateLocation}`}>
@@ -129,6 +148,22 @@ function FileNode({ data }: NodeProps) {
             {d.conditional && (
               <span className="file-node__badge file-node__badge--conditional" title="Inside conditional block">
                 conditional
+              </span>
+            )}
+            {d.dynamicPath && d.expressionResolved && (
+              <span
+                className="file-node__badge file-node__badge--resolved"
+                title={`Resolved from: ${d.originalPath}`}
+              >
+                resolved
+              </span>
+            )}
+            {d.dynamicPath && !d.expressionResolved && (
+              <span
+                className="file-node__badge file-node__badge--unresolved"
+                title={`Unresolved expressions: ${d.unresolvedExpressions?.join(', ') ?? 'unknown'}\nOriginal path: ${d.originalPath}`}
+              >
+                dynamic
               </span>
             )}
             {d.parameterNames && d.parameterNames.length > 0 && (

@@ -19,6 +19,9 @@ import {
   resolveTemplateSource,
   getEffectiveRepoAlias,
   buildAdoFileUrl,
+  resolveExpressionPath,
+  extractParameterDefaults,
+  pathHasExpressions,
   type TemplateReference,
   type ResourceRepository,
 } from '@apv/core';
@@ -90,6 +93,9 @@ export default function PipelineDiagram() {
       'Pipeline';
     const rootBaseDir = dirOf(rootPath);
 
+    // Extract root pipeline's parameter defaults for expression path resolution
+    const rootParamDefaults = extractParameterDefaults(raw ?? {});
+
     // Build ADO URL for root node
     const rootRepoName = selectedPipeline.definition?.repository?.name ?? '';
     const rootBranch = selectedPipeline.definition?.repository?.defaultBranch?.replace(/^refs\/heads\//, '');
@@ -120,6 +126,7 @@ export default function PipelineDiagram() {
       project,
       defaultRepoName,
       rootResources,
+      rootParamDefaults,
     );
 
     const allNodes = [rootNode, ...templateNodes];
@@ -203,6 +210,12 @@ export default function PipelineDiagram() {
           sourcePath: d.filePath,
         });
 
+        // Build parameter context for resolving expression paths in nested refs:
+        // File's own parameter defaults, overridden by caller-passed parameter values
+        const fileDefaults = extractParameterDefaults(parsed);
+        const callerParams = parentRef?.parameters as Record<string, unknown> | undefined;
+        const paramContext = { ...fileDefaults, ...callerParams };
+
         // Determine the baseDir for this expanded template
         const expandedFileDir = dirOf(d.filePath);
 
@@ -215,6 +228,7 @@ export default function PipelineDiagram() {
           project,
           defaultRepoName,
           rootResources,
+          paramContext,
         );
 
         // Atomic update: add new nodes with layout, then add new edges
@@ -338,6 +352,8 @@ function buildTemplateNodesAndEdges(
   project: string,
   defaultRepoName: string,
   repositories: ResourceRepository[],
+  /** Parameter context of the file containing these refs (merged caller + file defaults) */
+  parameterContext?: Record<string, unknown>,
 ): { templateNodes: Node[]; templateEdges: Edge[] } {
   // De-duplicate by rawPath to avoid duplicate nodes for the same template
   const seen = new Set<string>();
@@ -351,16 +367,37 @@ function buildTemplateNodesAndEdges(
     if (seen.has(ref.rawPath)) continue;
     seen.add(ref.rawPath);
 
+    // Attempt to resolve expression paths (e.g. ${{parameters.buildType}})
+    let pathForNode = ref.normalizedPath;
+    let dynamicPath = false;
+    let originalPath: string | undefined;
+    let expressionResolved = false;
+    let unresolvedExpressions: string[] | undefined;
+
+    if (pathHasExpressions(ref.normalizedPath)) {
+      dynamicPath = true;
+      originalPath = ref.normalizedPath;
+      const resolution = resolveExpressionPath(
+        ref.normalizedPath,
+        parameterContext,
+      );
+      pathForNode = resolution.resolvedPath;
+      expressionResolved = resolution.isFullyResolved;
+      unresolvedExpressions = resolution.unresolved.length
+        ? resolution.unresolved
+        : undefined;
+    }
+
     // For same-repo templates, resolve the full path relative to parent directory
     const effectiveRepoAlias = getEffectiveRepoAlias(ref);
     const resolvedPath = ref.repoAlias
-      ? ref.normalizedPath
-      : resolvePath(parentBaseDir, ref.normalizedPath);
+      ? pathForNode
+      : resolvePath(parentBaseDir, pathForNode);
 
     const label =
-      ref.normalizedPath.length > 40
-        ? `...${ref.normalizedPath.slice(-37)}`
-        : ref.normalizedPath;
+      pathForNode.length > 40
+        ? `...${pathForNode.slice(-37)}`
+        : pathForNode;
 
     // Resolve repo info and ADO URL
     const { repoInfo, adoUrl } = resolveNodeMetadata(
@@ -395,6 +432,10 @@ function buildTemplateNodesAndEdges(
         templateLocation: ref.location,
         conditional: ref.conditional || undefined,
         parameterNames,
+        dynamicPath: dynamicPath || undefined,
+        originalPath,
+        expressionResolved: dynamicPath ? expressionResolved : undefined,
+        unresolvedExpressions,
         // Stash the full ref for expansion
         _ref: ref,
       },

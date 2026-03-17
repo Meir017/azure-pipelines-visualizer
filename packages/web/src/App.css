@@ -409,6 +409,16 @@ body {
   border-style: solid;
 }
 
+.file-node--dynamic {
+  opacity: 0.75;
+  border-style: dashed;
+  border-color: #ff9800;
+}
+
+.file-node--dynamic:hover {
+  opacity: 1;
+}
+
 .file-node__header {
   display: flex;
   align-items: center;
@@ -533,6 +543,8 @@ body {
 .file-node__badge--variables { background: var(--badge-variables); color: var(--bg); }
 .file-node__badge--conditional { background: color-mix(in srgb, var(--badge-trigger) 30%, transparent); color: var(--badge-trigger); }
 .file-node__badge--params { background: color-mix(in srgb, var(--accent) 25%, transparent); color: var(--accent); }
+.file-node__badge--resolved { background: color-mix(in srgb, #4fc3f7 25%, transparent); color: #4fc3f7; }
+.file-node__badge--unresolved { background: color-mix(in srgb, #ff9800 30%, transparent); color: #ff9800; }
 
 .file-node__meta {
   font-size: 11px;

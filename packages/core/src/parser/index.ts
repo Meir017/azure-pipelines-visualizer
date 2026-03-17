@@ -16,3 +16,9 @@ export {
   type SubstitutionResult,
   type Expression,
 } from './expression-substitutor.js';
+export {
+  resolveExpressionPath,
+  pathHasExpressions,
+  extractParameterDefaults,
+  type PathResolutionResult,
+} from './expression-path-resolver.js';

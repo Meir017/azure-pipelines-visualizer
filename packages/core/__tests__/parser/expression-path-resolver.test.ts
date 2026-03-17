@@ -1,0 +1,170 @@
+import { describe, expect, test } from 'bun:test';
+import {
+  resolveExpressionPath,
+  pathHasExpressions,
+  extractParameterDefaults,
+} from '../../src/parser/expression-path-resolver.js';
+
+describe('pathHasExpressions', () => {
+  test('returns false for plain path', () => {
+    expect(pathHasExpressions('templates/build.yml')).toBe(false);
+  });
+
+  test('returns true for path with parameter expression', () => {
+    expect(pathHasExpressions('governed/${{parameters.buildType}}.yaml')).toBe(true);
+  });
+
+  test('returns true for path with spaces in expression', () => {
+    expect(pathHasExpressions('governed/${{ parameters.buildType }}.yaml')).toBe(true);
+  });
+});
+
+describe('resolveExpressionPath', () => {
+  test('returns plain path unchanged', () => {
+    const result = resolveExpressionPath('templates/build.yml');
+    expect(result.resolvedPath).toBe('templates/build.yml');
+    expect(result.isFullyResolved).toBe(true);
+    expect(result.hadExpressions).toBe(false);
+  });
+
+  test('resolves parameter from caller params', () => {
+    const result = resolveExpressionPath(
+      'governed/${{parameters.buildType}}.yaml',
+      { buildType: 'standard' },
+    );
+    expect(result.resolvedPath).toBe('governed/standard.yaml');
+    expect(result.isFullyResolved).toBe(true);
+    expect(result.hadExpressions).toBe(true);
+    expect(result.substituted).toEqual(['buildType']);
+    expect(result.unresolved).toEqual([]);
+  });
+
+  test('resolves parameter with spaces in expression', () => {
+    const result = resolveExpressionPath(
+      'governed/${{ parameters.buildType }}.yaml',
+      { buildType: 'official' },
+    );
+    expect(result.resolvedPath).toBe('governed/official.yaml');
+    expect(result.isFullyResolved).toBe(true);
+  });
+
+  test('resolves from file defaults when caller param missing', () => {
+    const result = resolveExpressionPath(
+      'governed/${{parameters.buildType}}.yaml',
+      {}, // caller didn't pass buildType
+      { buildType: 'standard' }, // file default
+    );
+    expect(result.resolvedPath).toBe('governed/standard.yaml');
+    expect(result.isFullyResolved).toBe(true);
+  });
+
+  test('caller params override file defaults', () => {
+    const result = resolveExpressionPath(
+      'governed/${{parameters.buildType}}.yaml',
+      { buildType: 'official' }, // caller overrides
+      { buildType: 'standard' }, // file default
+    );
+    expect(result.resolvedPath).toBe('governed/official.yaml');
+    expect(result.isFullyResolved).toBe(true);
+  });
+
+  test('reports unresolved when no value available', () => {
+    const result = resolveExpressionPath(
+      'governed/${{parameters.buildType}}.yaml',
+    );
+    expect(result.resolvedPath).toBe('governed/${{parameters.buildType}}.yaml');
+    expect(result.isFullyResolved).toBe(false);
+    expect(result.hadExpressions).toBe(true);
+    expect(result.unresolved).toEqual(['buildType']);
+  });
+
+  test('resolves multiple expressions in one path', () => {
+    const result = resolveExpressionPath(
+      '${{parameters.dir}}/${{parameters.file}}.yml',
+      { dir: 'stages', file: 'build' },
+    );
+    expect(result.resolvedPath).toBe('stages/build.yml');
+    expect(result.isFullyResolved).toBe(true);
+    expect(result.substituted).toEqual(['dir', 'file']);
+  });
+
+  test('partially resolves when only some params available', () => {
+    const result = resolveExpressionPath(
+      '${{parameters.dir}}/${{parameters.file}}.yml',
+      { dir: 'stages' },
+    );
+    expect(result.resolvedPath).toBe('stages/${{parameters.file}}.yml');
+    expect(result.isFullyResolved).toBe(false);
+    expect(result.substituted).toEqual(['dir']);
+    expect(result.unresolved).toEqual(['file']);
+  });
+
+  test('handles bracket notation', () => {
+    const result = resolveExpressionPath(
+      "governed/${{parameters['buildType']}}.yaml",
+      { buildType: 'standard' },
+    );
+    expect(result.resolvedPath).toBe('governed/standard.yaml');
+    expect(result.isFullyResolved).toBe(true);
+  });
+
+  test('handles boolean parameter values', () => {
+    const result = resolveExpressionPath(
+      'steps/${{parameters.enabled}}-build.yml',
+      { enabled: true },
+    );
+    expect(result.resolvedPath).toBe('steps/true-build.yml');
+    expect(result.isFullyResolved).toBe(true);
+  });
+
+  test('detects non-parameter expressions as unresolved', () => {
+    const result = resolveExpressionPath(
+      'governed/${{variables.buildType}}.yaml',
+    );
+    expect(result.isFullyResolved).toBe(false);
+    expect(result.hadExpressions).toBe(true);
+    expect(result.unresolved.length).toBeGreaterThan(0);
+  });
+});
+
+describe('extractParameterDefaults', () => {
+  test('extracts defaults from parameter list', () => {
+    const parsed = {
+      parameters: [
+        { name: 'buildType', type: 'string', default: 'standard' },
+        { name: 'enableTests', type: 'boolean', default: true },
+        { name: 'count', type: 'number', default: 5 },
+      ],
+    };
+    const defaults = extractParameterDefaults(parsed);
+    expect(defaults).toEqual({
+      buildType: 'standard',
+      enableTests: true,
+      count: 5,
+    });
+  });
+
+  test('skips parameters without defaults', () => {
+    const parsed = {
+      parameters: [
+        { name: 'buildType', type: 'string', default: 'standard' },
+        { name: 'target', type: 'string' }, // no default
+      ],
+    };
+    const defaults = extractParameterDefaults(parsed);
+    expect(defaults).toEqual({ buildType: 'standard' });
+    expect('target' in defaults).toBe(false);
+  });
+
+  test('returns empty for no parameters', () => {
+    expect(extractParameterDefaults({})).toEqual({});
+    expect(extractParameterDefaults({ parameters: 'not-array' } as any)).toEqual({});
+  });
+
+  test('handles object-style parameters', () => {
+    // Some pipelines use object-style: parameters: { buildType: 'standard' }
+    // This is a plain object, not an array — we only handle array style
+    const parsed = { parameters: { buildType: 'standard' } };
+    expect(extractParameterDefaults(parsed as any)).toEqual({});
+  });
+});
