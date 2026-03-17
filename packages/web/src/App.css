@@ -65,6 +65,43 @@ body {
 }
 
 /* Pipeline Selector */
+.mode-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.mode-tab {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.mode-tab--active {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+
+.mode-tab:hover:not(.mode-tab--active) {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.form-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
 .connection-form {
   display: flex;
   flex-direction: column;
@@ -72,16 +109,20 @@ body {
   margin-bottom: 16px;
 }
 
-.connection-form input {
+.connection-form input,
+.connection-form textarea {
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 4px;
   color: var(--text);
   padding: 8px 12px;
   font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
 }
 
-.connection-form input:focus {
+.connection-form input:focus,
+.connection-form textarea:focus {
   outline: none;
   border-color: var(--accent);
 }

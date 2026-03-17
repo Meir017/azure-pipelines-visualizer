@@ -22,4 +22,35 @@ files.get('/:org/:project/repos/:repoId/file', async (c) => {
   return c.json({ content, path, repoId, branch });
 });
 
+/**
+ * Fetch a file by repo name (not ID). Resolves repo name → ID first.
+ * Used by the URL-based pipeline selector.
+ */
+files.get('/:org/:project/file-by-repo-name', async (c) => {
+  const { org, project } = c.req.param();
+  const repoName = c.req.query('repo');
+  const path = c.req.query('path');
+  const branch = c.req.query('branch');
+
+  if (!repoName || !path) {
+    return c.json({ error: 'repo and path query parameters are required' }, 400);
+  }
+
+  // Resolve repo name to ID
+  const repos = await listRepositories(org, project);
+  const repo = repos.find((r) => r.name === repoName);
+  if (!repo) {
+    return c.json({ error: `Repository not found: ${repoName}` }, 404);
+  }
+
+  const content = await getFileContent(org, project, repo.id, path, branch || repo.defaultBranch);
+  return c.json({
+    content,
+    path,
+    repoId: repo.id,
+    repoName: repo.name,
+    branch: branch || repo.defaultBranch,
+  });
+});
+
 export { files };

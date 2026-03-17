@@ -72,3 +72,19 @@ export function fetchFileContent(
   if (branch) params.set('branch', branch);
   return apiFetch(`/${org}/${project}/repos/${repoId}/file?${params}`);
 }
+
+export interface FileByRepoNameResponse extends FileContentResponse {
+  repoName: string;
+}
+
+export function fetchFileByRepoName(
+  org: string,
+  project: string,
+  repoName: string,
+  path: string,
+  branch?: string,
+): Promise<FileByRepoNameResponse> {
+  const params = new URLSearchParams({ repo: repoName, path });
+  if (branch) params.set('branch', branch);
+  return apiFetch(`/${org}/${project}/file-by-repo-name?${params}`);
+}
