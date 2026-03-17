@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ReactFlow,
   Background,
@@ -47,6 +47,10 @@ export default function PipelineDiagram() {
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+
+  // Keep a ref to current edges so expansion callbacks always read the latest
+  const edgesRef = useRef<Edge[]>([]);
+  useEffect(() => { edgesRef.current = edges; }, [edges]);
 
   // Track which nodes are being loaded to prevent double-clicks
   const [loadingNodes, setLoadingNodes] = useState<Set<string>>(new Set());
@@ -148,15 +152,16 @@ export default function PipelineDiagram() {
         // Determine the baseDir for this expanded template
         const expandedFileDir = dirOf(d.filePath);
 
-        // Update this node to expanded and add child nodes atomically
+        // Update this node to expanded and add child nodes
         const { templateNodes, templateEdges } = buildTemplateNodesAndEdges(
           node.id,
           nestedRefs,
           expandedFileDir,
         );
 
-        setNodes((nds) => {
-          const updated = nds.map((n) =>
+        // Atomic update: add new nodes with layout, then add new edges
+        setNodes((currentNodes) => {
+          const updated = currentNodes.map((n) =>
             n.id === node.id
               ? {
                   ...n,
@@ -169,22 +174,11 @@ export default function PipelineDiagram() {
               : n,
           );
           const allNodes = [...updated, ...templateNodes];
-
-          setEdges((eds) => {
-            const allEdges = [...eds, ...templateEdges];
-            const layouted = getLayoutedElements(allNodes, allEdges);
-            // We need to update nodes from within this callback via a ref trick
-            // Instead, just return edges — nodes are set by the outer setNodes
-            return layouted.edges;
-          });
-
-          // Re-layout with all nodes
-          return getLayoutedElements(
-            allNodes,
-            // Use current edges + new ones for layout (edges state updates async)
-            [...edges, ...templateEdges],
-          ).nodes;
+          const allEdges = [...edgesRef.current, ...templateEdges];
+          return getLayoutedElements(allNodes, allEdges).nodes;
         });
+
+        setEdges((currentEdges) => [...currentEdges, ...templateEdges]);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         setNodes((nds) =>
@@ -213,7 +207,6 @@ export default function PipelineDiagram() {
       expandedTemplates,
       setExpandedTemplate,
       loadingNodes,
-      edges,
       setNodes,
       setEdges,
     ],
