@@ -542,9 +542,83 @@ body {
 .file-node__badge--steps { background: var(--badge-step); color: var(--bg); }
 .file-node__badge--variables { background: var(--badge-variables); color: var(--bg); }
 .file-node__badge--conditional { background: color-mix(in srgb, var(--badge-trigger) 30%, transparent); color: var(--badge-trigger); }
-.file-node__badge--params { background: color-mix(in srgb, var(--accent) 25%, transparent); color: var(--accent); }
+.file-node__badge--params {
+  background: color-mix(in srgb, var(--accent) 25%, transparent);
+  color: var(--accent);
+  position: relative;
+  cursor: default;
+}
 .file-node__badge--resolved { background: color-mix(in srgb, #4fc3f7 25%, transparent); color: #4fc3f7; }
 .file-node__badge--unresolved { background: color-mix(in srgb, #ff9800 30%, transparent); color: #ff9800; }
+
+/* ---- Params Tooltip ---- */
+.file-node__params-tooltip {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 4px);
+  z-index: 100;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  min-width: 180px;
+  max-width: 300px;
+  max-height: 260px;
+  overflow-y: auto;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  font-size: 11px;
+  text-transform: none;
+  font-weight: 400;
+  letter-spacing: normal;
+  line-height: 1.4;
+}
+
+.file-node__params-section + .file-node__params-section {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+.file-node__params-heading {
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.file-node__params-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.file-node__params-item {
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+}
+
+.file-node__params-item--passed {
+  background: color-mix(in srgb, var(--success) 20%, transparent);
+  color: var(--success);
+}
+
+.file-node__params-item--missing {
+  background: color-mix(in srgb, var(--text-muted) 15%, transparent);
+  color: var(--text-muted);
+}
+
+.file-node__params-hint {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 10px;
+}
 
 .file-node__meta {
   font-size: 11px;

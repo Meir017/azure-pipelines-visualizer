@@ -53,6 +53,7 @@ export interface FileNodeData {
 function FileNode({ data }: NodeProps) {
   const d = data as unknown as FileNodeData;
   const [showRepoTooltip, setShowRepoTooltip] = useState(false);
+  const [showParamsTooltip, setShowParamsTooltip] = useState(false);
 
   const statusClass =
     d.status === 'root'
@@ -168,9 +169,11 @@ function FileNode({ data }: NodeProps) {
             {d.parameterNames && d.parameterNames.length > 0 && (
               <span
                 className="file-node__badge file-node__badge--params"
-                title={buildParamsTooltip(d)}
+                onMouseEnter={() => setShowParamsTooltip(true)}
+                onMouseLeave={() => setShowParamsTooltip(false)}
               >
                 {formatParamsBadge(d)}
+                {showParamsTooltip && <ParamsTooltip data={d} />}
               </span>
             )}
           </div>
@@ -207,23 +210,43 @@ function formatParamsBadge(d: FileNodeData): string {
   return `${passed} params (passed)`;
 }
 
-/** Build a detailed tooltip for the params badge */
-function buildParamsTooltip(d: FileNodeData): string {
-  const lines: string[] = [];
-  if (d.parameterNames?.length) {
-    lines.push(`Passed (${d.parameterNames.length}): ${d.parameterNames.join(', ')}`);
-  }
-  if (d.declaredParameterNames?.length) {
-    const notPassed = d.declaredParameterNames.filter(
-      (n) => !d.parameterNames?.includes(n),
-    );
-    if (notPassed.length > 0) {
-      lines.push(`Not passed (${notPassed.length}): ${notPassed.join(', ')}`);
-    }
-  } else if (d.totalParameterCount == null) {
-    lines.push('Expand to see total declared parameters');
-  }
-  return lines.join('\n');
+/** Styled tooltip popup for the params badge */
+function ParamsTooltip({ data: d }: { data: FileNodeData }) {
+  const notPassed = d.declaredParameterNames?.filter(
+    (n) => !d.parameterNames?.includes(n),
+  );
+
+  return (
+    <div className="file-node__params-tooltip">
+      {d.parameterNames && d.parameterNames.length > 0 && (
+        <div className="file-node__params-section">
+          <div className="file-node__params-heading">
+            ✓ Passed ({d.parameterNames.length})
+          </div>
+          <ul className="file-node__params-list">
+            {d.parameterNames.map((n) => (
+              <li key={n} className="file-node__params-item file-node__params-item--passed">{n}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {notPassed && notPassed.length > 0 && (
+        <div className="file-node__params-section">
+          <div className="file-node__params-heading">
+            ○ Not passed ({notPassed.length})
+          </div>
+          <ul className="file-node__params-list">
+            {notPassed.map((n) => (
+              <li key={n} className="file-node__params-item file-node__params-item--missing">{n}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {d.totalParameterCount == null && !d.declaredParameterNames?.length && (
+        <div className="file-node__params-hint">Expand node to see all declared params</div>
+      )}
+    </div>
+  );
 }
 
 /** Azure DevOps logo as inline SVG (official icon path, 18×18 viewBox) */
