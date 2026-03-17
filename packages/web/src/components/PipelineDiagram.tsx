@@ -43,6 +43,7 @@ export default function PipelineDiagram() {
     selectedPipelineError,
     expandedTemplates,
     setExpandedTemplate,
+    setSelectedNodeDetail,
   } = usePipelineStore();
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -118,10 +119,41 @@ export default function PipelineDiagram() {
     setEdges(layoutedEdges);
   }, [selectedPipeline, setNodes, setEdges]);
 
-  // Handle clicking a collapsed template node to expand it
+  // Handle clicking a node:
+  // - Root/expanded node → show details in panel
+  // - Collapsed node → expand (fetch) then show details
   const onNodeClick: NodeMouseHandler = useCallback(
     async (_event, node) => {
       const d = node.data as unknown as FileNodeData;
+
+      // Root node: show its YAML in detail panel
+      if (d.status === 'root' && selectedPipeline?.yaml) {
+        setSelectedNodeDetail({
+          nodeId: node.id,
+          label: d.label,
+          filePath: d.filePath,
+          yaml: selectedPipeline.yaml,
+        });
+        return;
+      }
+
+      // Already expanded: just show its cached content
+      if (d.status === 'expanded') {
+        const ref = (d as unknown as Record<string, unknown>)._ref as { repoAlias?: string; normalizedPath: string } | undefined;
+        const cacheKey = `${ref?.repoAlias || ''}:${d.filePath}`;
+        const cached = expandedTemplates.get(cacheKey);
+        if (cached) {
+          setSelectedNodeDetail({
+            nodeId: node.id,
+            label: d.label,
+            filePath: d.filePath,
+            yaml: cached,
+            repoAlias: d.repoAlias,
+          });
+        }
+        return;
+      }
+
       if (d.status !== 'collapsed') return;
       if (loadingNodes.has(node.id)) return;
 
@@ -179,6 +211,15 @@ export default function PipelineDiagram() {
         });
 
         setEdges((currentEdges) => [...currentEdges, ...templateEdges]);
+
+        // Show the expanded content in the detail panel
+        setSelectedNodeDetail({
+          nodeId: node.id,
+          label: d.label,
+          filePath: d.filePath,
+          yaml: content,
+          repoAlias: d.repoAlias,
+        });
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         setNodes((nds) =>
@@ -203,9 +244,11 @@ export default function PipelineDiagram() {
       org,
       project,
       defaultRepoName,
+      selectedPipeline,
       rootResources,
       expandedTemplates,
       setExpandedTemplate,
+      setSelectedNodeDetail,
       loadingNodes,
       setNodes,
       setEdges,

@@ -15,6 +15,12 @@ app.use('/*', cors({ origin: 'http://localhost:3000' }));
 
 app.get('/health', (c) => c.json({ status: 'ok' }));
 
+// Serve custom task docs config to the frontend
+app.get('/api/config/task-docs', (c) => {
+  const config = getConfig();
+  return c.json({ customTaskDocs: config.customTaskDocs ?? {} });
+});
+
 // Mount API routes
 app.route('/api', pipelines);
 app.route('/api', files);

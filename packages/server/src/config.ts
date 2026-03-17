@@ -3,17 +3,22 @@ import { resolve } from 'node:path';
 
 /**
  * Maps "org/project/repo" → local filesystem path.
+ * Maps task names → documentation URLs.
  *
  * Example apv.config.json:
  * {
  *   "localRepos": {
- *     "microsoft/WDATP/Wcd.Infra.ConfigurationGeneration": "D:/git/configen",
- *     "microsoft/WDATP/GovernedTemplates": "D:/git/governed-templates"
+ *     "microsoft/WDATP/Wcd.Infra.ConfigurationGeneration": "D:/git/configen"
+ *   },
+ *   "customTaskDocs": {
+ *     "OneBranch.Pipeline.Build@1": "https://onebranch.dev/docs/build",
+ *     "OneBranch.Pipeline.Signing": "https://onebranch.dev/docs/signing"
  *   }
  * }
  */
 export interface AppConfig {
   localRepos: Record<string, string>;
+  customTaskDocs: Record<string, string>;
 }
 
 const CONFIG_FILENAME = 'apv.config.json';
@@ -46,7 +51,7 @@ export function getConfig(): AppConfig {
   }
 
   // No config found — empty defaults
-  _config = { localRepos: {} };
+  _config = { localRepos: {}, customTaskDocs: {} };
   return _config;
 }
 

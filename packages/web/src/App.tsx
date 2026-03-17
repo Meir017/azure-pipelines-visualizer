@@ -1,9 +1,22 @@
+import { useEffect } from 'react';
 import PipelineSelector from './components/PipelineSelector.js';
 import PipelineDiagram from './components/PipelineDiagram.js';
+import DetailPanel from './components/DetailPanel.js';
 import ErrorBoundary from './components/ErrorBoundary.js';
+import { usePipelineStore } from './store/pipeline-store.js';
+import { fetchTaskDocsConfig } from './services/api-client.js';
 import './App.css';
 
 export default function App() {
+  const { setCustomTaskDocs, selectedNodeDetail } = usePipelineStore();
+
+  // Load custom task docs config on mount
+  useEffect(() => {
+    fetchTaskDocsConfig()
+      .then((cfg) => setCustomTaskDocs(cfg.customTaskDocs))
+      .catch(() => {});
+  }, [setCustomTaskDocs]);
+
   return (
     <div className="app">
       <header className="app__header">
@@ -20,6 +33,13 @@ export default function App() {
             <PipelineDiagram />
           </ErrorBoundary>
         </section>
+        {selectedNodeDetail && (
+          <aside className="app__detail">
+            <ErrorBoundary>
+              <DetailPanel />
+            </ErrorBoundary>
+          </aside>
+        )}
       </main>
     </div>
   );

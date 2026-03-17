@@ -1,6 +1,14 @@
 import { create } from 'zustand';
 import type { PipelineInfo, PipelineYamlResponse } from '../services/api-client.js';
 
+export interface SelectedNodeDetail {
+  nodeId: string;
+  label: string;
+  filePath: string;
+  yaml: string;
+  repoAlias?: string;
+}
+
 export interface PipelineStore {
   // Connection
   org: string;
@@ -30,6 +38,14 @@ export interface PipelineStore {
   // Expanded node IDs (for tree expand/collapse state)
   expandedNodes: Set<string>;
   toggleNode: (nodeId: string) => void;
+
+  // Detail panel: currently selected node for viewing
+  selectedNodeDetail: SelectedNodeDetail | null;
+  setSelectedNodeDetail: (detail: SelectedNodeDetail | null) => void;
+
+  // Custom task docs from server config
+  customTaskDocs: Record<string, string>;
+  setCustomTaskDocs: (docs: Record<string, string>) => void;
 }
 
 export const usePipelineStore = create<PipelineStore>((set) => ({
@@ -72,6 +88,12 @@ export const usePipelineStore = create<PipelineStore>((set) => ({
       }
       return { expandedNodes: next };
     }),
+
+  selectedNodeDetail: null,
+  setSelectedNodeDetail: (selectedNodeDetail) => set({ selectedNodeDetail }),
+
+  customTaskDocs: {},
+  setCustomTaskDocs: (customTaskDocs) => set({ customTaskDocs }),
 }));
 
 const CACHE_KEY = 'apv-template-cache';

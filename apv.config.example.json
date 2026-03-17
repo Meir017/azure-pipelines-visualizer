@@ -1,5 +1,9 @@
 {
   "localRepos": {
     "org/project/RepoName": "/path/to/local/clone"
+  },
+  "customTaskDocs": {
+    "OneBranch.Pipeline.Build@1": "https://onebranch.dev/docs/tasks/build",
+    "OneBranch.Pipeline.Signing": "https://onebranch.dev/docs/tasks/signing"
   }
 }

@@ -88,3 +88,11 @@ export function fetchFileByRepoName(
   if (branch) params.set('branch', branch);
   return apiFetch(`/${org}/${project}/file-by-repo-name?${params}`);
 }
+
+export interface TaskDocsConfig {
+  customTaskDocs: Record<string, string>;
+}
+
+export function fetchTaskDocsConfig(): Promise<TaskDocsConfig> {
+  return apiFetch('/config/task-docs');
+}
