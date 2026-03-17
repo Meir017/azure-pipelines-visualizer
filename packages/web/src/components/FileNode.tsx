@@ -36,6 +36,10 @@ export interface FileNodeData {
   conditional?: boolean;
   /** Names of parameters passed to this template */
   parameterNames?: string[];
+  /** Total number of parameters declared by the template file */
+  totalParameterCount?: number;
+  /** All parameter names declared by the template file */
+  declaredParameterNames?: string[];
   /** Whether this path originally contained `${{ }}` expressions */
   dynamicPath?: boolean;
   /** The original raw path before expression resolution */
@@ -138,13 +142,8 @@ function FileNode({ data }: NodeProps) {
 
       <div className="file-node__meta">
         {/* Badges row */}
-        {(d.templateLocation || d.conditional || d.parameterNames?.length || d.dynamicPath) && (
+        {(d.conditional || d.parameterNames?.length || d.dynamicPath) && (
           <div className="file-node__badges">
-            {d.templateLocation && (
-              <span className={`file-node__badge file-node__badge--${d.templateLocation}`}>
-                {d.templateLocation}
-              </span>
-            )}
             {d.conditional && (
               <span className="file-node__badge file-node__badge--conditional" title="Inside conditional block">
                 conditional
@@ -169,9 +168,9 @@ function FileNode({ data }: NodeProps) {
             {d.parameterNames && d.parameterNames.length > 0 && (
               <span
                 className="file-node__badge file-node__badge--params"
-                title={`Parameters: ${d.parameterNames.join(', ')}`}
+                title={buildParamsTooltip(d)}
               >
-                {d.parameterNames.length} param{d.parameterNames.length > 1 ? 's' : ''}
+                {formatParamsBadge(d)}
               </span>
             )}
           </div>
@@ -197,6 +196,34 @@ function FileNode({ data }: NodeProps) {
       <Handle type="source" position={Position.Bottom} />
     </div>
   );
+}
+
+/** Format the params badge text: "x/y params" when total is known, "x params (passed)" otherwise */
+function formatParamsBadge(d: FileNodeData): string {
+  const passed = d.parameterNames?.length ?? 0;
+  if (d.totalParameterCount != null) {
+    return `${passed}/${d.totalParameterCount} params`;
+  }
+  return `${passed} params (passed)`;
+}
+
+/** Build a detailed tooltip for the params badge */
+function buildParamsTooltip(d: FileNodeData): string {
+  const lines: string[] = [];
+  if (d.parameterNames?.length) {
+    lines.push(`Passed (${d.parameterNames.length}): ${d.parameterNames.join(', ')}`);
+  }
+  if (d.declaredParameterNames?.length) {
+    const notPassed = d.declaredParameterNames.filter(
+      (n) => !d.parameterNames?.includes(n),
+    );
+    if (notPassed.length > 0) {
+      lines.push(`Not passed (${notPassed.length}): ${notPassed.join(', ')}`);
+    }
+  } else if (d.totalParameterCount == null) {
+    lines.push('Expand to see total declared parameters');
+  }
+  return lines.join('\n');
 }
 
 /** Azure DevOps logo as inline SVG (official icon path, 18×18 viewBox) */

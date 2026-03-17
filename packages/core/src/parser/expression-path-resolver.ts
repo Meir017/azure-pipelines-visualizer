@@ -146,3 +146,19 @@ export function extractParameterDefaults(
   }
   return defaults;
 }
+
+/**
+ * Extract declared parameter names from a parsed YAML file's `parameters:` section.
+ */
+export function extractDeclaredParameterNames(
+  parsed: Record<string, unknown>,
+): string[] {
+  const params = parsed.parameters;
+  if (!Array.isArray(params)) return [];
+
+  return params
+    .filter((p): p is { name: string } =>
+      p != null && typeof p === 'object' && 'name' in p && typeof p.name === 'string',
+    )
+    .map((p) => p.name);
+}

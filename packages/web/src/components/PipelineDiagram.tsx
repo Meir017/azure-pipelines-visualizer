@@ -21,6 +21,7 @@ import {
   buildAdoFileUrl,
   resolveExpressionPath,
   extractParameterDefaults,
+  extractDeclaredParameterNames,
   pathHasExpressions,
   type TemplateReference,
   type ResourceRepository,
@@ -191,6 +192,8 @@ export default function PipelineDiagram() {
             sourcePath: d.filePath,
           });
 
+          const declaredParamNames = extractDeclaredParameterNames(parsed);
+
           if (nestedRefs.length === 0) {
             // Leaf node — mark as expanded with no children
             setNodes((nds) =>
@@ -202,6 +205,8 @@ export default function PipelineDiagram() {
                         ...n.data,
                         status: 'expanded',
                         templateCount: 0,
+                        totalParameterCount: declaredParamNames.length || undefined,
+                        declaredParameterNames: declaredParamNames.length ? declaredParamNames : undefined,
                       },
                     }
                   : n,
@@ -234,6 +239,8 @@ export default function PipelineDiagram() {
                         ...n.data,
                         status: 'expanded',
                         templateCount: nestedRefs.length,
+                        totalParameterCount: declaredParamNames.length || undefined,
+                        declaredParameterNames: declaredParamNames.length ? declaredParamNames : undefined,
                       },
                     }
                   : n,
@@ -327,6 +334,7 @@ export default function PipelineDiagram() {
         const fileDefaults = extractParameterDefaults(parsed);
         const callerParams = parentRef?.parameters as Record<string, unknown> | undefined;
         const paramContext = { ...fileDefaults, ...callerParams };
+        const declaredParamNames = extractDeclaredParameterNames(parsed);
 
         // Determine the baseDir for this expanded template
         const expandedFileDir = dirOf(d.filePath);
@@ -353,6 +361,8 @@ export default function PipelineDiagram() {
                     ...n.data,
                     status: 'expanded',
                     templateCount: nestedRefs.length,
+                    totalParameterCount: declaredParamNames.length || undefined,
+                    declaredParameterNames: declaredParamNames.length ? declaredParamNames : undefined,
                   },
                 }
               : n,

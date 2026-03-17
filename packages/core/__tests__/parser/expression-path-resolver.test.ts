@@ -3,6 +3,7 @@ import {
   resolveExpressionPath,
   pathHasExpressions,
   extractParameterDefaults,
+  extractDeclaredParameterNames,
 } from '../../src/parser/expression-path-resolver.js';
 
 describe('pathHasExpressions', () => {
@@ -166,5 +167,27 @@ describe('extractParameterDefaults', () => {
     // This is a plain object, not an array — we only handle array style
     const parsed = { parameters: { buildType: 'standard' } };
     expect(extractParameterDefaults(parsed as any)).toEqual({});
+  });
+});
+
+describe('extractDeclaredParameterNames', () => {
+  test('extracts all declared names', () => {
+    const parsed = {
+      parameters: [
+        { name: 'buildType', type: 'string', default: 'standard' },
+        { name: 'target', type: 'string' },
+        { name: 'enableTests', type: 'boolean', default: true },
+      ],
+    };
+    expect(extractDeclaredParameterNames(parsed)).toEqual([
+      'buildType',
+      'target',
+      'enableTests',
+    ]);
+  });
+
+  test('returns empty for no parameters', () => {
+    expect(extractDeclaredParameterNames({})).toEqual([]);
+    expect(extractDeclaredParameterNames({ parameters: 'not-array' } as any)).toEqual([]);
   });
 });
