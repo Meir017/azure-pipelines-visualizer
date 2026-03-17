@@ -86,6 +86,16 @@ export async function listRepositories(
   return data.value;
 }
 
+export async function getRepository(
+  org: string,
+  project: string,
+  repoName: string,
+): Promise<RepositoryInfo> {
+  const url = `${baseUrl(org, project)}/git/repositories/${encodeURIComponent(repoName)}?api-version=${API_VERSION}`;
+  const resp = await adoFetch(url);
+  return resp.json();
+}
+
 export async function getFileContent(
   org: string,
   project: string,

@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { listRepositories, getFileContent } from '../services/azure-devops.js';
+import { listRepositories, getRepository, getFileContent } from '../services/azure-devops.js';
 
 const files = new Hono();
 
@@ -36,9 +36,8 @@ files.get('/:org/:project/file-by-repo-name', async (c) => {
     return c.json({ error: 'repo and path query parameters are required' }, 400);
   }
 
-  // Resolve repo name to ID
-  const repos = await listRepositories(org, project);
-  const repo = repos.find((r) => r.name === repoName);
+  // Look up the single repo by name (much faster than listing all repos)
+  const repo = await getRepository(org, project, repoName);
   if (!repo) {
     return c.json({ error: `Repository not found: ${repoName}` }, 404);
   }
