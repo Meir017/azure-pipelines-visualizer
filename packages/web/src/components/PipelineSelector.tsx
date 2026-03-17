@@ -25,6 +25,8 @@ export default function PipelineSelector() {
   const [projectInput, setProjectInput] = useState(project);
   const [mode, setMode] = useState<'url' | 'browse'>('url');
 
+  const [urlLoading, setUrlLoading] = useState(false);
+
   const handleLoadFromUrl = async () => {
     if (!urlInput.trim()) return;
     setUrlError(null);
@@ -38,6 +40,7 @@ export default function PipelineSelector() {
     setConnection(parsed.org, parsed.project);
     setSelectedPipelineLoading(true);
     setSelectedPipelineError(null);
+    setUrlLoading(true);
     try {
       const resp = await fetchFileByRepoName(
         parsed.org,
@@ -64,10 +67,11 @@ export default function PipelineSelector() {
       setSelectedPipelineError(err instanceof Error ? err.message : String(err));
     } finally {
       setSelectedPipelineLoading(false);
+      setUrlLoading(false);
     }
   };
 
-  const handleLoadPipelines = async () => {
+  const handleLoadPipelines= async () => {
     if (!orgInput || !projectInput) return;
     setConnection(orgInput, projectInput);
     setPipelinesLoading(true);
@@ -121,8 +125,8 @@ export default function PipelineSelector() {
             onChange={(e) => setUrlInput(e.target.value)}
             rows={3}
           />
-          <button onClick={handleLoadFromUrl} disabled={!urlInput.trim()}>
-            Load Pipeline
+          <button onClick={handleLoadFromUrl} disabled={!urlInput.trim() || urlLoading}>
+            {urlLoading ? '⏳ Loading...' : 'Load Pipeline'}
           </button>
           {urlError && <div className="error">{urlError}</div>}
         </div>

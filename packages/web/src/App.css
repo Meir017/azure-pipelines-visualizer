@@ -334,6 +334,25 @@ body {
   font-size: 16px;
 }
 
+/* Loading indicator */
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 16px;
+  color: var(--text-muted);
+}
+
+.loading-indicator__spinner {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 /* ---- Diagram File Nodes ---- */
 .file-node {
   background: var(--surface);
@@ -372,6 +391,22 @@ body {
 
 .file-node--error {
   border-color: var(--error);
+}
+
+.file-node--cross-repo {
+  border-style: dashed;
+}
+
+.file-node--cross-repo.file-node--collapsed {
+  border-color: var(--badge-resources);
+}
+.file-node--cross-repo.file-node--collapsed:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--badge-resources) 30%, transparent);
+}
+.file-node--cross-repo.file-node--expanded {
+  border-color: var(--badge-resources);
+  border-style: solid;
 }
 
 .file-node__header {
@@ -434,6 +469,11 @@ body {
 }
 .react-flow__edge-text {
   font-size: 11px;
+  font-weight: 600;
+}
+.react-flow__edge-textbg {
+  rx: 4;
+  ry: 4;
 }
 .react-flow__minimap {
   background: var(--bg);
@@ -460,6 +500,32 @@ body {
   padding: 12px 16px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+}
+
+.detail-panel__header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.detail-panel__close {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 6px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.detail-panel__close:hover {
+  background: var(--error);
+  border-color: var(--error);
+  color: var(--bg);
 }
 
 .detail-panel__title {

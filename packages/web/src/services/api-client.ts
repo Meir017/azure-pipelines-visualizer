@@ -23,12 +23,6 @@ export interface PipelineYamlResponse {
   yaml: string;
 }
 
-export interface RepositoryInfo {
-  id: string;
-  name: string;
-  defaultBranch: string;
-}
-
 export interface FileContentResponse {
   content: string;
   path: string;
@@ -55,22 +49,6 @@ export function fetchPipelineYaml(
   pipelineId: number,
 ): Promise<PipelineYamlResponse> {
   return apiFetch(`/${org}/${project}/pipelines/${pipelineId}/yaml`);
-}
-
-export function fetchRepositories(org: string, project: string): Promise<RepositoryInfo[]> {
-  return apiFetch(`/${org}/${project}/repos`);
-}
-
-export function fetchFileContent(
-  org: string,
-  project: string,
-  repoId: string,
-  path: string,
-  branch?: string,
-): Promise<FileContentResponse> {
-  const params = new URLSearchParams({ path });
-  if (branch) params.set('branch', branch);
-  return apiFetch(`/${org}/${project}/repos/${repoId}/file?${params}`);
 }
 
 export interface FileByRepoNameResponse extends FileContentResponse {

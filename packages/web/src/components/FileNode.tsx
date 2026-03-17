@@ -28,13 +28,15 @@ function FileNode({ data }: NodeProps) {
             ? 'file-node--error'
             : 'file-node--collapsed';
 
+  const crossRepoClass = d.repoAlias ? 'file-node--cross-repo' : '';
+
   return (
-    <div className={`file-node ${statusClass}`}>
+    <div className={`file-node ${statusClass} ${crossRepoClass}`}>
       {!d.isRoot && <Handle type="target" position={Position.Top} />}
 
       <div className="file-node__header">
         <span className="file-node__icon">
-          {d.isRoot ? '📄' : d.status === 'expanded' ? '📋' : '📁'}
+          {d.isRoot ? '📄' : d.status === 'expanded' ? '📋' : d.repoAlias ? '🔗' : '📁'}
         </span>
         <span className="file-node__label" title={d.filePath}>
           {d.label}
@@ -49,7 +51,7 @@ function FileNode({ data }: NodeProps) {
         {d.status === 'loading' && <span className="file-node__spinner">⏳ Loading...</span>}
         {d.status === 'error' && (
           <span className="file-node__error" title={d.errorMessage}>
-            ❌ {d.errorMessage?.slice(0, 50)}
+            ❌ {d.errorMessage?.slice(0, 80)}
           </span>
         )}
         {d.status === 'collapsed' && (

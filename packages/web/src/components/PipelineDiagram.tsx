@@ -265,7 +265,14 @@ export default function PipelineDiagram() {
   );
 
   if (selectedPipelineLoading) {
-    return <div className="pipeline-tree__empty">⏳ Loading pipeline...</div>;
+    return (
+      <div className="pipeline-tree__empty">
+        <div className="loading-indicator">
+          <span className="loading-indicator__spinner">⏳</span>
+          <span>Loading pipeline...</span>
+        </div>
+      </div>
+    );
   }
 
   if (selectedPipelineError) {
@@ -358,14 +365,22 @@ function buildTemplateNodesAndEdges(
           ? 'extends param'
           : ref.location;
 
+    const isExternalEdge = !!getEffectiveRepoAlias(ref);
+
     templateEdges.push({
       id: `${parentId}->${nodeId}`,
       source: parentId,
       target: nodeId,
       label: edgeLabel,
-      labelStyle: { fill: 'var(--text-muted)', fontSize: 11 },
-      labelBgStyle: { fill: 'var(--surface)', fillOpacity: 0.9 },
-      labelBgPadding: [4, 2] as [number, number],
+      labelStyle: { fill: 'var(--text)', fontSize: 11, fontWeight: 600 },
+      labelBgStyle: { fill: 'var(--surface)', fillOpacity: 0.95 },
+      labelBgPadding: [6, 3] as [number, number],
+      style: isExternalEdge
+        ? { stroke: 'var(--badge-resources)', strokeWidth: 2, strokeDasharray: '6 3' }
+        : undefined,
+      markerEnd: isExternalEdge
+        ? { type: MarkerType.ArrowClosed, color: 'var(--badge-resources)' }
+        : undefined,
     });
   }
 

@@ -9,7 +9,7 @@ import {
 import { usePipelineStore } from '../store/pipeline-store.js';
 
 export default function DetailPanel() {
-  const { selectedNodeDetail, customTaskDocs } = usePipelineStore();
+  const { selectedNodeDetail, customTaskDocs, setSelectedNodeDetail } = usePipelineStore();
 
   const taskRefs = useMemo(() => {
     if (!selectedNodeDetail?.yaml) return [];
@@ -24,7 +24,7 @@ export default function DetailPanel() {
   if (!selectedNodeDetail) {
     return (
       <div className="detail-panel detail-panel--empty">
-        <p>Click an expanded node to view its contents</p>
+        <p>Click a node to view its contents</p>
       </div>
     );
   }
@@ -32,9 +32,19 @@ export default function DetailPanel() {
   return (
     <div className="detail-panel">
       <div className="detail-panel__header">
-        <h3 className="detail-panel__title">
-          {selectedNodeDetail.label}
-        </h3>
+        <div className="detail-panel__header-row">
+          <h3 className="detail-panel__title">
+            {selectedNodeDetail.label}
+          </h3>
+          <button
+            className="detail-panel__close"
+            onClick={() => setSelectedNodeDetail(null)}
+            aria-label="Close detail panel"
+            title="Close"
+          >
+            ✕
+          </button>
+        </div>
         <div className="detail-panel__path">
           {selectedNodeDetail.filePath}
           {selectedNodeDetail.repoAlias && (
