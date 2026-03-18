@@ -3,6 +3,7 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { pipelines } from './routes/pipelines.js';
 import { files } from './routes/files.js';
+import { schema } from './routes/schema.js';
 import { getConfig } from './config.js';
 
 // Load config on startup
@@ -24,6 +25,7 @@ app.get('/api/config/task-docs', (c) => {
 // Mount API routes
 app.route('/api', pipelines);
 app.route('/api', files);
+app.route('/api', schema);
 
 // Global error handler
 app.onError((err, c) => {

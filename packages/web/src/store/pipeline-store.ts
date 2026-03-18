@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { PipelineInfo, PipelineYamlResponse } from '../services/api-client.js';
+import type { PipelineInfo, PipelineYamlResponse, TaskSchemaEntry } from '../services/api-client.js';
 
 export interface SelectedNodeDetail {
   nodeId: string;
@@ -46,6 +46,10 @@ export interface PipelineStore {
   // Custom task docs from server config
   customTaskDocs: Record<string, string>;
   setCustomTaskDocs: (docs: Record<string, string>) => void;
+
+  // Task schema: name@version → description & inputs
+  taskSchema: Map<string, TaskSchemaEntry>;
+  setTaskSchema: (entries: TaskSchemaEntry[]) => void;
 }
 
 export const usePipelineStore = create<PipelineStore>((set) => ({
@@ -94,6 +98,17 @@ export const usePipelineStore = create<PipelineStore>((set) => ({
 
   customTaskDocs: {},
   setCustomTaskDocs: (customTaskDocs) => set({ customTaskDocs }),
+
+  taskSchema: new Map(),
+  setTaskSchema: (entries) =>
+    set(() => {
+      const map = new Map<string, TaskSchemaEntry>();
+      for (const entry of entries) {
+        // Index by name@version for exact lookups
+        map.set(`${entry.name}@${entry.version}`, entry);
+      }
+      return { taskSchema: map };
+    }),
 }));
 
 const CACHE_KEY = 'apv-template-cache';

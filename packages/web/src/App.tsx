@@ -4,7 +4,7 @@ import PipelineDiagram from './components/PipelineDiagram.js';
 import DetailPanel from './components/DetailPanel.js';
 import ErrorBoundary from './components/ErrorBoundary.js';
 import { usePipelineStore } from './store/pipeline-store.js';
-import { fetchTaskDocsConfig } from './services/api-client.js';
+import { fetchTaskDocsConfig, fetchTaskSchema } from './services/api-client.js';
 import './App.css';
 
 const DETAIL_MIN_WIDTH = 280;
@@ -12,7 +12,7 @@ const DETAIL_MAX_WIDTH = 900;
 const DETAIL_DEFAULT_WIDTH = 420;
 
 export default function App() {
-  const { setCustomTaskDocs, selectedNodeDetail } = usePipelineStore();
+  const { setCustomTaskDocs, setTaskSchema, selectedNodeDetail, org } = usePipelineStore();
   const [detailWidth, setDetailWidth] = useState(DETAIL_DEFAULT_WIDTH);
   const dragging = useRef(false);
 
@@ -22,6 +22,14 @@ export default function App() {
       .then((cfg) => setCustomTaskDocs(cfg.customTaskDocs))
       .catch(() => {});
   }, [setCustomTaskDocs]);
+
+  // Fetch task schema when org becomes available
+  useEffect(() => {
+    if (!org) return;
+    fetchTaskSchema(org)
+      .then((resp) => setTaskSchema(resp.tasks))
+      .catch(() => {});
+  }, [org, setTaskSchema]);
 
   const onResizeStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();

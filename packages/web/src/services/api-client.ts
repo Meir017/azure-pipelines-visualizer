@@ -74,3 +74,19 @@ export interface TaskDocsConfig {
 export function fetchTaskDocsConfig(): Promise<TaskDocsConfig> {
   return apiFetch('/config/task-docs');
 }
+
+export interface TaskSchemaEntry {
+  name: string;
+  description: string;
+  version: number;
+  inputs: { name: string; description: string; required: boolean }[];
+}
+
+export interface TaskSchemaResponse {
+  tasks: TaskSchemaEntry[];
+  cached: boolean;
+}
+
+export function fetchTaskSchema(org: string): Promise<TaskSchemaResponse> {
+  return apiFetch(`/${org}/schema/tasks`);
+}

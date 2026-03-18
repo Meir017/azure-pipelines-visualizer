@@ -9,3 +9,4 @@ apv.config.json
 .playwright-mcp/
 *.png
 *.jpeg
+.cache/

@@ -7,9 +7,10 @@ import {
   type TaskReference,
 } from '@apv/core';
 import { usePipelineStore } from '../store/pipeline-store.js';
+import type { TaskSchemaEntry } from '../services/api-client.js';
 
 export default function DetailPanel() {
-  const { selectedNodeDetail, customTaskDocs, setSelectedNodeDetail } = usePipelineStore();
+  const { selectedNodeDetail, customTaskDocs, taskSchema, setSelectedNodeDetail } = usePipelineStore();
 
   const taskRefs = useMemo(() => {
     if (!selectedNodeDetail?.yaml) return [];
@@ -60,7 +61,12 @@ export default function DetailPanel() {
           </h4>
           <ul className="task-list">
             {taskRefs.map((ref) => (
-              <TaskItem key={ref.raw} ref_={ref} customDocs={customTaskDocs} />
+              <TaskItem
+                key={ref.raw}
+                ref_={ref}
+                customDocs={customTaskDocs}
+                schemaEntry={taskSchema.get(ref.raw) ?? taskSchema.get(`${ref.name}@${ref.version}`)}
+              />
             ))}
           </ul>
         </div>
@@ -91,33 +97,40 @@ export default function DetailPanel() {
 function TaskItem({
   ref_,
   customDocs,
+  schemaEntry,
 }: {
   ref_: TaskReference;
   customDocs: Record<string, string>;
+  schemaEntry?: TaskSchemaEntry;
 }) {
   const url = resolveTaskDocUrl(ref_, customDocs);
 
   return (
     <li className="task-item">
       <span className="task-item__icon">⚙️</span>
-      {url ? (
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="task-item__link"
-          title={`Open docs for ${ref_.name}`}
-        >
-          {ref_.name}
-          <span className="task-item__version">@{ref_.version}</span>
-          <span className="task-item__external">↗</span>
-        </a>
-      ) : (
-        <span className="task-item__name">
-          {ref_.name}
-          <span className="task-item__version">@{ref_.version}</span>
-        </span>
-      )}
+      <div className="task-item__content">
+        {url ? (
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="task-item__link"
+            title={schemaEntry?.description || `Open docs for ${ref_.name}`}
+          >
+            {ref_.name}
+            <span className="task-item__version">@{ref_.version}</span>
+            <span className="task-item__external">↗</span>
+          </a>
+        ) : (
+          <span className="task-item__name">
+            {ref_.name}
+            <span className="task-item__version">@{ref_.version}</span>
+          </span>
+        )}
+        {schemaEntry?.description && (
+          <div className="task-item__description">{schemaEntry.description}</div>
+        )}
+      </div>
     </li>
   );
 }
