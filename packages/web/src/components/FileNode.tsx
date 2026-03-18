@@ -53,7 +53,6 @@ export interface FileNodeData {
 function FileNode({ data }: NodeProps) {
   const d = data as unknown as FileNodeData;
   const [showRepoTooltip, setShowRepoTooltip] = useState(false);
-  const [showParamsTooltip, setShowParamsTooltip] = useState(false);
 
   const statusClass =
     d.status === 'root'
@@ -143,7 +142,7 @@ function FileNode({ data }: NodeProps) {
 
       <div className="file-node__meta">
         {/* Badges row */}
-        {(d.conditional || d.parameterNames?.length || d.dynamicPath) && (
+        {(d.conditional || d.dynamicPath) && (
           <div className="file-node__badges">
             {d.conditional && (
               <span className="file-node__badge file-node__badge--conditional" title="Inside conditional block">
@@ -164,16 +163,6 @@ function FileNode({ data }: NodeProps) {
                 title={`Unresolved expressions: ${d.unresolvedExpressions?.join(', ') ?? 'unknown'}\nOriginal path: ${d.originalPath}`}
               >
                 dynamic
-              </span>
-            )}
-            {d.parameterNames && d.parameterNames.length > 0 && (
-              <span
-                className="file-node__badge file-node__badge--params"
-                onMouseEnter={() => setShowParamsTooltip(true)}
-                onMouseLeave={() => setShowParamsTooltip(false)}
-              >
-                {formatParamsBadge(d)}
-                {showParamsTooltip && <ParamsTooltip data={d} />}
               </span>
             )}
           </div>
@@ -197,54 +186,6 @@ function FileNode({ data }: NodeProps) {
       </div>
 
       <Handle type="source" position={Position.Bottom} />
-    </div>
-  );
-}
-
-/** Format the params badge text: "x/y params" when total is known, "x params (passed)" otherwise */
-function formatParamsBadge(d: FileNodeData): string {
-  const passed = d.parameterNames?.length ?? 0;
-  if (d.totalParameterCount != null) {
-    return `${passed}/${d.totalParameterCount} params`;
-  }
-  return `${passed} params (passed)`;
-}
-
-/** Styled tooltip popup for the params badge */
-function ParamsTooltip({ data: d }: { data: FileNodeData }) {
-  const notPassed = d.declaredParameterNames?.filter(
-    (n) => !d.parameterNames?.includes(n),
-  );
-
-  return (
-    <div className="file-node__params-tooltip">
-      {d.parameterNames && d.parameterNames.length > 0 && (
-        <div className="file-node__params-section">
-          <div className="file-node__params-heading">
-            ✓ Passed ({d.parameterNames.length})
-          </div>
-          <ul className="file-node__params-list">
-            {d.parameterNames.map((n) => (
-              <li key={n} className="file-node__params-item file-node__params-item--passed">{n}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {notPassed && notPassed.length > 0 && (
-        <div className="file-node__params-section">
-          <div className="file-node__params-heading">
-            ○ Not passed ({notPassed.length})
-          </div>
-          <ul className="file-node__params-list">
-            {notPassed.map((n) => (
-              <li key={n} className="file-node__params-item file-node__params-item--missing">{n}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {d.totalParameterCount == null && !d.declaredParameterNames?.length && (
-        <div className="file-node__params-hint">Expand node to see all declared params</div>
-      )}
     </div>
   );
 }

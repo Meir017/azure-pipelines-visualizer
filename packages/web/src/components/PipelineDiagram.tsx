@@ -5,6 +5,7 @@ import {
   Controls,
   type Node,
   type Edge,
+  type ReactFlowInstance,
   type NodeMouseHandler,
   BackgroundVariant,
   MarkerType,
@@ -19,6 +20,7 @@ import {
   resolveTemplateSource,
   getEffectiveRepoAlias,
   buildAdoFileUrl,
+  resolveTemplateRefPath,
   resolveExpressionPath,
   extractParameterDefaults,
   extractDeclaredParameterNames,
@@ -32,8 +34,10 @@ import { usePipelineStore } from '../store/pipeline-store.js';
 import { fetchFileByRepoName } from '../services/api-client.js';
 import { getLayoutedElements } from './diagram-layout.js';
 import FileNode, { type FileNodeData, type RepoInfo } from './FileNode.js';
+import TemplateEdge, { type TemplateEdgeData } from './TemplateEdge.js';
 
 const nodeTypes = { fileNode: FileNode };
+const edgeTypes = { templateEdge: TemplateEdge };
 
 const defaultEdgeOptions = {
   animated: true,
@@ -55,6 +59,9 @@ export default function PipelineDiagram() {
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const reactFlowRef = useRef<ReactFlowInstance<Node, Edge> | null>(null);
+  const autoFitRequestRef = useRef<number | null>(null);
+  const lastAutoFitSignature = useRef('');
 
   // Keep a ref to current edges so expansion callbacks always read the latest
   const edgesRef = useRef<Edge[]>([]);
@@ -129,7 +136,6 @@ export default function PipelineDiagram() {
     const { templateNodes, templateEdges } = buildTemplateNodesAndEdges(
       'root',
       refs,
-      rootBaseDir,
       org,
       project,
       defaultRepoName,
@@ -154,6 +160,33 @@ export default function PipelineDiagram() {
   // - When autoExpandAll: fully expand non-leaf nodes too (add child nodes/edges).
   // Uses a sequential queue to avoid race conditions from concurrent setNodes calls.
   const autoExpandRunning = useRef(false);
+
+  useEffect(() => {
+    if (!autoExpandAll || !reactFlowRef.current || nodes.length === 0) return;
+
+    const signature = `${nodes.length}:${edges.length}`;
+    if (signature === lastAutoFitSignature.current) return;
+    lastAutoFitSignature.current = signature;
+
+    if (autoFitRequestRef.current != null) {
+      cancelAnimationFrame(autoFitRequestRef.current);
+    }
+
+    autoFitRequestRef.current = requestAnimationFrame(() => {
+      reactFlowRef.current?.fitView({
+        padding: 0.2,
+        duration: 300,
+      });
+      autoFitRequestRef.current = null;
+    });
+
+    return () => {
+      if (autoFitRequestRef.current != null) {
+        cancelAnimationFrame(autoFitRequestRef.current);
+        autoFitRequestRef.current = null;
+      }
+    };
+  }, [autoExpandAll, nodes.length, edges.length]);
 
   useEffect(() => {
     if (autoExpandRunning.current) return;
@@ -226,7 +259,6 @@ export default function PipelineDiagram() {
             const rawCallerParams = parentRef?.parameters as Record<string, unknown> | undefined;
             const callerParams = resolveCallerParams(rawCallerParams, parentParamContext);
             const paramContext = { ...fileDefaults, ...callerParams };
-            const expandedFileDir = dirOf(d.filePath);
 
             // Merge accumulated resources: parent's resources + this template's own resources
             const parentResources = (d as unknown as Record<string, unknown>)._accumulatedResources as ResourceRepository[] | undefined;
@@ -236,21 +268,27 @@ export default function PipelineDiagram() {
               ...templateResources,
             ]);
 
+            // Wait for a microtask to let React process any pending state updates
+            await new Promise((r) => setTimeout(r, 0));
+
+            // Compute existing node IDs from current nodes for dedup
+            const existingIds = new Set(nodes.map((n) => n.id));
             const { templateNodes, templateEdges } = buildTemplateNodesAndEdges(
               node.id,
               nestedRefs,
-              expandedFileDir,
               org,
               project,
               defaultRepoName,
               mergedResources,
               paramContext,
+              existingIds,
             );
 
-            // Wait for a microtask to let React process any pending state updates
-            await new Promise((r) => setTimeout(r, 0));
-
             setNodes((currentNodes) => {
+              // Re-check against current state (may have changed)
+              const currentIds = new Set(currentNodes.map((n) => n.id));
+              const newNodes = templateNodes.filter((n) => !currentIds.has(n.id));
+
               const updated = currentNodes.map((n) =>
                 n.id === node.id
                   ? {
@@ -265,12 +303,22 @@ export default function PipelineDiagram() {
                     }
                   : n,
               );
-              const allNodes = [...updated, ...templateNodes];
-              const allEdges = [...edgesRef.current, ...templateEdges];
+              const allNodes = [...updated, ...newNodes];
+
+              // Propagate declared param info to edges targeting this node
+              const updatedEdges = declaredParamNames.length
+                ? updateEdgesWithDeclaredParams(edgesRef.current, node.id, declaredParamNames)
+                : edgesRef.current;
+              const allEdges = [...updatedEdges, ...templateEdges];
               return getLayoutedElements(allNodes, allEdges).nodes;
             });
 
-            setEdges((currentEdges) => [...currentEdges, ...templateEdges]);
+            setEdges((currentEdges) => {
+              const updated = declaredParamNames.length
+                ? updateEdgesWithDeclaredParams(currentEdges, node.id, declaredParamNames)
+                : currentEdges;
+              return [...updated, ...templateEdges];
+            });
 
             // Let React flush the state update before processing next node
             await new Promise((r) => setTimeout(r, 50));
@@ -380,19 +428,23 @@ export default function PipelineDiagram() {
         ]);
 
         // Update this node to expanded and add child nodes
+        const existingIds = new Set(nodes.map((n) => n.id));
         const { templateNodes, templateEdges } = buildTemplateNodesAndEdges(
           node.id,
           nestedRefs,
-          expandedFileDir,
           org,
           project,
           defaultRepoName,
           mergedResources,
           paramContext,
+          existingIds,
         );
 
         // Atomic update: add new nodes with layout, then add new edges
         setNodes((currentNodes) => {
+          const currentIds = new Set(currentNodes.map((n) => n.id));
+          const newNodes = templateNodes.filter((n) => !currentIds.has(n.id));
+
           const updated = currentNodes.map((n) =>
             n.id === node.id
               ? {
@@ -407,12 +459,22 @@ export default function PipelineDiagram() {
                 }
               : n,
           );
-          const allNodes = [...updated, ...templateNodes];
-          const allEdges = [...edgesRef.current, ...templateEdges];
+          const allNodes = [...updated, ...newNodes];
+
+          // Propagate declared param info to edges targeting this node
+          const updatedEdges = declaredParamNames.length
+            ? updateEdgesWithDeclaredParams(edgesRef.current, node.id, declaredParamNames)
+            : edgesRef.current;
+          const allEdges = [...updatedEdges, ...templateEdges];
           return getLayoutedElements(allNodes, allEdges).nodes;
         });
 
-        setEdges((currentEdges) => [...currentEdges, ...templateEdges]);
+        setEdges((currentEdges) => {
+          const updated = declaredParamNames.length
+            ? updateEdgesWithDeclaredParams(currentEdges, node.id, declaredParamNames)
+            : currentEdges;
+          return [...updated, ...templateEdges];
+        });
 
         // Show the expanded content in the detail panel
         setSelectedNodeDetail({
@@ -462,6 +524,7 @@ export default function PipelineDiagram() {
       if (!prev) {
         // Turning ON: reset attempted set so existing collapsed nodes get expanded
         autoExpandAttempted.current = new Set();
+        lastAutoFitSignature.current = '';
       }
       return !prev;
     });
@@ -493,10 +556,14 @@ export default function PipelineDiagram() {
       <ReactFlow
         nodes={nodes}
         edges={edges}
+        onInit={(instance) => {
+          reactFlowRef.current = instance;
+        }}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
         fitView
         fitViewOptions={{ padding: 0.2 }}
@@ -522,6 +589,30 @@ export default function PipelineDiagram() {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * When a template node is expanded and we discover its declared parameter names,
+ * propagate that info to all edges pointing at the node so the edge tooltip
+ * can show "passed vs. not passed" breakdown.
+ */
+function updateEdgesWithDeclaredParams(
+  edges: Edge[],
+  targetNodeId: string,
+  declaredParamNames: string[],
+): Edge[] {
+  return edges.map((e) => {
+    if (e.target !== targetNodeId) return e;
+    const d = (e.data as TemplateEdgeData | undefined) ?? {} as TemplateEdgeData;
+    return {
+      ...e,
+      data: {
+        ...d,
+        totalParameterCount: declaredParamNames.length,
+        declaredParameterNames: declaredParamNames,
+      },
+    };
+  });
+}
 
 /**
  * Resolve `${{ parameters.X }}` expression strings in a callerParams object.
@@ -602,29 +693,36 @@ function deduplicateResources(resources: ResourceRepository[]): ResourceReposito
   return Array.from(map.values());
 }
 
+/**
+ * Generate a canonical node ID for a template based on its resolved identity.
+ * Two references pointing to the same file (and repo) produce the same ID,
+ * enabling node de-duplication across the entire graph.
+ */
+function canonicalNodeId(resolvedRepoAlias: string | undefined, resolvedPath: string): string {
+  const repo = resolvedRepoAlias || 'self';
+  return `tpl::${repo}::${resolvedPath}`;
+}
+
 /** Build node + edge arrays from a set of template references attached to a parent. */
 function buildTemplateNodesAndEdges(
   parentId: string,
   refs: TemplateReference[],
-  parentBaseDir: string,
   org: string,
   project: string,
   defaultRepoName: string,
   repositories: ResourceRepository[],
   /** Parameter context of the file containing these refs (merged caller + file defaults) */
   parameterContext?: Record<string, unknown>,
+  /** IDs of nodes that already exist in the graph — used for cross-parent dedup */
+  existingNodeIds?: Set<string>,
 ): { templateNodes: Node[]; templateEdges: Edge[] } {
-  // De-duplicate by rawPath to avoid duplicate nodes for the same template
-  const seen = new Set<string>();
+  // De-duplicate within this batch (same resolved identity from the same parent)
+  const seenInBatch = new Set<string>();
   const templateNodes: Node[] = [];
   const templateEdges: Edge[] = [];
 
   for (let i = 0; i < refs.length; i++) {
     const ref = refs[i];
-    const nodeId = `${parentId}__${ref.normalizedPath}__${i}`;
-
-    if (seen.has(ref.rawPath)) continue;
-    seen.add(ref.rawPath);
 
     // Attempt to resolve expression paths (e.g. ${{parameters.buildType}})
     let pathForNode = ref.normalizedPath;
@@ -669,78 +767,88 @@ function buildTemplateNodesAndEdges(
     const isDynamic = pathDynamic || repoAliasDynamic;
     const isFullyResolved = pathResolved && repoAliasResolved;
 
-    // For same-repo templates, resolve the full path relative to parent directory
-    const resolvedPath = resolvedRepoAlias
-      ? pathForNode
-      : resolvePath(parentBaseDir, pathForNode);
-
-    const label =
-      pathForNode.length > 40
-        ? `...${pathForNode.slice(-37)}`
-        : pathForNode;
-
-    // Resolve repo info and ADO URL using the resolved repo alias
-    const { repoInfo, adoUrl } = resolveNodeMetadata(
-      ref,
-      resolvedRepoAlias,
-      resolvedPath,
-      org,
-      project,
-      defaultRepoName,
-      repositories,
-    );
-
-    // Resolve expression strings in ref.parameters (e.g. ${{ parameters.featureFlags }} → actual value)
-    const resolvedRefParams = resolveCallerParams(
-      ref.parameters as Record<string, unknown> | undefined,
-      parameterContext,
-    );
-
-    // Extract parameter names
-    const parameterNames = ref.parameters
-      ? Object.keys(ref.parameters)
-      : undefined;
-
-    // Create a modified ref with the resolved repo alias and parameters for fetching
-    const resolvedRef: TemplateReference = resolvedRepoAlias !== getEffectiveRepoAlias(ref) || resolvedRefParams !== ref.parameters
-      ? {
-          ...ref,
-          repoAlias: resolvedRepoAlias || ref.repoAlias,
-          contextRepoAlias: resolvedRepoAlias || ref.contextRepoAlias,
-          parameters: resolvedRefParams as TemplateReference['parameters'],
-        }
-      : ref;
-
-    templateNodes.push({
-      id: nodeId,
-      type: 'fileNode',
-      position: { x: 0, y: 0 },
-      data: {
-        label,
-        filePath: resolvedPath,
-        repoAlias: resolvedRepoAlias,
-        templateCount: 0,
-        status: 'collapsed',
-        isRoot: false,
-        baseDir: dirOf(resolvedPath),
-        adoUrl,
-        repoInfo,
-        templateLocation: ref.location,
-        conditional: ref.conditional || undefined,
-        parameterNames,
-        dynamicPath: isDynamic || undefined,
-        originalPath: originalPath || (repoAliasDynamic ? ref.rawPath : undefined),
-        expressionResolved: isDynamic ? isFullyResolved : undefined,
-        unresolvedExpressions,
-        // Stash the resolved ref for expansion (with resolved repo alias + params)
-        _ref: resolvedRef,
-        // Stash the parent's parameter context so it can flow down during expansion
-        _parentParamContext: parameterContext,
-        // Stash accumulated resources (root + all ancestor template resources)
-        _accumulatedResources: repositories,
-      },
+    // Resolve non-aliased nested refs relative to the template that declared them.
+    const resolvedPath = resolveTemplateRefPath({
+      ...ref,
+      normalizedPath: pathForNode,
+      repoAlias: ref.repoAlias,
+      sourcePath: ref.sourcePath,
     });
 
+    // Canonical ID based on resolved identity
+    const nodeId = canonicalNodeId(resolvedRepoAlias, resolvedPath);
+
+    // Skip if we already created this node in this batch
+    if (seenInBatch.has(nodeId)) continue;
+    seenInBatch.add(nodeId);
+
+    // Check if the node already exists in the graph (cross-parent dedup)
+    const nodeAlreadyExists = existingNodeIds?.has(nodeId);
+
+    if (!nodeAlreadyExists) {
+      const label =
+        pathForNode.length > 40
+          ? `...${pathForNode.slice(-37)}`
+          : pathForNode;
+
+      // Resolve repo info and ADO URL using the resolved repo alias
+      const { repoInfo, adoUrl } = resolveNodeMetadata(
+        ref,
+        resolvedRepoAlias,
+        resolvedPath,
+        org,
+        project,
+        defaultRepoName,
+        repositories,
+      );
+
+      // Resolve expression strings in ref.parameters (e.g. ${{ parameters.featureFlags }} → actual value)
+      const resolvedRefParams = resolveCallerParams(
+        ref.parameters as Record<string, unknown> | undefined,
+        parameterContext,
+      );
+
+      // Create a modified ref with the resolved repo alias and parameters for fetching
+      const resolvedRef: TemplateReference = resolvedRepoAlias !== getEffectiveRepoAlias(ref) || resolvedRefParams !== ref.parameters
+        ? {
+            ...ref,
+            repoAlias: resolvedRepoAlias || ref.repoAlias,
+            contextRepoAlias: resolvedRepoAlias || ref.contextRepoAlias,
+            parameters: resolvedRefParams as TemplateReference['parameters'],
+          }
+        : ref;
+
+      templateNodes.push({
+        id: nodeId,
+        type: 'fileNode',
+        position: { x: 0, y: 0 },
+        data: {
+          label,
+          filePath: resolvedPath,
+          repoAlias: resolvedRepoAlias,
+          templateCount: 0,
+          status: 'collapsed',
+          isRoot: false,
+          baseDir: dirOf(resolvedPath),
+          adoUrl,
+          repoInfo,
+          templateLocation: ref.location,
+          conditional: ref.conditional || undefined,
+          dynamicPath: isDynamic || undefined,
+          originalPath: originalPath || (repoAliasDynamic ? ref.rawPath : undefined),
+          expressionResolved: isDynamic ? isFullyResolved : undefined,
+          unresolvedExpressions,
+          // Stash the resolved ref for expansion (with resolved repo alias + params)
+          _ref: resolvedRef,
+          // Stash the parent's parameter context so it can flow down during expansion
+          _parentParamContext: parameterContext,
+          // Stash accumulated resources (root + all ancestor template resources)
+          _accumulatedResources: repositories,
+        },
+      });
+    }
+
+    // Always create the edge (even for deduplicated nodes)
     const edgeLabel =
       ref.location === 'extends'
         ? 'extends'
@@ -750,14 +858,21 @@ function buildTemplateNodesAndEdges(
 
     const isExternalEdge = !!resolvedRepoAlias;
 
+    // Extract parameter names for the edge
+    const parameterNames = ref.parameters
+      ? Object.keys(ref.parameters)
+      : undefined;
+
     templateEdges.push({
       id: `${parentId}->${nodeId}`,
       source: parentId,
       target: nodeId,
-      label: edgeLabel,
-      labelStyle: { fill: 'var(--text)', fontSize: 11, fontWeight: 600 },
-      labelBgStyle: { fill: 'var(--surface)', fillOpacity: 0.95 },
-      labelBgPadding: [6, 3] as [number, number],
+      type: 'templateEdge',
+      data: {
+        edgeLabel,
+        parameterNames,
+        isExternal: isExternalEdge || undefined,
+      } satisfies TemplateEdgeData,
       style: isExternalEdge
         ? { stroke: 'var(--badge-resources)', strokeWidth: 2, strokeDasharray: '6 3' }
         : undefined,
@@ -834,16 +949,6 @@ function dirOf(filePath: string): string {
   const normalized = filePath.replace(/\\/g, '/');
   const lastSlash = normalized.lastIndexOf('/');
   return lastSlash > 0 ? normalized.slice(0, lastSlash) : '';
-}
-
-/**
- * Resolve a relative template path against a base directory.
- * If the path starts with "/" it's absolute (repo root). Otherwise, join with baseDir.
- */
-function resolvePath(baseDir: string, templatePath: string): string {
-  if (templatePath.startsWith('/')) return templatePath;
-  if (!baseDir) return templatePath;
-  return `${baseDir}/${templatePath}`;
 }
 
 /** Resolve ADO URL and repo info for a template reference node. */
