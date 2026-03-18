@@ -355,13 +355,18 @@ export default function PipelineDiagram() {
         return;
       }
 
-      // Already expanded: just show its cached content
+      // Already expanded: show its cached content in the detail panel
       if (d.status === 'expanded') {
         const ref = (d as unknown as Record<string, unknown>)._ref as
           | TemplateReference
           | undefined;
-        const cacheKey = `${getEffectiveRepoAlias(ref ?? {}) || ''}:${d.filePath}`;
-        const cached = expandedTemplates.get(cacheKey);
+        const alias = getEffectiveRepoAlias(ref ?? {}) || '';
+        const cacheKey = `${alias}:${d.filePath}`;
+        const fallbackPath = (d as unknown as Record<string, unknown>)._fallbackPath as string | undefined;
+        const fallbackCacheKey = fallbackPath ? `${alias}:${fallbackPath}` : undefined;
+        const cached = expandedTemplates.get(cacheKey)
+          ?? (fallbackCacheKey ? expandedTemplates.get(fallbackCacheKey) : undefined);
+
         if (cached) {
           setSelectedNodeDetail({
             nodeId: node.id,
@@ -370,6 +375,29 @@ export default function PipelineDiagram() {
             yaml: cached,
             repoAlias: d.repoAlias,
           });
+          return;
+        }
+
+        // Cache miss — fetch content directly
+        try {
+          const { content } = await fetchTemplateContent(
+            org,
+            project,
+            defaultRepoName,
+            d,
+            rootResources,
+            expandedTemplates,
+            setExpandedTemplate,
+          );
+          setSelectedNodeDetail({
+            nodeId: node.id,
+            label: d.label,
+            filePath: d.filePath,
+            yaml: content,
+            repoAlias: d.repoAlias,
+          });
+        } catch {
+          // Silently fail — node is already expanded, just can't show detail
         }
         return;
       }
