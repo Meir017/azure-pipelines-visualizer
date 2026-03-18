@@ -3,10 +3,13 @@
  * to its Microsoft Learn documentation URL.
  *
  * Built-in tasks follow the pattern:
- *   https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/{kebab-name}-v{version}
+ *   https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/{slug}-v{version}
  *
- * Custom tasks can be resolved via a lookup map.
+ * Slugs are looked up from a mapping sourced from the MS Learn task reference page.
+ * Custom tasks can be resolved via a lookup map in apv.config.json.
  */
+
+import { TASK_DOC_SLUGS } from './task-doc-slugs.js';
 
 export interface TaskReference {
   /** Full string as written in YAML, e.g. "DotNetCoreCLI@2" */
@@ -51,9 +54,10 @@ const MS_LEARN_BASE =
  * Resolve a task reference to its documentation URL.
  *
  * Priority:
- * 1. Exact match in customTaskDocs (name or name@version)
- * 2. Built-in MS Learn URL (for tasks without dots in their name)
- * 3. null if no URL can be determined
+ * 1. Exact match in customTaskDocs (name@version or name)
+ * 2. Known slug from the MS Learn task reference mapping
+ * 3. Heuristic PascalCase → kebab-case (for tasks not yet in the mapping)
+ * 4. null for custom/3rd-party tasks (names containing dots)
  */
 export function resolveTaskDocUrl(
   ref: TaskReference,
@@ -70,6 +74,13 @@ export function resolveTaskDocUrl(
   // Tasks with dots (e.g. "OneBranch.Pipeline.Build") are custom/3rd-party — no MS Learn docs
   if (ref.name.includes('.')) return null;
 
+  // Look up the known slug from the MS Learn mapping
+  const knownSlug = TASK_DOC_SLUGS[ref.name];
+  if (knownSlug) {
+    return `${MS_LEARN_BASE}/${knownSlug}-v${ref.version}`;
+  }
+
+  // Fallback: heuristic PascalCase → kebab-case for unknown tasks
   const kebab = pascalToKebab(ref.name);
   return `${MS_LEARN_BASE}/${kebab}-v${ref.version}`;
 }

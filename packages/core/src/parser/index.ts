@@ -9,6 +9,7 @@ export {
   pascalToKebab,
   type TaskReference,
 } from './task-resolver.js';
+export { TASK_DOC_SLUGS } from './task-doc-slugs.js';
 export {
   substituteParameters,
   findExpressions,

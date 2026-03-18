@@ -52,11 +52,11 @@ describe('pascalToKebab', () => {
 });
 
 describe('resolveTaskDocUrl', () => {
-  test('built-in task gets MS Learn URL', () => {
+  test('built-in task gets MS Learn URL from known mapping', () => {
     const ref = parseTaskReference('DotNetCoreCLI@2');
     const url = resolveTaskDocUrl(ref);
     expect(url).toBe(
-      'https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/dot-net-core-cli-v2',
+      'https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/dotnet-core-cli-v2',
     );
   });
 
@@ -87,6 +87,56 @@ describe('resolveTaskDocUrl', () => {
       'Bash@3': 'https://custom.com/bash',
     });
     expect(url).toBe('https://custom.com/bash');
+  });
+
+  test('PowerShell uses correct slug from mapping (not pascal-to-kebab)', () => {
+    const ref = parseTaskReference('PowerShell@2');
+    const url = resolveTaskDocUrl(ref);
+    expect(url).toBe(
+      'https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/powershell-v2',
+    );
+    // Verify pascalToKebab would have produced the wrong slug
+    expect(pascalToKebab('PowerShell')).toBe('power-shell');
+  });
+
+  test('AzurePowerShell uses correct slug from mapping', () => {
+    const ref = parseTaskReference('AzurePowerShell@5');
+    const url = resolveTaskDocUrl(ref);
+    expect(url).toBe(
+      'https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/azure-powershell-v5',
+    );
+  });
+
+  test('CmdLine uses correct slug from mapping', () => {
+    const ref = parseTaskReference('CmdLine@2');
+    const url = resolveTaskDocUrl(ref);
+    expect(url).toBe(
+      'https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/cmd-line-v2',
+    );
+  });
+
+  test('MSBuild uses correct slug from mapping', () => {
+    const ref = parseTaskReference('MSBuild@1');
+    const url = resolveTaskDocUrl(ref);
+    expect(url).toBe(
+      'https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/msbuild-v1',
+    );
+  });
+
+  test('SSH uses correct slug from mapping', () => {
+    const ref = parseTaskReference('SSH@0');
+    const url = resolveTaskDocUrl(ref);
+    expect(url).toBe(
+      'https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/ssh-v0',
+    );
+  });
+
+  test('unknown task falls back to pascalToKebab heuristic', () => {
+    const ref = parseTaskReference('SomeNewTask@1');
+    const url = resolveTaskDocUrl(ref);
+    expect(url).toBe(
+      'https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/some-new-task-v1',
+    );
   });
 });
 
