@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import PipelineSelector from './components/PipelineSelector.js';
 import PipelineDiagram from './components/PipelineDiagram.js';
 import DetailPanel from './components/DetailPanel.js';
@@ -7,8 +7,14 @@ import { usePipelineStore } from './store/pipeline-store.js';
 import { fetchTaskDocsConfig } from './services/api-client.js';
 import './App.css';
 
+const DETAIL_MIN_WIDTH = 280;
+const DETAIL_MAX_WIDTH = 900;
+const DETAIL_DEFAULT_WIDTH = 420;
+
 export default function App() {
   const { setCustomTaskDocs, selectedNodeDetail } = usePipelineStore();
+  const [detailWidth, setDetailWidth] = useState(DETAIL_DEFAULT_WIDTH);
+  const dragging = useRef(false);
 
   // Load custom task docs config on mount
   useEffect(() => {
@@ -16,6 +22,30 @@ export default function App() {
       .then((cfg) => setCustomTaskDocs(cfg.customTaskDocs))
       .catch(() => {});
   }, [setCustomTaskDocs]);
+
+  const onResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    dragging.current = true;
+    const startX = e.clientX;
+    const startWidth = detailWidth;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    const onMove = (ev: MouseEvent) => {
+      const delta = startX - ev.clientX; // dragging left = wider
+      const next = Math.min(DETAIL_MAX_WIDTH, Math.max(DETAIL_MIN_WIDTH, startWidth + delta));
+      setDetailWidth(next);
+    };
+    const onUp = () => {
+      dragging.current = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  }, [detailWidth]);
 
   return (
     <div className="app">
@@ -34,11 +64,18 @@ export default function App() {
           </ErrorBoundary>
         </section>
         {selectedNodeDetail && (
-          <aside className="app__detail">
-            <ErrorBoundary>
-              <DetailPanel />
-            </ErrorBoundary>
-          </aside>
+          <>
+            <div
+              className="app__detail-resize-handle"
+              onMouseDown={onResizeStart}
+              title="Drag to resize"
+            />
+            <aside className="app__detail" style={{ width: detailWidth }}>
+              <ErrorBoundary>
+                <DetailPanel />
+              </ErrorBoundary>
+            </aside>
+          </>
         )}
       </main>
     </div>
