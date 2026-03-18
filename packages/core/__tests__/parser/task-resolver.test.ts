@@ -214,4 +214,110 @@ describe('extractTaskReferences', () => {
     });
     expect(refs).toHaveLength(1);
   });
+
+  test('extracts tasks from triply-nested conditional blocks', () => {
+    const refs = extractTaskReferences({
+      steps: [
+        { '${{ if parameters.a }}': [
+          { '${{ if parameters.b }}': [
+            { '${{ if parameters.c }}': [
+              { task: 'DeepTask@1' },
+            ]},
+          ]},
+        ]},
+      ],
+    });
+    expect(refs).toHaveLength(1);
+    expect(refs[0].name).toBe('DeepTask');
+  });
+
+  test('extracts tasks from conditional blocks at root level', () => {
+    const refs = extractTaskReferences({
+      '${{ if parameters.isTemplate }}': {
+        steps: [{ task: 'RootConditionalTask@1' }],
+      },
+    });
+    expect(refs).toHaveLength(1);
+    expect(refs[0].name).toBe('RootConditionalTask');
+  });
+
+  test('extracts tasks from stages with conditional jobs', () => {
+    const refs = extractTaskReferences({
+      stages: [
+        {
+          stage: 'Build',
+          jobs: [
+            { '${{ if parameters.useDocker }}': [
+              { job: 'DockerBuild', steps: [{ task: 'Docker@2' }] },
+            ]},
+            { '${{ else }}': [
+              { job: 'NativeBuild', steps: [{ task: 'MSBuild@1' }] },
+            ]},
+          ],
+        },
+      ],
+    });
+    expect(refs).toHaveLength(2);
+    expect(refs.map(r => r.name)).toContain('Docker');
+    expect(refs.map(r => r.name)).toContain('MSBuild');
+  });
+
+  test('handles null and non-object steps gracefully', () => {
+    const refs = extractTaskReferences({
+      steps: [null, undefined, 'not an object', 42, { task: 'Valid@1' }],
+    });
+    expect(refs).toHaveLength(1);
+    expect(refs[0].name).toBe('Valid');
+  });
+
+  test('handles conditional value that is neither array nor object', () => {
+    const refs = extractTaskReferences({
+      steps: [
+        { '${{ if true }}': 'just a string' },
+        { '${{ if true }}': 42 },
+        { '${{ if true }}': null },
+        { task: 'Still@1' },
+      ],
+    });
+    expect(refs).toHaveLength(1);
+    expect(refs[0].name).toBe('Still');
+  });
+
+  test('extracts from mixed conditional and non-conditional steps', () => {
+    const refs = extractTaskReferences({
+      steps: [
+        { task: 'Before@1' },
+        { '${{ if parameters.x }}': [{ task: 'Middle@1' }] },
+        { task: 'After@1' },
+      ],
+    });
+    expect(refs).toHaveLength(3);
+    expect(refs.map(r => r.name)).toEqual(['Before', 'Middle', 'After']);
+  });
+});
+
+describe('parseTaskReference edge cases', () => {
+  test('handles @ at end with no version', () => {
+    const ref = parseTaskReference('Task@');
+    expect(ref.name).toBe('Task');
+    expect(ref.version).toBe(0);
+  });
+
+  test('handles multiple @ symbols (uses last)', () => {
+    const ref = parseTaskReference('Some@Weird@3');
+    expect(ref.name).toBe('Some@Weird');
+    expect(ref.version).toBe(3);
+  });
+
+  test('handles non-numeric version', () => {
+    const ref = parseTaskReference('Task@beta');
+    expect(ref.name).toBe('Task');
+    expect(ref.version).toBe(0);
+  });
+
+  test('handles empty string', () => {
+    const ref = parseTaskReference('');
+    expect(ref.name).toBe('');
+    expect(ref.version).toBe(0);
+  });
 });

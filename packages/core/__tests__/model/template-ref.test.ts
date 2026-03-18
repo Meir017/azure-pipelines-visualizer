@@ -139,6 +139,46 @@ describe('createTemplateRef', () => {
     expect(ref.contextRepoAlias).toBe('GovernedTemplates');
     expect(ref.sourcePath).toBe('v2/OneBranch.NonOfficial.CrossPlat.yml');
   });
+
+  test('creates a conditional template reference with conditionExpression', () => {
+    const ref = createTemplateRef(
+      'templates/build.yml',
+      'steps',
+      { env: 'prod' },
+      true,
+      {},
+      'eq(parameters.env, prod)',
+    );
+
+    expect(ref.conditional).toBe(true);
+    expect(ref.conditionExpression).toBe('eq(parameters.env, prod)');
+    expect(ref.parameters).toEqual({ env: 'prod' });
+  });
+
+  test('conditionExpression is undefined when not provided', () => {
+    const ref = createTemplateRef('templates/build.yml', 'steps');
+    expect(ref.conditionExpression).toBeUndefined();
+  });
+
+  test('creates ref with all context fields populated', () => {
+    const ref = createTemplateRef(
+      'core/steps.yml@ExtRepo',
+      'steps',
+      { flag: true },
+      true,
+      { contextRepoAlias: 'ParentRepo', sourcePath: 'parent/pipeline.yml' },
+      'and(eq(a, b), ne(c, d))',
+    );
+
+    expect(ref.rawPath).toBe('core/steps.yml@ExtRepo');
+    expect(ref.normalizedPath).toBe('core/steps.yml');
+    expect(ref.repoAlias).toBe('ExtRepo');
+    expect(ref.contextRepoAlias).toBe('ExtRepo'); // repoAlias takes priority
+    expect(ref.sourcePath).toBe('parent/pipeline.yml');
+    expect(ref.conditional).toBe(true);
+    expect(ref.conditionExpression).toBe('and(eq(a, b), ne(c, d))');
+    expect(ref.parameters).toEqual({ flag: true });
+  });
 });
 
 describe('resolveTemplateRefPath', () => {

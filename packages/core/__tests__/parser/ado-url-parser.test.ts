@@ -77,6 +77,43 @@ describe('parseAdoUrl', () => {
     expect(result!.project).toBe('my project');
     expect(result!.repoName).toBe('my repo');
   });
+
+  test('parses URL with URL-encoded slash in branch name', () => {
+    const result = parseAdoUrl(
+      'https://dev.azure.com/org/proj/_git/repo?path=/build.yml&version=GBfeature%2Fmy-branch',
+    );
+    expect(result).not.toBeNull();
+    expect(result!.branch).toBe('feature/my-branch');
+    expect(result!.ref).toBe('refs/heads/feature/my-branch');
+  });
+
+  test('parses URL with query parameters in different order', () => {
+    const result = parseAdoUrl(
+      'https://dev.azure.com/org/proj/_git/repo?version=GBmain&path=/ci.yml',
+    );
+    expect(result).not.toBeNull();
+    expect(result!.filePath).toBe('/ci.yml');
+    expect(result!.branch).toBe('main');
+  });
+
+  test('parses URL with empty version parameter', () => {
+    const result = parseAdoUrl(
+      'https://dev.azure.com/org/proj/_git/repo?path=/file.yml&version=',
+    );
+    expect(result).not.toBeNull();
+    expect(result!.branch).toBeUndefined();
+    expect(result!.ref).toBeUndefined();
+  });
+
+  test('parses URL with unknown version prefix as branch', () => {
+    const result = parseAdoUrl(
+      'https://dev.azure.com/org/proj/_git/repo?path=/file.yml&version=ZZunknown',
+    );
+    expect(result).not.toBeNull();
+    // Unknown prefix: neither GB nor GT, so branch and ref remain undefined
+    expect(result!.branch).toBeUndefined();
+    expect(result!.ref).toBeUndefined();
+  });
 });
 
 describe('buildAdoFileUrl', () => {
@@ -153,5 +190,38 @@ describe('buildAdoFileUrl', () => {
     const parsed = parseAdoUrl(url);
     expect(parsed!.ref).toBe('refs/tags/3.stable');
     expect(parsed!.branch).toBeUndefined();
+  });
+
+  test('builds URL with special characters in filePath', () => {
+    const url = buildAdoFileUrl({
+      org: 'org',
+      project: 'proj',
+      repoName: 'repo',
+      filePath: '/path with spaces/build.yml',
+    });
+    expect(url).toContain('path+with+spaces');
+    expect(url).toContain('build.yml');
+  });
+
+  test('builds URL with ref that is neither heads nor tags', () => {
+    const url = buildAdoFileUrl({
+      org: 'org',
+      project: 'proj',
+      repoName: 'repo',
+      filePath: '/ci.yml',
+      ref: 'abc123def',
+    });
+    // Non-standard ref should still use GB prefix as fallback
+    expect(url).not.toContain('version=');
+  });
+
+  test('builds URL without ref or branch omits version param', () => {
+    const url = buildAdoFileUrl({
+      org: 'org',
+      project: 'proj',
+      repoName: 'repo',
+      filePath: '/ci.yml',
+    });
+    expect(url).not.toContain('version=');
   });
 });

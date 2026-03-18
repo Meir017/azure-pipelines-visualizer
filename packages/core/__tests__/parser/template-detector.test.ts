@@ -257,4 +257,150 @@ extends:
     expect(refs[0].conditional).toBe(false);
     expect(refs[0].parameters?.env).toBe('dev');
   });
+
+  test('extracts condition from no-space format ${{if ...}}', () => {
+    const refs = detectTemplateReferences(
+      parseYaml(`
+steps:
+  - \${{if eq(a,b)}}:
+    - template: templates/a.yml
+`) as Record<string, unknown>,
+    );
+    expect(refs).toHaveLength(1);
+    expect(refs[0].conditional).toBe(true);
+    expect(refs[0].conditionExpression).toBe('eq(a,b)');
+  });
+
+  test('extracts complex nested condition expression', () => {
+    const refs = detectTemplateReferences(
+      parseYaml(`
+steps:
+  - \${{ if and(or(x, y), eq(z, true)) }}:
+    - template: templates/complex.yml
+`) as Record<string, unknown>,
+    );
+    expect(refs).toHaveLength(1);
+    expect(refs[0].conditionExpression).toBe('and(or(x, y), eq(z, true))');
+  });
+
+  test('extracts condition with extra whitespace', () => {
+    const refs = detectTemplateReferences(
+      parseYaml(`
+steps:
+  - \${{   if   eq(a, b)   }}:
+    - template: templates/ws.yml
+`) as Record<string, unknown>,
+    );
+    expect(refs).toHaveLength(1);
+    expect(refs[0].conditionExpression).toBe('eq(a, b)');
+  });
+
+  test('detects templates in triple-nested conditional blocks', () => {
+    const refs = detectTemplateReferences(
+      parseYaml(`
+steps:
+  - \${{ if eq(parameters.platform, 'linux') }}:
+    - \${{ if eq(parameters.arch, 'x64') }}:
+      - \${{ if parameters.enableTelemetry }}:
+        - template: templates/telemetry-linux-x64.yml
+`) as Record<string, unknown>,
+    );
+    expect(refs).toHaveLength(1);
+    expect(refs[0].normalizedPath).toBe('templates/telemetry-linux-x64.yml');
+    expect(refs[0].conditional).toBe(true);
+  });
+
+  test('detects templates in multiple conditional blocks at same level', () => {
+    const refs = detectTemplateReferences(
+      parseYaml(`
+steps:
+  - \${{ if parameters.runBuild }}:
+    - template: templates/build.yml
+  - \${{ if parameters.runTest }}:
+    - template: templates/test.yml
+  - \${{ if parameters.runDeploy }}:
+    - template: templates/deploy.yml
+`) as Record<string, unknown>,
+    );
+    expect(refs).toHaveLength(3);
+    expect(refs[0].normalizedPath).toBe('templates/build.yml');
+    expect(refs[1].normalizedPath).toBe('templates/test.yml');
+    expect(refs[2].normalizedPath).toBe('templates/deploy.yml');
+    expect(refs.every(r => r.conditional)).toBe(true);
+  });
+
+  test('detects templates in conditionals at different nesting levels', () => {
+    const refs = detectTemplateReferences(
+      parseYaml(`
+stages:
+  - \${{ if eq(parameters.env, 'prod') }}:
+    - stage: Production
+      jobs:
+        - \${{ if parameters.approval }}:
+          - template: jobs/approval.yml
+        - template: jobs/deploy.yml
+`) as Record<string, unknown>,
+    );
+    expect(refs).toHaveLength(2);
+    expect(refs.map(r => r.normalizedPath)).toContain('jobs/approval.yml');
+    expect(refs.map(r => r.normalizedPath)).toContain('jobs/deploy.yml');
+  });
+
+  test('handles empty conditional blocks gracefully', () => {
+    const refs = detectTemplateReferences(
+      parseYaml(`
+steps:
+  - \${{ if parameters.verbose }}:
+    - script: echo "verbose mode"
+  - template: templates/always.yml
+`) as Record<string, unknown>,
+    );
+    expect(refs).toHaveLength(1);
+    expect(refs[0].normalizedPath).toBe('templates/always.yml');
+    expect(refs[0].conditional).toBe(false);
+  });
+
+  test('detects step templates inside conditional jobs', () => {
+    const refs = detectTemplateReferences(
+      parseYaml(`
+jobs:
+  - \${{ if parameters.includeJob }}:
+    - job: ConditionalJob
+      steps:
+        - template: steps/build.yml
+          parameters:
+            config: release
+`) as Record<string, unknown>,
+    );
+    expect(refs).toHaveLength(1);
+    expect(refs[0].normalizedPath).toBe('steps/build.yml');
+    expect(refs[0].parameters).toEqual({ config: 'release' });
+  });
+
+  test('propagates context repo alias through conditional templates', () => {
+    const refs = detectTemplateReferences(
+      parseYaml(`
+steps:
+  - \${{ if parameters.flag }}:
+    - template: steps/helper.yml
+`) as Record<string, unknown>,
+      { contextRepoAlias: 'ExternalRepo', sourcePath: 'main/pipeline.yml' },
+    );
+    expect(refs).toHaveLength(1);
+    expect(refs[0].contextRepoAlias).toBe('ExternalRepo');
+    expect(refs[0].sourcePath).toBe('main/pipeline.yml');
+  });
+
+  test('returns empty for pipeline with only script steps and conditionals', () => {
+    const refs = detectTemplateReferences(
+      parseYaml(`
+steps:
+  - script: echo "hello"
+  - \${{ if parameters.debug }}:
+    - script: echo "debug"
+  - bash: echo "done"
+`) as Record<string, unknown>,
+    );
+    expect(refs).toHaveLength(0);
+  });
 });

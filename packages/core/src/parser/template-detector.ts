@@ -205,6 +205,13 @@ function walkConditionalItems(
       );
     }
 
+    // Check for nested directive blocks inside conditional items
+    for (const key of Object.keys(obj)) {
+      if (isDirectiveKey(key)) {
+        walkConditionalValue(obj[key], location, refs, context, extractConditionExpression(key));
+      }
+    }
+
     if (Array.isArray(obj.jobs)) {
       walkItems(
         obj.jobs,

@@ -71,4 +71,86 @@ describe('mapToPipeline', () => {
     expect(pipeline.rawYaml).toBeDefined();
     expect(pipeline.rawYaml).toContain('trigger');
   });
+
+  test('maps pipeline with empty stages array', () => {
+    const pipeline = mapToPipeline(
+      parseYaml('stages: []') as Record<string, unknown>,
+    );
+    expect(pipeline.stages).toEqual([]);
+  });
+
+  test('maps pipeline with empty jobs array', () => {
+    const pipeline = mapToPipeline(
+      parseYaml('jobs: []') as Record<string, unknown>,
+    );
+    expect(pipeline.jobs).toEqual([]);
+  });
+
+  test('maps pipeline with empty steps array', () => {
+    const pipeline = mapToPipeline(
+      parseYaml('steps: []') as Record<string, unknown>,
+    );
+    expect(pipeline.steps).toEqual([]);
+  });
+
+  test('maps pipeline with only trigger', () => {
+    const pipeline = mapToPipeline(
+      parseYaml('trigger: none') as Record<string, unknown>,
+    );
+    expect(pipeline.trigger).toBe('none');
+    expect(pipeline.stages).toBeUndefined();
+    expect(pipeline.jobs).toBeUndefined();
+    expect(pipeline.steps).toBeUndefined();
+  });
+
+  test('maps pipeline with pool object', () => {
+    const pipeline = mapToPipeline(
+      parseYaml(`
+pool:
+  vmImage: windows-latest
+  demands:
+    - npm
+`) as Record<string, unknown>,
+    );
+    expect(pipeline.pool).toBeDefined();
+    expect(pipeline.pool!.vmImage).toBe('windows-latest');
+  });
+
+  test('maps pipeline with both variables and variable templates', () => {
+    const pipeline = mapToPipeline(
+      parseYaml(`
+variables:
+  - template: vars/common.yml
+  - name: myVar
+    value: myValue
+  - group: MyVarGroup
+`) as Record<string, unknown>,
+    );
+    expect(pipeline.variables).toHaveLength(3);
+  });
+
+  test('maps pipeline with resources including containers', () => {
+    const pipeline = mapToPipeline(
+      parseYaml(`
+resources:
+  repositories:
+    - repository: templates
+      type: git
+      name: project/templates
+  containers:
+    - container: build
+      image: ubuntu:20.04
+`) as Record<string, unknown>,
+    );
+    expect(pipeline.resources).toBeDefined();
+    expect(pipeline.resources!.repositories).toHaveLength(1);
+  });
+
+  test('maps empty object as valid pipeline', () => {
+    const pipeline = mapToPipeline({});
+    expect(pipeline.rawYaml).toBeDefined();
+    expect(pipeline.stages).toBeUndefined();
+    expect(pipeline.jobs).toBeUndefined();
+    expect(pipeline.steps).toBeUndefined();
+  });
 });

@@ -110,7 +110,17 @@ export function extractTaskReferences(raw: Record<string, unknown>): TaskReferen
 
   function walkConditionalValue(value: unknown) {
     if (Array.isArray(value)) {
-      walkSteps(value);
+      for (const item of value) {
+        if (!item || typeof item !== 'object') continue;
+        const obj = item as Record<string, unknown>;
+        if ('task' in obj) addTask(obj.task);
+        if (Array.isArray(obj.steps)) walkSteps(obj.steps);
+        if (Array.isArray(obj.jobs)) walkJobs(obj.jobs);
+        if (Array.isArray(obj.stages)) walkStages(obj.stages);
+        for (const key of Object.keys(obj)) {
+          if (key.startsWith('${{')) walkConditionalValue(obj[key]);
+        }
+      }
     } else if (value && typeof value === 'object') {
       const obj = value as Record<string, unknown>;
       if ('task' in obj) {
