@@ -29,6 +29,30 @@ export interface TemplateEdgeData {
   unresolvedExpressions?: string[];
 }
 
+function BadgeWithTooltip({
+  className,
+  label,
+  children,
+}: {
+  className: string;
+  label: string;
+  children: React.ReactNode;
+}) {
+  const [show, setShow] = useState(false);
+  return (
+    <span
+      className={className}
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+    >
+      {label}
+      {show && (
+        <div className="template-edge__badge-tooltip">{children}</div>
+      )}
+    </span>
+  );
+}
+
 function TemplateEdge({
   id,
   sourceX,
@@ -73,28 +97,45 @@ function TemplateEdge({
           <div className="template-edge__top-row">
             <span className="template-edge__category">{d?.edgeLabel}</span>
             {d?.conditional && (
-              <span
+              <BadgeWithTooltip
                 className="template-edge__badge template-edge__badge--conditional"
-                title="This template reference is inside a conditional (${{ if }}) block — it may not execute in every run"
+                label="conditional"
               >
-                conditional
-              </span>
+                <div className="template-edge__badge-tooltip-title">⚡ Conditional Reference</div>
+                <p>This template is inside a <code>{'${{ if }}'}</code> block and may not execute in every pipeline run.</p>
+              </BadgeWithTooltip>
             )}
             {d?.dynamicPath && d.expressionResolved && (
-              <span
+              <BadgeWithTooltip
                 className="template-edge__badge template-edge__badge--resolved"
-                title={`Expression resolved\nOriginal: ${d.originalPath}\nResolved to the current target path`}
+                label="🔮 resolved"
               >
-                🔮 resolved
-              </span>
+                <div className="template-edge__badge-tooltip-title">🔮 Expression Resolved</div>
+                <p>The template path contained expressions that were successfully evaluated.</p>
+                <div className="template-edge__badge-tooltip-row">
+                  <span className="template-edge__badge-tooltip-label">Original</span>
+                  <code>{d.originalPath}</code>
+                </div>
+              </BadgeWithTooltip>
             )}
             {d?.dynamicPath && !d.expressionResolved && (
-              <span
+              <BadgeWithTooltip
                 className="template-edge__badge template-edge__badge--unresolved"
-                title={`Unresolved expressions: ${d.unresolvedExpressions?.join(', ') ?? 'unknown'}\nOriginal: ${d.originalPath}\nThe template path contains expressions that could not be evaluated`}
+                label="⚠️ dynamic"
               >
-                ⚠️ dynamic
-              </span>
+                <div className="template-edge__badge-tooltip-title">⚠️ Unresolved Expressions</div>
+                <p>The template path contains expressions that could not be evaluated at analysis time.</p>
+                <div className="template-edge__badge-tooltip-row">
+                  <span className="template-edge__badge-tooltip-label">Original</span>
+                  <code>{d.originalPath}</code>
+                </div>
+                {d.unresolvedExpressions && d.unresolvedExpressions.length > 0 && (
+                  <div className="template-edge__badge-tooltip-row">
+                    <span className="template-edge__badge-tooltip-label">Unresolved</span>
+                    <span>{d.unresolvedExpressions.join(', ')}</span>
+                  </div>
+                )}
+              </BadgeWithTooltip>
             )}
           </div>
           {paramCount > 0 && (
