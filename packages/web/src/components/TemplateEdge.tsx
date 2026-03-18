@@ -17,6 +17,16 @@ export interface TemplateEdgeData {
   declaredParameterNames?: string[];
   /** Whether this edge goes to an external (cross-repo) template */
   isExternal?: boolean;
+  /** Whether this reference is inside a conditional block */
+  conditional?: boolean;
+  /** Whether the template path originally contained expressions */
+  dynamicPath?: boolean;
+  /** Whether all expressions in the path were fully resolved */
+  expressionResolved?: boolean;
+  /** The original raw path before expression resolution */
+  originalPath?: string;
+  /** Unresolved expression parameter names */
+  unresolvedExpressions?: string[];
 }
 
 function TemplateEdge({
@@ -60,7 +70,33 @@ function TemplateEdge({
             pointerEvents: 'all',
           }}
         >
-          <span className="template-edge__category">{d?.edgeLabel}</span>
+          <div className="template-edge__top-row">
+            <span className="template-edge__category">{d?.edgeLabel}</span>
+            {d?.conditional && (
+              <span
+                className="template-edge__badge template-edge__badge--conditional"
+                title="This template reference is inside a conditional (${{ if }}) block — it may not execute in every run"
+              >
+                conditional
+              </span>
+            )}
+            {d?.dynamicPath && d.expressionResolved && (
+              <span
+                className="template-edge__badge template-edge__badge--resolved"
+                title={`Expression resolved\nOriginal: ${d.originalPath}\nResolved to the current target path`}
+              >
+                🔮 resolved
+              </span>
+            )}
+            {d?.dynamicPath && !d.expressionResolved && (
+              <span
+                className="template-edge__badge template-edge__badge--unresolved"
+                title={`Unresolved expressions: ${d.unresolvedExpressions?.join(', ') ?? 'unknown'}\nOriginal: ${d.originalPath}\nThe template path contains expressions that could not be evaluated`}
+              >
+                ⚠️ dynamic
+              </span>
+            )}
+          </div>
           {paramCount > 0 && (
             <span
               className="template-edge__params-badge"

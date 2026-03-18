@@ -833,11 +833,6 @@ function buildTemplateNodesAndEdges(
           adoUrl,
           repoInfo,
           templateLocation: ref.location,
-          conditional: ref.conditional || undefined,
-          dynamicPath: isDynamic || undefined,
-          originalPath: originalPath || (repoAliasDynamic ? ref.rawPath : undefined),
-          expressionResolved: isDynamic ? isFullyResolved : undefined,
-          unresolvedExpressions,
           // Stash the resolved ref for expansion (with resolved repo alias + params)
           _ref: resolvedRef,
           // Stash the parent's parameter context so it can flow down during expansion
@@ -872,6 +867,11 @@ function buildTemplateNodesAndEdges(
         edgeLabel,
         parameterNames,
         isExternal: isExternalEdge || undefined,
+        conditional: ref.conditional || undefined,
+        dynamicPath: isDynamic || undefined,
+        expressionResolved: isDynamic ? isFullyResolved : undefined,
+        originalPath: originalPath || (repoAliasDynamic ? ref.rawPath : undefined),
+        unresolvedExpressions,
       } satisfies TemplateEdgeData,
       style: isExternalEdge
         ? { stroke: 'var(--badge-resources)', strokeWidth: 2, strokeDasharray: '6 3' }

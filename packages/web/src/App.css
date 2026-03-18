@@ -629,6 +629,12 @@ body {
   font-size: 11px;
 }
 
+.template-edge__top-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .template-edge__category {
   background: var(--surface);
   color: var(--text);
@@ -637,6 +643,30 @@ body {
   padding: 1px 6px;
   border-radius: 3px;
   white-space: nowrap;
+}
+
+.template-edge__badge {
+  font-size: 9px;
+  font-weight: 500;
+  padding: 1px 5px;
+  border-radius: 8px;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.template-edge__badge--conditional {
+  background: color-mix(in srgb, var(--badge-trigger) 30%, transparent);
+  color: var(--badge-trigger);
+}
+
+.template-edge__badge--resolved {
+  background: color-mix(in srgb, #4fc3f7 25%, transparent);
+  color: #4fc3f7;
+}
+
+.template-edge__badge--unresolved {
+  background: color-mix(in srgb, #ff9800 30%, transparent);
+  color: #ff9800;
 }
 
 .template-edge__params-badge {
