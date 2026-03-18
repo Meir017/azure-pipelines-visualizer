@@ -73,12 +73,14 @@ describe('detectTemplateReferences', () => {
     );
     expect(pssaRef).toBeDefined();
     expect(pssaRef!.conditional).toBe(true);
+    expect(pssaRef!.conditionExpression).toBe('eq(parameters.enablePSSA, true)');
 
     const armRef = conditionalRefs.find((r) =>
       r.normalizedPath.includes('arm-ev2-test-steps-template'),
     );
     expect(armRef).toBeDefined();
     expect(armRef!.conditional).toBe(true);
+    expect(armRef!.conditionExpression).toBe('eq(parameters.enableArmTests, true)');
   });
 
   test('detects template references in else branches', () => {
@@ -96,6 +98,31 @@ steps:
     expect(refs.every((ref) => ref.conditional)).toBe(true);
     expect(refs.map((ref) => ref.normalizedPath)).toContain('templates/a.yml');
     expect(refs.map((ref) => ref.normalizedPath)).toContain('templates/b.yml');
+
+    const aRef = refs.find((r) => r.normalizedPath === 'templates/a.yml')!;
+    expect(aRef.conditionExpression).toBe('eq(parameters.useA, true)');
+
+    const bRef = refs.find((r) => r.normalizedPath === 'templates/b.yml')!;
+    expect(bRef.conditionExpression).toBeUndefined(); // ${{ else }} has no expression
+  });
+
+  test('extracts elseif condition expression', () => {
+    const refs = detectTemplateReferences(
+      parseYaml(`
+steps:
+  - \${{ if eq(variables.env, 'prod') }}:
+    - template: templates/prod.yml
+  - \${{ elseif eq(variables.env, 'staging') }}:
+    - template: templates/staging.yml
+  - \${{ else }}:
+    - template: templates/dev.yml
+`) as Record<string, unknown>,
+    );
+
+    expect(refs).toHaveLength(3);
+    expect(refs[0].conditionExpression).toBe("eq(variables.env, 'prod')");
+    expect(refs[1].conditionExpression).toBe("eq(variables.env, 'staging')");
+    expect(refs[2].conditionExpression).toBeUndefined();
   });
 
   test('detects variable template references', () => {
@@ -184,9 +211,11 @@ extends:
     expect(refs[0].normalizedPath).toBe('/v2/Core.Dialtone.OnPrem.Template.yml');
     expect(refs[0].location).toBe('extends');
     expect(refs[0].conditional).toBe(true);
+    expect(refs[0].conditionExpression).toBe("eq(parameters.mode, 'dialtone')");
     expect(refs[1].normalizedPath).toBe('/v2/Core.Template.yml');
     expect(refs[1].location).toBe('extends');
     expect(refs[1].conditional).toBe(true);
+    expect(refs[1].conditionExpression).toBeUndefined(); // ${{ else }}
   });
 
   test('detects conditional extends with shared parameters fallback', () => {

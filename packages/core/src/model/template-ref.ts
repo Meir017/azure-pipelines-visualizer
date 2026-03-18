@@ -43,6 +43,7 @@ export function createTemplateRef(
   parameters?: Record<string, unknown>,
   conditional = false,
   context: TemplateRefContext = {},
+  conditionExpression?: string,
 ): TemplateReference {
   const { normalizedPath, repoAlias } = parseTemplatePath(rawPath);
   return {
@@ -54,6 +55,7 @@ export function createTemplateRef(
     parameters,
     location,
     conditional,
+    conditionExpression,
   };
 }
 

@@ -167,6 +167,8 @@ export interface TemplateReference {
   readonly location: TemplateLocation;
   /** Whether this ref is inside a conditional `${{ if }}` block. */
   readonly conditional: boolean;
+  /** The condition expression text, e.g. `eq(parameters.enablePSSA, true)`. */
+  readonly conditionExpression?: string;
 }
 
 export type TemplateLocation =

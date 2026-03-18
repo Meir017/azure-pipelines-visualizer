@@ -19,6 +19,8 @@ export interface TemplateEdgeData {
   isExternal?: boolean;
   /** Whether this reference is inside a conditional block */
   conditional?: boolean;
+  /** The condition expression text, e.g. `eq(parameters.enablePSSA, true)` */
+  conditionExpression?: string;
   /** Whether the template path originally contained expressions */
   dynamicPath?: boolean;
   /** Whether all expressions in the path were fully resolved */
@@ -102,7 +104,13 @@ function TemplateEdge({
                 label="conditional"
               >
                 <div className="template-edge__badge-tooltip-title">⚡ Conditional Reference</div>
-                <p>This template is inside a <code>{'${{ if }}'}</code> block and may not execute in every pipeline run.</p>
+                <p>This template is inside a conditional block and may not execute in every pipeline run.</p>
+                {d.conditionExpression && (
+                  <div className="template-edge__badge-tooltip-row">
+                    <span className="template-edge__badge-tooltip-label">Condition</span>
+                    <code>{d.conditionExpression}</code>
+                  </div>
+                )}
               </BadgeWithTooltip>
             )}
             {d?.dynamicPath && d.expressionResolved && (

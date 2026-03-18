@@ -47,6 +47,7 @@ export function detectTemplateReferences(
                 (condObj.parameters ?? ext.parameters) as Record<string, unknown>,
                 true, // conditional
                 context,
+                extractConditionExpression(key),
               ),
             );
           }
@@ -127,7 +128,7 @@ function walkItems(
     for (const key of Object.keys(obj)) {
       if (isDirectiveKey(key)) {
         const conditionalBlock = obj[key];
-        walkConditionalValue(conditionalBlock, location, refs, context);
+        walkConditionalValue(conditionalBlock, location, refs, context, extractConditionExpression(key));
       }
     }
 
@@ -168,14 +169,15 @@ function walkConditionalValue(
   location: TemplateLocation,
   refs: TemplateReference[],
   context: TemplateRefContext,
+  conditionExpression?: string,
 ): void {
   if (Array.isArray(value)) {
-    walkConditionalItems(value, location, refs, context);
+    walkConditionalItems(value, location, refs, context, conditionExpression);
     return;
   }
 
   if (value && typeof value === 'object') {
-    walkConditionalItems([value], location, refs, context);
+    walkConditionalItems([value], location, refs, context, conditionExpression);
   }
 }
 
@@ -184,6 +186,7 @@ function walkConditionalItems(
   location: TemplateLocation,
   refs: TemplateReference[],
   context: TemplateRefContext,
+  conditionExpression?: string,
 ): void {
   for (const item of items) {
     if (!item || typeof item !== 'object') continue;
@@ -197,6 +200,7 @@ function walkConditionalItems(
           obj.parameters as Record<string, unknown> | undefined,
           true, // conditional
           context,
+          conditionExpression,
         ),
       );
     }
@@ -281,4 +285,11 @@ function walkExtendsParameters(
 
 function isDirectiveKey(key: string): boolean {
   return key.startsWith('${{');
+}
+
+/** Extract the condition expression from a directive key like `${{ if eq(a, b) }}` → `eq(a, b)` */
+function extractConditionExpression(key: string): string | undefined {
+  // Match: ${{ if <expression> }}  or  ${{ elseif <expression> }}
+  const m = key.match(/\$\{\{\s*(?:else\s*)?if\s+(.*?)\s*\}\}/);
+  return m?.[1] || undefined;
 }

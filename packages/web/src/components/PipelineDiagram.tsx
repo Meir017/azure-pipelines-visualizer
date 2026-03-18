@@ -871,6 +871,7 @@ function buildTemplateNodesAndEdges(
         parameterNames,
         isExternal: isExternalEdge || undefined,
         conditional: ref.conditional || undefined,
+        conditionExpression: ref.conditionExpression,
         dynamicPath: isDynamic || undefined,
         expressionResolved: isDynamic ? isFullyResolved : undefined,
         originalPath: originalPath || (repoAliasDynamic ? ref.rawPath : undefined),
