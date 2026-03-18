@@ -36,7 +36,7 @@ describe('resolveExpressionPath', () => {
     expect(result.resolvedPath).toBe('governed/standard.yaml');
     expect(result.isFullyResolved).toBe(true);
     expect(result.hadExpressions).toBe(true);
-    expect(result.substituted).toEqual(['buildType']);
+    expect(result.substituted).toEqual(['parameters.buildType']);
     expect(result.unresolved).toEqual([]);
   });
 
@@ -76,7 +76,7 @@ describe('resolveExpressionPath', () => {
     expect(result.resolvedPath).toBe('governed/${{parameters.buildType}}.yaml');
     expect(result.isFullyResolved).toBe(false);
     expect(result.hadExpressions).toBe(true);
-    expect(result.unresolved).toEqual(['buildType']);
+    expect(result.unresolved).toEqual(['parameters.buildType']);
   });
 
   test('resolves multiple expressions in one path', () => {
@@ -86,7 +86,7 @@ describe('resolveExpressionPath', () => {
     );
     expect(result.resolvedPath).toBe('stages/build.yml');
     expect(result.isFullyResolved).toBe(true);
-    expect(result.substituted).toEqual(['dir', 'file']);
+    expect(result.substituted).toEqual(['parameters.dir', 'parameters.file']);
   });
 
   test('partially resolves when only some params available', () => {
@@ -96,8 +96,8 @@ describe('resolveExpressionPath', () => {
     );
     expect(result.resolvedPath).toBe('stages/${{parameters.file}}.yml');
     expect(result.isFullyResolved).toBe(false);
-    expect(result.substituted).toEqual(['dir']);
-    expect(result.unresolved).toEqual(['file']);
+    expect(result.substituted).toEqual(['parameters.dir']);
+    expect(result.unresolved).toEqual(['parameters.file']);
   });
 
   test('handles bracket notation', () => {
@@ -114,7 +114,8 @@ describe('resolveExpressionPath', () => {
       'steps/${{parameters.enabled}}-build.yml',
       { enabled: true },
     );
-    expect(result.resolvedPath).toBe('steps/true-build.yml');
+    // Azure Pipelines renders booleans as True/False
+    expect(result.resolvedPath).toBe('steps/True-build.yml');
     expect(result.isFullyResolved).toBe(true);
   });
 
@@ -125,6 +126,33 @@ describe('resolveExpressionPath', () => {
     expect(result.isFullyResolved).toBe(false);
     expect(result.hadExpressions).toBe(true);
     expect(result.unresolved.length).toBeGreaterThan(0);
+  });
+
+  test('resolves coalesce function in path', () => {
+    const result = resolveExpressionPath(
+      "path.yml@${{ coalesce(parameters.featureFlags.obcanary, 'obcoretemplates') }}",
+      { featureFlags: { WindowsHostVersion: '2022' } },
+    );
+    expect(result.resolvedPath).toBe('path.yml@obcoretemplates');
+    expect(result.isFullyResolved).toBe(true);
+  });
+
+  test('resolves nested replace/eq in path', () => {
+    const result = resolveExpressionPath(
+      "template.yml@${{ replace(replace(eq(parameters.featureFlags.use1ESPTCanary, true), true, '1escanary'), false, '1esstable') }}",
+      { featureFlags: {} },
+    );
+    expect(result.resolvedPath).toBe('template.yml@1esstable');
+    expect(result.isFullyResolved).toBe(true);
+  });
+
+  test('resolves nested parameter access', () => {
+    const result = resolveExpressionPath(
+      '${{ parameters.featureFlags.obcanary }}/template.yml',
+      { featureFlags: { obcanary: 'myrepo' } },
+    );
+    expect(result.resolvedPath).toBe('myrepo/template.yml');
+    expect(result.isFullyResolved).toBe(true);
   });
 });
 

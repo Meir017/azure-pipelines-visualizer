@@ -23,6 +23,7 @@ import {
   extractParameterDefaults,
   extractDeclaredParameterNames,
   pathHasExpressions,
+  resolveAllExpressions,
   type TemplateReference,
   type ResourceRepository,
 } from '@apv/core';
@@ -221,9 +222,19 @@ export default function PipelineDiagram() {
           } else if (autoExpandAll) {
             // Non-leaf with auto-expand enabled — fully expand
             const fileDefaults = extractParameterDefaults(parsed);
-            const callerParams = parentRef?.parameters as Record<string, unknown> | undefined;
+            const parentParamContext = (d as unknown as Record<string, unknown>)._parentParamContext as Record<string, unknown> | undefined;
+            const rawCallerParams = parentRef?.parameters as Record<string, unknown> | undefined;
+            const callerParams = resolveCallerParams(rawCallerParams, parentParamContext);
             const paramContext = { ...fileDefaults, ...callerParams };
             const expandedFileDir = dirOf(d.filePath);
+
+            // Merge accumulated resources: parent's resources + this template's own resources
+            const parentResources = (d as unknown as Record<string, unknown>)._accumulatedResources as ResourceRepository[] | undefined;
+            const templateResources = extractResourceRepositories(parsed);
+            const mergedResources = deduplicateResources([
+              ...(parentResources ?? rootResources),
+              ...templateResources,
+            ]);
 
             const { templateNodes, templateEdges } = buildTemplateNodesAndEdges(
               node.id,
@@ -232,7 +243,7 @@ export default function PipelineDiagram() {
               org,
               project,
               defaultRepoName,
-              rootResources,
+              mergedResources,
               paramContext,
             );
 
@@ -351,12 +362,22 @@ export default function PipelineDiagram() {
         // Build parameter context for resolving expression paths in nested refs:
         // File's own parameter defaults, overridden by caller-passed parameter values
         const fileDefaults = extractParameterDefaults(parsed);
-        const callerParams = parentRef?.parameters as Record<string, unknown> | undefined;
+        const parentParamContext = (d as unknown as Record<string, unknown>)._parentParamContext as Record<string, unknown> | undefined;
+        const rawCallerParams = parentRef?.parameters as Record<string, unknown> | undefined;
+        const callerParams = resolveCallerParams(rawCallerParams, parentParamContext);
         const paramContext = { ...fileDefaults, ...callerParams };
         const declaredParamNames = extractDeclaredParameterNames(parsed);
 
         // Determine the baseDir for this expanded template
         const expandedFileDir = dirOf(d.filePath);
+
+        // Merge accumulated resources: parent's resources + this template's own resources
+        const parentResources = (d as unknown as Record<string, unknown>)._accumulatedResources as ResourceRepository[] | undefined;
+        const templateResources = extractResourceRepositories(parsed);
+        const mergedResources = deduplicateResources([
+          ...(parentResources ?? rootResources),
+          ...templateResources,
+        ]);
 
         // Update this node to expanded and add child nodes
         const { templateNodes, templateEdges } = buildTemplateNodesAndEdges(
@@ -366,7 +387,7 @@ export default function PipelineDiagram() {
           org,
           project,
           defaultRepoName,
-          rootResources,
+          mergedResources,
           paramContext,
         );
 
@@ -502,6 +523,85 @@ export default function PipelineDiagram() {
 // Helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * Resolve `${{ parameters.X }}` expression strings in a callerParams object.
+ * When a template passes `featureFlags: ${{ parameters.featureFlags }}`, the YAML
+ * parser stores the literal string. This function evaluates such expressions
+ * using the parent's parameter context to get the actual values.
+ */
+function resolveCallerParams(
+  callerParams: Record<string, unknown> | undefined,
+  parentParamContext: Record<string, unknown> | undefined,
+): Record<string, unknown> | undefined {
+  if (!callerParams || !parentParamContext) return callerParams;
+
+  const resolved: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(callerParams)) {
+    if (typeof value === 'string' && pathHasExpressions(value)) {
+      const { result, isFullyResolved } = resolveAllExpressions(value, {
+        parameters: parentParamContext,
+      });
+      resolved[key] = isFullyResolved ? tryParseResolved(result) : value;
+    } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+      // Recursively resolve nested objects
+      resolved[key] = resolveCallerParams(
+        value as Record<string, unknown>,
+        parentParamContext,
+      ) ?? value;
+    } else {
+      resolved[key] = value;
+    }
+  }
+  return resolved;
+}
+
+/**
+ * After expression resolution, attempt to parse the result as JSON/boolean/number
+ * so we get the actual typed value instead of a string representation.
+ */
+function tryParseResolved(value: string): unknown {
+  if (value === 'True' || value === 'true') return true;
+  if (value === 'False' || value === 'false') return false;
+  if (value === 'null') return null;
+  // Don't try JSON.parse for plain strings — only if it looks like JSON
+  if ((value.startsWith('{') && value.endsWith('}')) ||
+      (value.startsWith('[') && value.endsWith(']'))) {
+    try { return JSON.parse(value); } catch { /* fall through */ }
+  }
+  return value;
+}
+
+/**
+ * Extract `resources.repositories` from a parsed YAML template.
+ * These define repo aliases used by template references within the file.
+ */
+function extractResourceRepositories(
+  parsed: Record<string, unknown>,
+): ResourceRepository[] {
+  const resources = parsed.resources as Record<string, unknown> | undefined;
+  if (!resources) return [];
+  const repos = resources.repositories;
+  if (!Array.isArray(repos)) return [];
+  return repos.filter(
+    (r): r is ResourceRepository =>
+      r != null &&
+      typeof r === 'object' &&
+      'repository' in r &&
+      'name' in r &&
+      typeof (r as Record<string, unknown>).repository === 'string' &&
+      typeof (r as Record<string, unknown>).name === 'string',
+  );
+}
+
+/** De-duplicate resources by alias name, later entries take priority. */
+function deduplicateResources(resources: ResourceRepository[]): ResourceRepository[] {
+  const map = new Map<string, ResourceRepository>();
+  for (const r of resources) {
+    map.set(r.repository, r);
+  }
+  return Array.from(map.values());
+}
+
 /** Build node + edge arrays from a set of template references attached to a parent. */
 function buildTemplateNodesAndEdges(
   parentId: string,
@@ -528,28 +628,49 @@ function buildTemplateNodesAndEdges(
 
     // Attempt to resolve expression paths (e.g. ${{parameters.buildType}})
     let pathForNode = ref.normalizedPath;
-    let dynamicPath = false;
+    let pathDynamic = false;
+    let pathResolved = true;
     let originalPath: string | undefined;
-    let expressionResolved = false;
     let unresolvedExpressions: string[] | undefined;
 
     if (pathHasExpressions(ref.normalizedPath)) {
-      dynamicPath = true;
+      pathDynamic = true;
       originalPath = ref.normalizedPath;
       const resolution = resolveExpressionPath(
         ref.normalizedPath,
         parameterContext,
       );
       pathForNode = resolution.resolvedPath;
-      expressionResolved = resolution.isFullyResolved;
+      pathResolved = resolution.isFullyResolved;
       unresolvedExpressions = resolution.unresolved.length
         ? resolution.unresolved
         : undefined;
     }
 
+    // Resolve expressions in repo alias (e.g. @${{ coalesce(params.x, 'fallback') }})
+    let resolvedRepoAlias = getEffectiveRepoAlias(ref);
+    let repoAliasDynamic = false;
+    let repoAliasResolved = true;
+    if (resolvedRepoAlias && pathHasExpressions(resolvedRepoAlias)) {
+      repoAliasDynamic = true;
+      const aliasResolution = resolveExpressionPath(resolvedRepoAlias, parameterContext);
+      if (aliasResolution.isFullyResolved) {
+        resolvedRepoAlias = aliasResolution.resolvedPath;
+      } else {
+        repoAliasResolved = false;
+        unresolvedExpressions = [
+          ...(unresolvedExpressions ?? []),
+          ...aliasResolution.unresolved,
+        ];
+      }
+    }
+
+    // Overall: is anything dynamic? Is everything resolved?
+    const isDynamic = pathDynamic || repoAliasDynamic;
+    const isFullyResolved = pathResolved && repoAliasResolved;
+
     // For same-repo templates, resolve the full path relative to parent directory
-    const effectiveRepoAlias = getEffectiveRepoAlias(ref);
-    const resolvedPath = ref.repoAlias
+    const resolvedPath = resolvedRepoAlias
       ? pathForNode
       : resolvePath(parentBaseDir, pathForNode);
 
@@ -558,10 +679,10 @@ function buildTemplateNodesAndEdges(
         ? `...${pathForNode.slice(-37)}`
         : pathForNode;
 
-    // Resolve repo info and ADO URL
+    // Resolve repo info and ADO URL using the resolved repo alias
     const { repoInfo, adoUrl } = resolveNodeMetadata(
       ref,
-      effectiveRepoAlias,
+      resolvedRepoAlias,
       resolvedPath,
       org,
       project,
@@ -569,10 +690,26 @@ function buildTemplateNodesAndEdges(
       repositories,
     );
 
+    // Resolve expression strings in ref.parameters (e.g. ${{ parameters.featureFlags }} → actual value)
+    const resolvedRefParams = resolveCallerParams(
+      ref.parameters as Record<string, unknown> | undefined,
+      parameterContext,
+    );
+
     // Extract parameter names
     const parameterNames = ref.parameters
       ? Object.keys(ref.parameters)
       : undefined;
+
+    // Create a modified ref with the resolved repo alias and parameters for fetching
+    const resolvedRef: TemplateReference = resolvedRepoAlias !== getEffectiveRepoAlias(ref) || resolvedRefParams !== ref.parameters
+      ? {
+          ...ref,
+          repoAlias: resolvedRepoAlias || ref.repoAlias,
+          contextRepoAlias: resolvedRepoAlias || ref.contextRepoAlias,
+          parameters: resolvedRefParams as TemplateReference['parameters'],
+        }
+      : ref;
 
     templateNodes.push({
       id: nodeId,
@@ -581,7 +718,7 @@ function buildTemplateNodesAndEdges(
       data: {
         label,
         filePath: resolvedPath,
-        repoAlias: effectiveRepoAlias,
+        repoAlias: resolvedRepoAlias,
         templateCount: 0,
         status: 'collapsed',
         isRoot: false,
@@ -591,12 +728,16 @@ function buildTemplateNodesAndEdges(
         templateLocation: ref.location,
         conditional: ref.conditional || undefined,
         parameterNames,
-        dynamicPath: dynamicPath || undefined,
-        originalPath,
-        expressionResolved: dynamicPath ? expressionResolved : undefined,
+        dynamicPath: isDynamic || undefined,
+        originalPath: originalPath || (repoAliasDynamic ? ref.rawPath : undefined),
+        expressionResolved: isDynamic ? isFullyResolved : undefined,
         unresolvedExpressions,
-        // Stash the full ref for expansion
-        _ref: ref,
+        // Stash the resolved ref for expansion (with resolved repo alias + params)
+        _ref: resolvedRef,
+        // Stash the parent's parameter context so it can flow down during expansion
+        _parentParamContext: parameterContext,
+        // Stash accumulated resources (root + all ancestor template resources)
+        _accumulatedResources: repositories,
       },
     });
 
@@ -607,7 +748,7 @@ function buildTemplateNodesAndEdges(
           ? 'extends param'
           : ref.location;
 
-    const isExternalEdge = !!getEffectiveRepoAlias(ref);
+    const isExternalEdge = !!resolvedRepoAlias;
 
     templateEdges.push({
       id: `${parentId}->${nodeId}`,
@@ -652,13 +793,19 @@ async function fetchTemplateContent(
   const cached = cache.get(cacheKey);
   if (cached) return cached;
 
+  // Use node-specific accumulated resources if available, otherwise fall back to root resources
+  const nodeResources = (nodeData as unknown as Record<string, unknown>)._accumulatedResources as
+    | ResourceRepository[]
+    | undefined;
+  const effectiveRepos = nodeResources ?? repositories;
+
   // Resolve the repo alias
   let targetProject = project;
   let targetRepo = defaultRepoName;
   let targetRef: string | undefined;
 
-  if (effectiveRepoAlias && repositories.length) {
-    const source = resolveTemplateSource(effectiveRepoAlias, repositories);
+  if (effectiveRepoAlias && effectiveRepos.length) {
+    const source = resolveTemplateSource(effectiveRepoAlias, effectiveRepos);
     if (source) {
       targetProject = source.project || project;
       targetRepo = source.repoName;

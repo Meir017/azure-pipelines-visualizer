@@ -1,21 +1,19 @@
 /**
- * Resolves `${{ parameters.xxx }}` expressions in template paths.
+ * Resolves `${{ ... }}` expressions in template paths.
  *
- * When a template reference uses `${{ parameters.buildType }}` in its path,
- * we attempt to resolve it by looking up the value from:
- * 1. The parameters passed by the caller (parent)
+ * When a template reference uses expressions like `${{ parameters.buildType }}`
+ * or `${{ coalesce(parameters.featureFlags.obcanary, 'obcoretemplates') }}`,
+ * we evaluate them using the full expression evaluator which supports Azure
+ * Pipelines functions (coalesce, eq, replace, etc.) and nested parameter access.
+ *
+ * Parameter values come from:
+ * 1. The parameters passed by the caller (parent) — higher priority
  * 2. The parameter defaults declared in the file's own `parameters:` section
- *
- * If we can resolve all expressions, the path becomes a concrete file path.
- * If some expressions can't be resolved, the path stays partially dynamic.
  */
 
-// Matches ${{ parameters.NAME }} or ${{ parameters['NAME'] }}
-const PARAM_DOT_RE =
-  /\$\{\{\s*parameters\.([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}/g;
-const PARAM_BRACKET_RE =
-  /\$\{\{\s*parameters\['\s*([^']+)\s*'\]\s*\}\}/g;
-// Matches any remaining ${{ ... }} expression
+import { resolveAllExpressions, type ExpressionContext } from './expression-evaluator';
+
+// Matches any ${{ ... }} expression
 const ANY_EXPR_RE = /\$\{\{.*?\}\}/g;
 
 export interface PathResolutionResult {
@@ -41,7 +39,11 @@ export function pathHasExpressions(templatePath: string): boolean {
 /**
  * Resolve expressions in a template path using available parameter values.
  *
- * @param templatePath The raw template path possibly containing `${{ parameters.xxx }}`
+ * Supports simple parameter substitution (`${{ parameters.x }}`), nested
+ * parameter access (`${{ parameters.featureFlags.obcanary }}`), and function
+ * calls (`${{ coalesce(parameters.x, 'fallback') }}`).
+ *
+ * @param templatePath The raw template path possibly containing `${{ ... }}`
  * @param callerParams Parameters passed by the parent (higher priority)
  * @param fileParamDefaults Parameter defaults declared in the file's `parameters:` section
  */
@@ -66,47 +68,14 @@ export function resolveExpressionPath(
     ...(callerParams ?? {}),
   };
 
-  const substituted: string[] = [];
-  const unresolved: string[] = [];
-
-  let result = templatePath;
-
-  // Replace ${{ parameters.NAME }}
-  result = result.replace(PARAM_DOT_RE, (match, name: string) => {
-    if (name in merged) {
-      substituted.push(name);
-      return String(merged[name] ?? '');
-    }
-    unresolved.push(name);
-    return match;
-  });
-
-  // Replace ${{ parameters['NAME'] }}
-  result = result.replace(PARAM_BRACKET_RE, (match, name: string) => {
-    if (name in merged) {
-      substituted.push(name);
-      return String(merged[name] ?? '');
-    }
-    unresolved.push(name);
-    return match;
-  });
-
-  // Check for any remaining expressions (variables, functions, etc.)
-  const remaining = result.match(ANY_EXPR_RE);
-  if (remaining) {
-    for (const expr of remaining) {
-      // Don't duplicate parameter expressions already tracked by name
-      const alreadyTracked = unresolved.some(u => expr.includes(`parameters.${u}`) || expr.includes(`parameters['${u}']`));
-      if (!alreadyTracked) {
-        unresolved.push(expr);
-      }
-    }
-  }
+  const context: ExpressionContext = { parameters: merged };
+  const { result, hadExpressions, isFullyResolved, substituted, unresolved } =
+    resolveAllExpressions(templatePath, context);
 
   return {
     resolvedPath: result,
-    isFullyResolved: !ANY_EXPR_RE.test(result),
-    hadExpressions: true,
+    isFullyResolved: hadExpressions ? isFullyResolved : true,
+    hadExpressions,
     substituted,
     unresolved,
   };

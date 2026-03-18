@@ -23,3 +23,8 @@ export {
   extractDeclaredParameterNames,
   type PathResolutionResult,
 } from './expression-path-resolver.js';
+export {
+  evaluateExpression,
+  resolveAllExpressions,
+  type ExpressionContext,
+} from './expression-evaluator.js';
