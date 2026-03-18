@@ -46,6 +46,18 @@ describe('parseYaml', () => {
     const result = parseYaml(content) as Record<string, unknown>;
     expect(Array.isArray(result.steps)).toBe(true);
   });
+
+  test('parses directive keys that contain embedded double quotes', () => {
+    const content =
+      'featureFlags:\n' +
+      '  ${{ if startsWith(convertToJson(parameters.featureFlags), \'{\') }}:\n' +
+      '    ${{ each property in parameters.featureFlags }}:\n' +
+      '      ${{ if or(contains(convertToJson(property.value), \'"task":\'), in(property.key, \'EnableClamd\')) }}:\n' +
+      '        enabled: false\n';
+
+    const result = parseYaml(content) as Record<string, unknown>;
+    expect(result.featureFlags).toBeDefined();
+  });
 });
 
 describe('toYaml', () => {

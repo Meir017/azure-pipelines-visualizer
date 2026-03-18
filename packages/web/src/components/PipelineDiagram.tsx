@@ -151,7 +151,12 @@ export default function PipelineDiagram() {
   // Auto-expand collapsed nodes in the background.
   // - Always: detect leaf templates (0 nested refs) and mark as expanded.
   // - When autoExpandAll: fully expand non-leaf nodes too (add child nodes/edges).
+  // Uses a sequential queue to avoid race conditions from concurrent setNodes calls.
+  const autoExpandRunning = useRef(false);
+
   useEffect(() => {
+    if (autoExpandRunning.current) return;
+
     const collapsedNodes = nodes.filter(
       (n) =>
         (n.data as unknown as FileNodeData).status === 'collapsed' &&
@@ -165,13 +170,14 @@ export default function PipelineDiagram() {
       autoExpandAttempted.current.add(n.id);
     }
 
-    // Fire off parallel fetches for all collapsed nodes
-    for (const node of collapsedNodes) {
-      const d = node.data as unknown as FileNodeData;
-      // Skip nodes with unresolved dynamic paths — can't auto-expand
-      if (d.dynamicPath && !d.expressionResolved) continue;
+    autoExpandRunning.current = true;
 
-      (async () => {
+    (async () => {
+      // Process nodes sequentially to avoid race conditions
+      for (const node of collapsedNodes) {
+        const d = node.data as unknown as FileNodeData;
+        if (d.dynamicPath && !d.expressionResolved) continue;
+
         try {
           const content = await fetchTemplateContent(
             org,
@@ -230,6 +236,9 @@ export default function PipelineDiagram() {
               paramContext,
             );
 
+            // Wait for a microtask to let React process any pending state updates
+            await new Promise((r) => setTimeout(r, 0));
+
             setNodes((currentNodes) => {
               const updated = currentNodes.map((n) =>
                 n.id === node.id
@@ -251,12 +260,22 @@ export default function PipelineDiagram() {
             });
 
             setEdges((currentEdges) => [...currentEdges, ...templateEdges]);
+
+            // Let React flush the state update before processing next node
+            await new Promise((r) => setTimeout(r, 50));
           }
         } catch {
           // Silently ignore — user can still click to expand manually
         }
-      })();
-    }
+      }
+
+      autoExpandRunning.current = false;
+      // When auto-expanding all, trigger re-render so the effect re-runs to process
+      // newly added collapsed child nodes. Only needed when we actually expanded non-leaf nodes.
+      if (autoExpandAll) {
+        setNodes((n) => [...n]);
+      }
+    })();
   }, [nodes, org, project, defaultRepoName, rootResources, expandedTemplates, setExpandedTemplate, loadingNodes, setNodes, setEdges, autoExpandAll]);
 
   // Handle clicking a node:

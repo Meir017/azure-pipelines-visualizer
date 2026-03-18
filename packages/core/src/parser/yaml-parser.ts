@@ -26,7 +26,7 @@ function preprocessAzurePipelinesDirectiveKeys(content: string): string {
     .map((line) =>
       line.replace(DIRECTIVE_KEY_PATTERN, (_match, prefix: string, key: string, suffix: string) => {
         const uniqueKey = `${key}__apv_${counter++}`;
-        return `${prefix}"${uniqueKey}"${suffix}`;
+        return `${prefix}${JSON.stringify(uniqueKey)}${suffix}`;
       }),
     )
     .join('\n');
