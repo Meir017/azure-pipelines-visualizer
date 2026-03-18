@@ -39,7 +39,7 @@ describe('detectTemplateReferences', () => {
     const nestedRefs = refs.filter((r) => r.location === 'extends-parameters');
     expect(nestedRefs.length).toBeGreaterThanOrEqual(2);
 
-    const buildRef = nestedRefs.find((r) => r.normalizedPath === 'build-template.yml');
+    const buildRef = nestedRefs.find((r) => r.normalizedPath === '.pipelines/build-template.yml');
     expect(buildRef).toBeDefined();
 
     const validationRef = nestedRefs.find((r) =>
@@ -144,21 +144,27 @@ steps:
   test('handles inconsistent path formats', () => {
     const refs = detectFromFixture('inconsistent-paths.yml');
 
-    // .pipelines/build-template.yml@self → build-template.yml
+    // .pipelines/build-template.yml@self → .pipelines/build-template.yml (preserved)
     // ./build-template.yml@self → build-template.yml
     // build-template.yml → build-template.yml
     const buildRefs = refs.filter((r) => r.normalizedPath === 'build-template.yml');
-    expect(buildRefs).toHaveLength(3);
+    expect(buildRefs).toHaveLength(2);
+
+    // The .pipelines/ prefixed one is separate now
+    const pipelinesRef = refs.find((r) => r.normalizedPath === '.pipelines/build-template.yml');
+    expect(pipelinesRef).toBeDefined();
 
     // All should have no repoAlias (self = local)
-    for (const ref of buildRefs) {
+    for (const ref of [...buildRefs, pipelinesRef!]) {
       expect(ref.repoAlias).toBeUndefined();
     }
 
-    // .pipelines/templates/steps.yml@self → templates/steps.yml
+    // .pipelines/templates/steps.yml@self → .pipelines/templates/steps.yml (preserved)
     // templates/steps.yml → templates/steps.yml
     const stepsRefs = refs.filter((r) => r.normalizedPath === 'templates/steps.yml');
-    expect(stepsRefs).toHaveLength(2);
+    expect(stepsRefs).toHaveLength(1);
+    const pipelinesStepsRef = refs.find((r) => r.normalizedPath === '.pipelines/templates/steps.yml');
+    expect(pipelinesStepsRef).toBeDefined();
   });
 
   test('detects conditional extends template references', () => {

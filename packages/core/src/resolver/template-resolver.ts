@@ -3,7 +3,7 @@ import type { IFileProvider } from './types.js';
 import { parseYaml } from '../parser/yaml-parser.js';
 import { detectTemplateReferences } from '../parser/template-detector.js';
 import { resolveRepoAlias } from '../model/resources.js';
-import { getEffectiveRepoAlias, resolveTemplateRefPath } from '../model/template-ref.js';
+import { getEffectiveRepoAlias, resolveTemplateRefPaths } from '../model/template-ref.js';
 
 /** A resolved template with its content and any nested template references. */
 export interface ResolvedTemplate {
@@ -70,11 +70,12 @@ async function resolveSingle(
 ): Promise<ResolvedTemplate> {
   // Build a unique key for cycle detection
   const repoKey = getEffectiveRepoAlias(ref) ?? '';
-  const resolvedPath = resolveTemplateRefPath(ref);
-  const cacheKey = `${repoKey}:${resolvedPath}`;
+  const { primary: primaryPath, fallback: fallbackPath } = resolveTemplateRefPaths(ref);
+  const cacheKey = `${repoKey}:${primaryPath}`;
 
-  // Cycle detection
-  if (visited.has(cacheKey)) {
+  // Cycle detection (check both primary and fallback)
+  const fallbackCacheKey = fallbackPath ? `${repoKey}:${fallbackPath}` : undefined;
+  if (visited.has(cacheKey) || (fallbackCacheKey && visited.has(fallbackCacheKey))) {
     return {
       ref,
       content: '',
@@ -120,7 +121,20 @@ async function resolveSingle(
   }
 
   try {
-    const content = await fileProvider.getFileContent(repoId, resolvedPath, gitRef);
+    // Try primary path (relative to source file), fallback to repo-root-relative
+    let resolvedPath = primaryPath;
+    let content: string;
+    try {
+      content = await fileProvider.getFileContent(repoId, primaryPath, gitRef);
+    } catch (primaryErr) {
+      if (fallbackPath) {
+        content = await fileProvider.getFileContent(repoId, fallbackPath, gitRef);
+        resolvedPath = fallbackPath;
+      } else {
+        throw primaryErr;
+      }
+    }
+
     const parsed = (parseYaml(content) ?? {}) as Record<string, unknown>;
     const nestedRefs = detectTemplateReferences(parsed, {
       contextRepoAlias: effectiveRepoAlias,
@@ -129,7 +143,7 @@ async function resolveSingle(
 
     // Track this path as visited for cycle detection in this branch
     const branchVisited = new Set(visited);
-    branchVisited.add(cacheKey);
+    branchVisited.add(`${repoKey}:${resolvedPath}`);
 
     const children = await resolveRefs(
       nestedRefs,

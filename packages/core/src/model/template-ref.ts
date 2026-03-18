@@ -27,10 +27,9 @@ export function parseTemplatePath(raw: string): {
     }
   }
 
-  // Normalize: forward slashes, strip leading ./ or .pipelines/
+  // Normalize: forward slashes, strip leading ./
   path = path.replace(/\\/g, '/');
   path = path.replace(/^\.\//, '');
-  path = path.replace(/^\.pipelines\//, '');
 
   return { normalizedPath: path, repoAlias };
 }
@@ -64,23 +63,48 @@ export function getEffectiveRepoAlias(
   return ref.repoAlias ?? ref.contextRepoAlias;
 }
 
-export function resolveTemplateRefPath(
+/**
+ * Returns the primary resolved path (relative to source file) and an optional
+ * fallback path (repo-root-relative) for template path resolution.
+ *
+ * Azure Pipelines resolves template paths by first trying relative to the
+ * including file's directory, then falling back to repository root.
+ */
+export function resolveTemplateRefPaths(
   ref: Pick<TemplateReference, 'rawPath' | 'normalizedPath' | 'repoAlias' | 'sourcePath'>,
-): string {
+): { primary: string; fallback?: string } {
   if (ref.normalizedPath.startsWith('/')) {
-    return ref.normalizedPath;
+    return { primary: ref.normalizedPath };
   }
 
-  if (ref.repoAlias || !ref.sourcePath || !isExplicitRelativePath(ref.rawPath)) {
-    return ref.normalizedPath;
+  // Cross-repo explicit refs or no source context — use normalized path only
+  if (ref.repoAlias || !ref.sourcePath) {
+    return { primary: ref.normalizedPath };
   }
 
   const baseDir = dirOf(ref.sourcePath);
   if (!baseDir) {
-    return ref.normalizedPath;
+    return { primary: ref.normalizedPath };
   }
 
-  return `${baseDir}/${ref.normalizedPath}`;
+  const relativePath = collapsePath(`${baseDir}/${ref.normalizedPath}`);
+
+  // If relative resolution produces the same path, no fallback needed
+  if (relativePath === ref.normalizedPath) {
+    return { primary: relativePath };
+  }
+
+  return { primary: relativePath, fallback: ref.normalizedPath };
+}
+
+/**
+ * Returns the primary resolved path for a template reference.
+ * Use resolveTemplateRefPaths() when fallback resolution is needed.
+ */
+export function resolveTemplateRefPath(
+  ref: Pick<TemplateReference, 'rawPath' | 'normalizedPath' | 'repoAlias' | 'sourcePath'>,
+): string {
+  return resolveTemplateRefPaths(ref).primary;
 }
 
 function dirOf(filePath: string): string {
@@ -89,7 +113,25 @@ function dirOf(filePath: string): string {
   return lastSlash > 0 ? normalized.slice(0, lastSlash) : '';
 }
 
-function isExplicitRelativePath(rawPath: string): boolean {
-  const path = rawPath.split('@')[0]?.trim() ?? '';
-  return path.startsWith('./') || path.startsWith('../');
+/**
+ * Collapses `.` and `..` segments in a path.
+ * e.g. `v1/Core/Steps/../../Variables/foo.yml` → `v1/Variables/foo.yml`
+ */
+export function collapsePath(path: string): string {
+  const isAbsolute = path.startsWith('/');
+  const parts = path.split('/').filter((p) => p !== '' && p !== '.');
+  const result: string[] = [];
+  for (const part of parts) {
+    if (part === '..') {
+      if (result.length > 0 && result[result.length - 1] !== '..') {
+        result.pop();
+      } else if (!isAbsolute) {
+        result.push(part);
+      }
+    } else {
+      result.push(part);
+    }
+  }
+  const collapsed = result.join('/');
+  return isAbsolute ? `/${collapsed}` : collapsed;
 }

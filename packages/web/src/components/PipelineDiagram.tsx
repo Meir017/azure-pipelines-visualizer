@@ -20,7 +20,7 @@ import {
   resolveTemplateSource,
   getEffectiveRepoAlias,
   buildAdoFileUrl,
-  resolveTemplateRefPath,
+  resolveTemplateRefPaths,
   resolveExpressionPath,
   extractParameterDefaults,
   extractDeclaredParameterNames,
@@ -213,7 +213,7 @@ export default function PipelineDiagram() {
         if (d.dynamicPath && !d.expressionResolved) continue;
 
         try {
-          const content = await fetchTemplateContent(
+          const { content, actualPath } = await fetchTemplateContent(
             org,
             project,
             defaultRepoName,
@@ -229,7 +229,7 @@ export default function PipelineDiagram() {
             | undefined;
           const nestedRefs = detectTemplateReferences(parsed, {
             contextRepoAlias: getEffectiveRepoAlias(parentRef ?? {}),
-            sourcePath: d.filePath,
+            sourcePath: actualPath,
           });
 
           const declaredParamNames = extractDeclaredParameterNames(parsed);
@@ -388,7 +388,7 @@ export default function PipelineDiagram() {
       );
 
       try {
-        const content = await fetchTemplateContent(
+        const { content, actualPath } = await fetchTemplateContent(
           org,
           project,
           defaultRepoName,
@@ -404,7 +404,7 @@ export default function PipelineDiagram() {
           | undefined;
         const nestedRefs = detectTemplateReferences(parsed, {
           contextRepoAlias: getEffectiveRepoAlias(parentRef ?? {}),
-          sourcePath: d.filePath,
+          sourcePath: actualPath,
         });
 
         // Build parameter context for resolving expression paths in nested refs:
@@ -416,8 +416,8 @@ export default function PipelineDiagram() {
         const paramContext = { ...fileDefaults, ...callerParams };
         const declaredParamNames = extractDeclaredParameterNames(parsed);
 
-        // Determine the baseDir for this expanded template
-        const expandedFileDir = dirOf(d.filePath);
+        // Determine the baseDir for this expanded template (use actual resolved path)
+        const expandedFileDir = dirOf(actualPath);
 
         // Merge accumulated resources: parent's resources + this template's own resources
         const parentResources = (d as unknown as Record<string, unknown>)._accumulatedResources as ResourceRepository[] | undefined;
@@ -768,7 +768,8 @@ function buildTemplateNodesAndEdges(
     const isFullyResolved = pathResolved && repoAliasResolved;
 
     // Resolve non-aliased nested refs relative to the template that declared them.
-    const resolvedPath = resolveTemplateRefPath({
+    // Azure Pipelines tries relative-to-source first, then repo-root as fallback.
+    const { primary: resolvedPath, fallback: fallbackPath } = resolveTemplateRefPaths({
       ...ref,
       normalizedPath: pathForNode,
       repoAlias: ref.repoAlias,
@@ -835,6 +836,8 @@ function buildTemplateNodesAndEdges(
           templateLocation: ref.location,
           // Stash the resolved ref for expansion (with resolved repo alias + params)
           _ref: resolvedRef,
+          // Stash fallback path for fetch retry (repo-root-relative)
+          _fallbackPath: fallbackPath,
           // Stash the parent's parameter context so it can flow down during expansion
           _parentParamContext: parameterContext,
           // Stash accumulated resources (root + all ancestor template resources)
@@ -885,7 +888,7 @@ function buildTemplateNodesAndEdges(
   return { templateNodes, templateEdges };
 }
 
-/** Fetch template content, using cache or API. */
+/** Fetch template content, using cache or API. Returns content + actual resolved path. */
 async function fetchTemplateContent(
   org: string,
   project: string,
@@ -894,7 +897,7 @@ async function fetchTemplateContent(
   repositories: ResourceRepository[],
   cache: Map<string, string>,
   setCache: (key: string, content: string) => void,
-): Promise<string> {
+): Promise<{ content: string; actualPath: string }> {
   // Retrieve the stashed ref from node data
   const ref = (nodeData as unknown as Record<string, unknown>)._ref as
     | TemplateReference
@@ -903,10 +906,20 @@ async function fetchTemplateContent(
 
   // Use the resolved filePath from node data (already resolved relative to parent dir)
   const fetchPath = nodeData.filePath;
+  const fallbackPath = (nodeData as unknown as Record<string, unknown>)._fallbackPath as
+    | string
+    | undefined;
   const effectiveRepoAlias = getEffectiveRepoAlias(ref);
   const cacheKey = `${effectiveRepoAlias || ''}:${fetchPath}`;
   const cached = cache.get(cacheKey);
-  if (cached) return cached;
+  if (cached) return { content: cached, actualPath: fetchPath };
+
+  // Also check cache for fallback path
+  if (fallbackPath) {
+    const fallbackCacheKey = `${effectiveRepoAlias || ''}:${fallbackPath}`;
+    const fallbackCached = cache.get(fallbackCacheKey);
+    if (fallbackCached) return { content: fallbackCached, actualPath: fallbackPath };
+  }
 
   // Use node-specific accumulated resources if available, otherwise fall back to root resources
   const nodeResources = (nodeData as unknown as Record<string, unknown>)._accumulatedResources as
@@ -932,16 +945,34 @@ async function fetchTemplateContent(
     targetRepo = effectiveRepoAlias;
   }
 
-  const resp = await fetchFileByRepoName(
-    org,
-    targetProject,
-    targetRepo,
-    fetchPath,
-    targetRef,
-  );
+  let resp: { content: string };
+  let actualPath = fetchPath;
+  try {
+    resp = await fetchFileByRepoName(
+      org,
+      targetProject,
+      targetRepo,
+      fetchPath,
+      targetRef,
+    );
+  } catch (primaryErr) {
+    // Fallback: try repo-root-relative path
+    if (fallbackPath) {
+      resp = await fetchFileByRepoName(
+        org,
+        targetProject,
+        targetRepo,
+        fallbackPath,
+        targetRef,
+      );
+      actualPath = fallbackPath;
+    } else {
+      throw primaryErr;
+    }
+  }
 
-  setCache(cacheKey, resp.content);
-  return resp.content;
+  setCache(`${effectiveRepoAlias || ''}:${actualPath}`, resp.content);
+  return { content: resp.content, actualPath };
 }
 
 /** Extract directory from a file path. e.g. "/.pipelines/a.yml" → "/.pipelines" */

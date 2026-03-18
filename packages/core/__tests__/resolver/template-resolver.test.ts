@@ -53,11 +53,11 @@ jobs:
 stages:
   - stage: deploy
     jobs:
-      - template: jobs/deploy-job.yml
+      - template: deploy-job.yml
 `,
         ],
         [
-          'jobs/deploy-job.yml',
+          'stages/deploy-job.yml',
           `
 jobs:
   - job: deployJob
@@ -84,14 +84,14 @@ jobs:
           'templates/stage-a.yml',
           `
 stages:
-  - template: templates/stage-b.yml
+  - template: stage-b.yml
 `,
         ],
         [
           'templates/stage-b.yml',
           `
 stages:
-  - template: templates/stage-a.yml
+  - template: stage-a.yml
 `,
         ],
       ]),
@@ -247,5 +247,64 @@ steps:
 
     expect(resolved).toHaveLength(3);
     expect(resolved.every((r) => !r.error)).toBe(true);
+  });
+
+  test('falls back to repo-root path when relative resolution fails', async () => {
+    // Simulates: .pipelines/pipeline.yml references .pipelines/build-template.yml
+    // Relative resolution produces .pipelines/.pipelines/build-template.yml (wrong)
+    // Fallback to .pipelines/build-template.yml (correct)
+    const provider = new InMemoryFileProvider(
+      new Map([
+        [
+          '.pipelines/build-template.yml',
+          `
+steps:
+  - script: echo building
+`,
+        ],
+      ]),
+    );
+
+    const refs = [
+      createTemplateRef('.pipelines/build-template.yml@self', 'steps', undefined, false, {
+        sourcePath: '.pipelines/pipeline.yml',
+      }),
+    ];
+    const resolved = await resolveTemplateReferences(refs, provider);
+
+    expect(resolved).toHaveLength(1);
+    expect(resolved[0].error).toBeUndefined();
+    expect(resolved[0].content).toContain('echo building');
+  });
+
+  test('resolves bare filenames relative to source directory', async () => {
+    // Simulates: helm-ev2/parent.yaml references create-helm-commands.yaml
+    // Should resolve to helm-ev2/create-helm-commands.yaml
+    const provider = new InMemoryFileProvider(
+      new Map([
+        [
+          'helm-ev2/parent.yaml',
+          `
+steps:
+  - template: create-commands.yaml
+`,
+        ],
+        [
+          'helm-ev2/create-commands.yaml',
+          `
+steps:
+  - script: echo creating
+`,
+        ],
+      ]),
+    );
+
+    const refs = [createTemplateRef('helm-ev2/parent.yaml', 'steps')];
+    const resolved = await resolveTemplateReferences(refs, provider);
+
+    expect(resolved).toHaveLength(1);
+    expect(resolved[0].children).toHaveLength(1);
+    expect(resolved[0].children[0].error).toBeUndefined();
+    expect(resolved[0].children[0].content).toContain('echo creating');
   });
 });
