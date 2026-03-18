@@ -76,38 +76,82 @@ export function resolveTaskDocUrl(
 
 /**
  * Extract all task references from a parsed YAML object.
- * Walks through stages → jobs → steps looking for `task:` fields.
+ * Walks through stages → jobs → steps looking for `task:` fields,
+ * including inside conditional `${{ if }}` / `${{ else }}` blocks.
  */
 export function extractTaskReferences(raw: Record<string, unknown>): TaskReference[] {
   const refs: TaskReference[] = [];
   const seen = new Set<string>();
 
+  function addTask(taskVal: unknown) {
+    if (typeof taskVal === 'string' && !seen.has(taskVal)) {
+      seen.add(taskVal);
+      refs.push(parseTaskReference(taskVal));
+    }
+  }
+
   function walkSteps(steps: unknown[]) {
     for (const step of steps) {
-      if (step && typeof step === 'object' && 'task' in step) {
-        const taskVal = (step as Record<string, unknown>).task;
-        if (typeof taskVal === 'string' && !seen.has(taskVal)) {
-          seen.add(taskVal);
-          refs.push(parseTaskReference(taskVal));
+      if (!step || typeof step !== 'object') continue;
+      const obj = step as Record<string, unknown>;
+
+      if ('task' in obj) {
+        addTask(obj.task);
+      }
+
+      // Walk conditional directive blocks: ${{ if }}, ${{ else }}, etc.
+      for (const key of Object.keys(obj)) {
+        if (key.startsWith('${{')) {
+          walkConditionalValue(obj[key]);
         }
       }
     }
   }
 
+  function walkConditionalValue(value: unknown) {
+    if (Array.isArray(value)) {
+      walkSteps(value);
+    } else if (value && typeof value === 'object') {
+      const obj = value as Record<string, unknown>;
+      if ('task' in obj) {
+        addTask(obj.task);
+      }
+      // Recurse into nested conditionals
+      for (const key of Object.keys(obj)) {
+        if (key.startsWith('${{')) {
+          walkConditionalValue(obj[key]);
+        }
+      }
+      if (Array.isArray(obj.steps)) walkSteps(obj.steps);
+      if (Array.isArray(obj.jobs)) walkJobs(obj.jobs);
+      if (Array.isArray(obj.stages)) walkStages(obj.stages);
+    }
+  }
+
   function walkJobs(jobs: unknown[]) {
     for (const job of jobs) {
-      if (job && typeof job === 'object') {
-        const j = job as Record<string, unknown>;
-        if (Array.isArray(j.steps)) walkSteps(j.steps);
+      if (!job || typeof job !== 'object') continue;
+      const j = job as Record<string, unknown>;
+      if (Array.isArray(j.steps)) walkSteps(j.steps);
+      // Walk conditional blocks at the job level
+      for (const key of Object.keys(j)) {
+        if (key.startsWith('${{')) {
+          walkConditionalValue(j[key]);
+        }
       }
     }
   }
 
   function walkStages(stages: unknown[]) {
     for (const stage of stages) {
-      if (stage && typeof stage === 'object') {
-        const s = stage as Record<string, unknown>;
-        if (Array.isArray(s.jobs)) walkJobs(s.jobs);
+      if (!stage || typeof stage !== 'object') continue;
+      const s = stage as Record<string, unknown>;
+      if (Array.isArray(s.jobs)) walkJobs(s.jobs);
+      // Walk conditional blocks at the stage level
+      for (const key of Object.keys(s)) {
+        if (key.startsWith('${{')) {
+          walkConditionalValue(s[key]);
+        }
       }
     }
   }
@@ -118,6 +162,12 @@ export function extractTaskReferences(raw: Record<string, unknown>): TaskReferen
   if (Array.isArray(raw.jobs)) walkJobs(raw.jobs);
   // Stages
   if (Array.isArray(raw.stages)) walkStages(raw.stages);
+  // Top-level conditional blocks (template files with steps inside conditionals)
+  for (const key of Object.keys(raw)) {
+    if (key.startsWith('${{')) {
+      walkConditionalValue(raw[key]);
+    }
+  }
 
   return refs;
 }

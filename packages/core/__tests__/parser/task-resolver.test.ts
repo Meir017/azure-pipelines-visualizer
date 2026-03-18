@@ -138,4 +138,80 @@ describe('extractTaskReferences', () => {
     const refs = extractTaskReferences({ trigger: 'none', pool: {} });
     expect(refs).toHaveLength(0);
   });
+
+  test('extracts tasks inside conditional ${{ if }} blocks in steps', () => {
+    const refs = extractTaskReferences({
+      steps: [
+        { '${{ if eq(parameters.isLinux, true) }}': [
+          { task: 'ContainerSecurityCopacetic@0' },
+        ]},
+        { task: 'ContainerSecurityCredScan@0' },
+      ],
+    });
+    expect(refs).toHaveLength(2);
+    expect(refs.map(r => r.name)).toContain('ContainerSecurityCopacetic');
+    expect(refs.map(r => r.name)).toContain('ContainerSecurityCredScan');
+  });
+
+  test('extracts tasks from nested conditional blocks (if/elseif/else)', () => {
+    const refs = extractTaskReferences({
+      steps: [
+        { '${{ if eq(parameters.mode, "patch") }}': [
+          { task: 'PatchTask@1' },
+        ]},
+        { '${{ elseif eq(parameters.mode, "scan") }}': [
+          { task: 'ScanTask@1' },
+        ]},
+        { '${{ else }}': [
+          { task: 'AnalyzeTask@1' },
+        ]},
+      ],
+    });
+    expect(refs).toHaveLength(3);
+    expect(refs.map(r => r.name)).toEqual(['PatchTask', 'ScanTask', 'AnalyzeTask']);
+  });
+
+  test('extracts tasks from doubly-nested conditional blocks', () => {
+    const refs = extractTaskReferences({
+      steps: [
+        { '${{ if parameters.isLinux }}': [
+          { '${{ if eq(parameters.enablePatching, true) }}': [
+            { task: 'LinuxPatch@0' },
+          ]},
+          { '${{ else }}': [
+            { task: 'LinuxScan@0' },
+          ]},
+        ]},
+        { task: 'AlwaysRun@1' },
+      ],
+    });
+    expect(refs).toHaveLength(3);
+    expect(refs.map(r => r.name)).toContain('LinuxPatch');
+    expect(refs.map(r => r.name)).toContain('LinuxScan');
+    expect(refs.map(r => r.name)).toContain('AlwaysRun');
+  });
+
+  test('extracts tasks from conditional blocks inside jobs', () => {
+    const refs = extractTaskReferences({
+      jobs: [
+        { job: 'Build', steps: [
+          { '${{ if parameters.useCache }}': [
+            { task: 'Cache@2' },
+          ]},
+          { task: 'DotNetCoreCLI@2' },
+        ]},
+      ],
+    });
+    expect(refs).toHaveLength(2);
+  });
+
+  test('deduplicates tasks across conditional branches', () => {
+    const refs = extractTaskReferences({
+      steps: [
+        { '${{ if parameters.a }}': [{ task: 'Same@1' }] },
+        { '${{ else }}': [{ task: 'Same@1' }] },
+      ],
+    });
+    expect(refs).toHaveLength(1);
+  });
 });
