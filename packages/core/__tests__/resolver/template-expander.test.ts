@@ -639,4 +639,75 @@ steps:
     expect(steps[2].script).toBe('echo middle');
     expect(steps[3].script).toBe('echo post-1');
   });
+
+  // ── Relative path resolution in expander ────────────────────────────────
+
+  test('resolves bare paths relative to referencing file in nested dirs', async () => {
+    // Verifies the expander resolves bare paths relative to the including file
+    const provider = new InMemoryFileProvider(
+      new Map([
+        [
+          'pipeline.yml',
+          `
+steps:
+  - template: subdir/parent.yml
+`,
+        ],
+        [
+          'subdir/parent.yml',
+          `
+steps:
+  - template: child.yml
+`,
+        ],
+        [
+          'subdir/child.yml',
+          `
+steps:
+  - script: echo from child
+`,
+        ],
+      ]),
+    );
+
+    const result = await expandPipeline(provider, '', 'pipeline.yml');
+
+    expect(result.errors).toHaveLength(0);
+    expect(result.filesLoaded).toContain('subdir/child.yml');
+    const steps = result.pipeline.steps as Record<string, unknown>[];
+    expect(steps).toHaveLength(1);
+    expect(steps[0].script).toBe('echo from child');
+  });
+
+  test('expander does not implement fallback — path must resolve directly', async () => {
+    // The expander resolves paths relative to source only (no repo-root fallback).
+    // This test documents that limitation: if a template references a path that
+    // includes its own parent dir (e.g., .pipelines/build.yml from .pipelines/main.yml),
+    // the expander will look for .pipelines/.pipelines/build.yml which won't exist.
+    const provider = new InMemoryFileProvider(
+      new Map([
+        [
+          '.pipelines/main.yml',
+          `
+steps:
+  - template: .pipelines/build.yml
+`,
+        ],
+        [
+          '.pipelines/build.yml',
+          `
+steps:
+  - script: echo build
+`,
+        ],
+      ]),
+    );
+
+    const result = await expandPipeline(provider, '', '.pipelines/main.yml');
+
+    // The expander will try .pipelines/.pipelines/build.yml (wrong), not find it,
+    // and report an error. This is a known limitation vs. template-resolver.ts.
+    expect(result.errors.length).toBeGreaterThanOrEqual(1);
+    expect(result.errors[0].message).toContain('File not found');
+  });
 });

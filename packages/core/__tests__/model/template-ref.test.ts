@@ -55,6 +55,37 @@ describe('parseTemplatePath', () => {
     expect(result.normalizedPath).toBe('v2/OneBranch.Official.CrossPlat.yml');
     expect(result.repoAlias).toBe('GovernedTemplates');
   });
+
+  test('backslash with @ alias combination', () => {
+    const result = parseTemplatePath('templates\\folder\\build.yml@shared');
+    expect(result.normalizedPath).toBe('templates/folder/build.yml');
+    expect(result.repoAlias).toBe('shared');
+  });
+
+  test('double @ uses last occurrence', () => {
+    const result = parseTemplatePath('dir@sub/file.yml@alias');
+    expect(result.normalizedPath).toBe('dir@sub/file.yml');
+    expect(result.repoAlias).toBe('alias');
+  });
+
+  test('empty path returns empty normalized path', () => {
+    const result = parseTemplatePath('');
+    expect(result.normalizedPath).toBe('');
+    expect(result.repoAlias).toBeUndefined();
+  });
+
+  test('@ at start is not treated as alias separator', () => {
+    // atIndex must be > 0 to split
+    const result = parseTemplatePath('@alias');
+    expect(result.normalizedPath).toBe('@alias');
+    expect(result.repoAlias).toBeUndefined();
+  });
+
+  test('path with trailing @ and empty alias', () => {
+    const result = parseTemplatePath('path.yml@');
+    expect(result.normalizedPath).toBe('path.yml');
+    expect(result.repoAlias).toBe('');
+  });
 });
 
 describe('createTemplateRef', () => {
@@ -228,6 +259,54 @@ describe('resolveTemplateRefPaths', () => {
     expect(result.primary).toBe('/templates/build.yml');
     expect(result.fallback).toBeUndefined();
   });
+
+  test('explicit ../ path provides fallback since collapsed path differs', () => {
+    const result = resolveTemplateRefPaths({
+      rawPath: '../../Variables/foo.yml',
+      normalizedPath: '../../Variables/foo.yml',
+      repoAlias: undefined,
+      sourcePath: 'v1/Core/Steps/bar.yml',
+    });
+    // Relative: v1/Core/Steps/../../Variables/foo.yml → collapsed to v1/Variables/foo.yml
+    expect(result.primary).toBe('v1/Variables/foo.yml');
+    // Fallback is the normalized path (../../Variables/foo.yml) which is different
+    expect(result.fallback).toBe('../../Variables/foo.yml');
+  });
+
+  test('cross-repo ref with sourcePath skips relative resolution', () => {
+    const result = resolveTemplateRefPaths({
+      rawPath: 'build.yml@external',
+      normalizedPath: 'build.yml',
+      repoAlias: 'external',
+      sourcePath: 'v1/pipeline.yml',
+    });
+    expect(result.primary).toBe('build.yml');
+    expect(result.fallback).toBeUndefined();
+  });
+
+  test('contextRepoAlias without repoAlias still resolves relative', () => {
+    // contextRepoAlias is NOT checked by resolveTemplateRefPaths — only repoAlias
+    // This is correct: inherited context means the ref is local within that repo
+    const result = resolveTemplateRefPaths({
+      rawPath: 'Core.Template.yml',
+      normalizedPath: 'Core.Template.yml',
+      repoAlias: undefined,
+      sourcePath: 'v2/OneBranch.NonOfficial.CrossPlat.yml',
+    });
+    expect(result.primary).toBe('v2/Core.Template.yml');
+    expect(result.fallback).toBe('Core.Template.yml');
+  });
+
+  test('bare filename from nested directory provides fallback', () => {
+    const result = resolveTemplateRefPaths({
+      rawPath: 'create-helm-commands.yaml',
+      normalizedPath: 'create-helm-commands.yaml',
+      repoAlias: undefined,
+      sourcePath: 'helm-ev2/sharedEv2-build-steps.yaml',
+    });
+    expect(result.primary).toBe('helm-ev2/create-helm-commands.yaml');
+    expect(result.fallback).toBe('create-helm-commands.yaml');
+  });
 });
 
 describe('collapsePath', () => {
@@ -253,5 +332,25 @@ describe('collapsePath', () => {
 
   test('returns path unchanged when no special segments', () => {
     expect(collapsePath('a/b/c.yml')).toBe('a/b/c.yml');
+  });
+
+  test('handles empty string', () => {
+    expect(collapsePath('')).toBe('');
+  });
+
+  test('handles trailing slash', () => {
+    expect(collapsePath('a/b/../c/')).toBe('a/c');
+  });
+
+  test('handles excessive .. for relative paths', () => {
+    expect(collapsePath('../../../../../../foo.yml')).toBe('../../../../../../foo.yml');
+  });
+
+  test('handles multiple consecutive forward slashes', () => {
+    expect(collapsePath('a///b//c.yml')).toBe('a/b/c.yml');
+  });
+
+  test('collapses all segments with enough ..', () => {
+    expect(collapsePath('a/b/../../foo.yml')).toBe('foo.yml');
   });
 });

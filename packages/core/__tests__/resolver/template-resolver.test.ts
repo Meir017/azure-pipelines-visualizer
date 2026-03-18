@@ -307,4 +307,214 @@ steps:
     expect(resolved[0].children[0].error).toBeUndefined();
     expect(resolved[0].children[0].content).toContain('echo creating');
   });
+
+  test('errors when both primary and fallback paths fail', async () => {
+    const provider = new InMemoryFileProvider(new Map());
+
+    // Reference from a subdirectory — primary will be dir/missing.yml, fallback will be missing.yml
+    // Neither exists → error
+    const refs = [
+      createTemplateRef('missing.yml', 'steps', undefined, false, {
+        sourcePath: 'some-dir/parent.yml',
+      }),
+    ];
+    const resolved = await resolveTemplateReferences(refs, provider);
+
+    expect(resolved).toHaveLength(1);
+    expect(resolved[0].error).toBeDefined();
+    expect(resolved[0].error).toContain('File not found');
+  });
+
+  test('detects cycle via fallback path resolution', async () => {
+    // A references B (bare name, resolves relative to A's dir)
+    // B references A using a path that needs fallback (path includes parent dir)
+    const provider = new InMemoryFileProvider(
+      new Map([
+        [
+          'templates/stage-a.yml',
+          `
+stages:
+  - template: stage-b.yml
+`,
+        ],
+        [
+          'templates/stage-b.yml',
+          `
+stages:
+  - template: stage-a.yml
+`,
+        ],
+      ]),
+    );
+
+    const refs = [createTemplateRef('templates/stage-a.yml', 'stages')];
+    const resolved = await resolveTemplateReferences(refs, provider);
+
+    expect(resolved).toHaveLength(1);
+    // A → B (bare "stage-b.yml" resolves to templates/stage-b.yml)
+    expect(resolved[0].children).toHaveLength(1);
+    expect(resolved[0].children[0].error).toBeUndefined();
+    // B → A (bare "stage-a.yml" resolves to templates/stage-a.yml → cycle!)
+    expect(resolved[0].children[0].children).toHaveLength(1);
+    expect(resolved[0].children[0].children[0].cycleDetected).toBe(true);
+  });
+
+  test('propagates correct sourcePath through 3+ level chain', async () => {
+    // Root references level1/main.yml
+    // level1/main.yml references steps.yml (bare) → resolves to level1/steps.yml
+    // level1/steps.yml references build.yml (bare) → resolves to level1/build.yml
+    const provider = new InMemoryFileProvider(
+      new Map([
+        [
+          'level1/main.yml',
+          `
+steps:
+  - template: steps.yml
+`,
+        ],
+        [
+          'level1/steps.yml',
+          `
+steps:
+  - template: build.yml
+`,
+        ],
+        [
+          'level1/build.yml',
+          `
+steps:
+  - script: echo final
+`,
+        ],
+      ]),
+    );
+
+    const refs = [createTemplateRef('level1/main.yml', 'steps')];
+    const resolved = await resolveTemplateReferences(refs, provider);
+
+    expect(resolved).toHaveLength(1);
+    expect(resolved[0].error).toBeUndefined();
+    // level1/main.yml → level1/steps.yml
+    expect(resolved[0].children).toHaveLength(1);
+    expect(resolved[0].children[0].error).toBeUndefined();
+    // level1/steps.yml → level1/build.yml
+    expect(resolved[0].children[0].children).toHaveLength(1);
+    expect(resolved[0].children[0].children[0].error).toBeUndefined();
+    expect(resolved[0].children[0].children[0].content).toContain('echo final');
+  });
+
+  test('fallback updates sourcePath for nested refs', async () => {
+    // .pipelines/pipeline.yml references .pipelines/build.yml (will need fallback)
+    // .pipelines/build.yml references steps.yml (bare) → should resolve to .pipelines/steps.yml
+    const provider = new InMemoryFileProvider(
+      new Map([
+        [
+          '.pipelines/build.yml',
+          `
+steps:
+  - template: steps.yml
+`,
+        ],
+        [
+          '.pipelines/steps.yml',
+          `
+steps:
+  - script: echo nested
+`,
+        ],
+      ]),
+    );
+
+    // Simulate: reference from .pipelines/pipeline.yml to .pipelines/build.yml
+    // Primary resolution: .pipelines/.pipelines/build.yml → not found
+    // Fallback: .pipelines/build.yml → found
+    // Nested ref "steps.yml" should use fallback's sourcePath (.pipelines/build.yml)
+    const refs = [
+      createTemplateRef('.pipelines/build.yml', 'steps', undefined, false, {
+        sourcePath: '.pipelines/pipeline.yml',
+      }),
+    ];
+    const resolved = await resolveTemplateReferences(refs, provider);
+
+    expect(resolved).toHaveLength(1);
+    expect(resolved[0].error).toBeUndefined();
+    expect(resolved[0].children).toHaveLength(1);
+    expect(resolved[0].children[0].error).toBeUndefined();
+    expect(resolved[0].children[0].content).toContain('echo nested');
+  });
+
+  test('sibling refs resolve independently via primary and fallback', async () => {
+    // Parent references two templates:
+    // - steps.yml (bare) → resolves via primary to subdir/steps.yml
+    // - subdir/jobs.yml (from root) → primary fails, fallback succeeds
+    const provider = new InMemoryFileProvider(
+      new Map([
+        [
+          'subdir/parent.yml',
+          `
+steps:
+  - template: steps.yml
+  - template: subdir/jobs.yml
+`,
+        ],
+        [
+          'subdir/steps.yml',
+          `
+steps:
+  - script: echo steps
+`,
+        ],
+        [
+          'subdir/jobs.yml',
+          `
+jobs:
+  - job: build
+    steps:
+      - script: echo jobs
+`,
+        ],
+      ]),
+    );
+
+    const refs = [createTemplateRef('subdir/parent.yml', 'steps')];
+    const resolved = await resolveTemplateReferences(refs, provider);
+
+    expect(resolved).toHaveLength(1);
+    expect(resolved[0].error).toBeUndefined();
+    expect(resolved[0].children).toHaveLength(2);
+    // steps.yml → primary: subdir/steps.yml (exists)
+    expect(resolved[0].children[0].error).toBeUndefined();
+    expect(resolved[0].children[0].content).toContain('echo steps');
+    // subdir/jobs.yml → primary: subdir/subdir/jobs.yml (not found) → fallback: subdir/jobs.yml (exists)
+    expect(resolved[0].children[1].error).toBeUndefined();
+    expect(resolved[0].children[1].content).toContain('echo jobs');
+  });
+
+  test('primary succeeds without attempting fallback', async () => {
+    // When primary resolution finds the file, fallback should not be attempted
+    let fetchCount = 0;
+    const originalProvider = new InMemoryFileProvider(
+      new Map([
+        ['dir/template.yml', 'steps:\n  - script: echo ok\n'],
+      ]),
+    );
+    const countingProvider: IFileProvider = {
+      async getFileContent(repo: string, path: string, ref?: string): Promise<string> {
+        fetchCount++;
+        return originalProvider.getFileContent(repo, path, ref);
+      },
+    };
+
+    const refs = [
+      createTemplateRef('template.yml', 'steps', undefined, false, {
+        sourcePath: 'dir/parent.yml',
+      }),
+    ];
+    const resolved = await resolveTemplateReferences(refs, countingProvider);
+
+    expect(resolved).toHaveLength(1);
+    expect(resolved[0].error).toBeUndefined();
+    // Should have fetched exactly once (primary succeeded, no fallback attempt)
+    expect(fetchCount).toBe(1);
+  });
 });
