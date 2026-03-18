@@ -627,6 +627,7 @@ body {
   align-items: center;
   gap: 2px;
   font-size: 11px;
+  z-index: 1;
 }
 
 .template-edge__top-row {
@@ -684,9 +685,9 @@ body {
 .template-edge__params-tooltip {
   position: absolute;
   left: 50%;
-  top: calc(100% + 6px);
+  bottom: calc(100% + 6px);
   transform: translateX(-50%);
-  z-index: 100;
+  z-index: 10000;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -790,6 +791,14 @@ body {
 .react-flow__edge-text {
   font-size: 11px;
   font-weight: 600;
+}
+
+/* Elevate edge label renderer above nodes so tooltips/badges aren't hidden.
+   pointer-events: none lets clicks pass through to nodes below;
+   individual label containers re-enable pointer-events. */
+.react-flow__edgelabel-renderer {
+  z-index: 1001 !important;
+  pointer-events: none !important;
 }
 .react-flow__edge-textbg {
   rx: 4;
