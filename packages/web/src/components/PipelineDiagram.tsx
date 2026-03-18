@@ -1021,14 +1021,13 @@ function resolveNodeMetadata(
   }
 
   // Build ADO URL
-  const cleanRef = targetRef?.replace(/^refs\/heads\//, '').replace(/^refs\/tags\//, '');
   const adoUrl = org && targetProject && targetRepo
     ? buildAdoFileUrl({
         org,
         project: targetProject,
         repoName: targetRepo,
         filePath: resolvedPath,
-        branch: cleanRef,
+        ref: targetRef,
       })
     : undefined;
 

@@ -12,6 +12,7 @@ describe('parseAdoUrl', () => {
       repoName: 'Wcd.Infra.ConfigurationGeneration',
       filePath: '/.pipelines/onebranch.pr.gated.yml',
       branch: undefined,
+      ref: undefined,
     });
   });
 
@@ -25,6 +26,7 @@ describe('parseAdoUrl', () => {
       repoName: 'myrepo',
       filePath: '/azure-pipelines.yml',
       branch: 'main',
+      ref: 'refs/heads/main',
     });
   });
 
@@ -34,6 +36,16 @@ describe('parseAdoUrl', () => {
     );
     expect(result).not.toBeNull();
     expect(result!.branch).toBe('feature/my-branch');
+    expect(result!.ref).toBe('refs/heads/feature/my-branch');
+  });
+
+  test('parses URL with tag version', () => {
+    const result = parseAdoUrl(
+      'https://dev.azure.com/org/proj/_git/repo?path=/build.yml&version=GT3.stable',
+    );
+    expect(result).not.toBeNull();
+    expect(result!.branch).toBeUndefined();
+    expect(result!.ref).toBe('refs/tags/3.stable');
   });
 
   test('returns null for non-ADO URLs', () => {
@@ -68,7 +80,7 @@ describe('parseAdoUrl', () => {
 });
 
 describe('buildAdoFileUrl', () => {
-  test('builds URL without branch', () => {
+  test('builds URL without branch or ref', () => {
     const url = buildAdoFileUrl({
       org: 'microsoft',
       project: 'WDATP',
@@ -80,7 +92,7 @@ describe('buildAdoFileUrl', () => {
     );
   });
 
-  test('builds URL with branch', () => {
+  test('builds URL with branch (legacy)', () => {
     const url = buildAdoFileUrl({
       org: 'microsoft',
       project: 'WDATP',
@@ -92,10 +104,54 @@ describe('buildAdoFileUrl', () => {
     expect(url).toContain('path=%2Fbuild.yml');
   });
 
-  test('round-trips with parseAdoUrl', () => {
-    const parts = { org: 'myorg', project: 'myproj', repoName: 'myrepo', filePath: '/ci.yml', branch: 'develop' };
+  test('builds URL with refs/heads ref', () => {
+    const url = buildAdoFileUrl({
+      org: 'org',
+      project: 'proj',
+      repoName: 'repo',
+      filePath: '/ci.yml',
+      ref: 'refs/heads/develop',
+    });
+    expect(url).toContain('version=GBdevelop');
+  });
+
+  test('builds URL with refs/tags ref', () => {
+    const url = buildAdoFileUrl({
+      org: 'org',
+      project: 'proj',
+      repoName: 'repo',
+      filePath: '/ci.yml',
+      ref: 'refs/tags/3.stable',
+    });
+    expect(url).toContain('version=GT3.stable');
+    expect(url).not.toContain('GB');
+  });
+
+  test('ref takes precedence over branch', () => {
+    const url = buildAdoFileUrl({
+      org: 'org',
+      project: 'proj',
+      repoName: 'repo',
+      filePath: '/ci.yml',
+      branch: 'main',
+      ref: 'refs/tags/v1.0',
+    });
+    expect(url).toContain('version=GTv1.0');
+    expect(url).not.toContain('GBmain');
+  });
+
+  test('round-trips branch URL with parseAdoUrl', () => {
+    const parts = { org: 'myorg', project: 'myproj', repoName: 'myrepo', filePath: '/ci.yml', branch: 'develop', ref: 'refs/heads/develop' };
     const url = buildAdoFileUrl(parts);
     const parsed = parseAdoUrl(url);
     expect(parsed).toEqual(parts);
+  });
+
+  test('round-trips tag URL with parseAdoUrl', () => {
+    const parts = { org: 'myorg', project: 'myproj', repoName: 'myrepo', filePath: '/ci.yml', ref: 'refs/tags/3.stable' };
+    const url = buildAdoFileUrl(parts);
+    const parsed = parseAdoUrl(url);
+    expect(parsed!.ref).toBe('refs/tags/3.stable');
+    expect(parsed!.branch).toBeUndefined();
   });
 });
