@@ -112,7 +112,9 @@ export function resolveTemplateRefPath(
 function dirOf(filePath: string): string {
   const normalized = filePath.replace(/\\/g, '/');
   const lastSlash = normalized.lastIndexOf('/');
-  return lastSlash > 0 ? normalized.slice(0, lastSlash) : '';
+  if (lastSlash < 0) return '';
+  if (lastSlash === 0) return '/';
+  return normalized.slice(0, lastSlash);
 }
 
 /**

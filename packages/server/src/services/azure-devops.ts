@@ -1,4 +1,5 @@
 import type { IFileProvider } from '@apv/core';
+import { collapsePath } from '@apv/core';
 import { getAzureDevOpsToken } from '../auth.js';
 
 const API_VERSION = '7.1';
@@ -129,7 +130,10 @@ export async function getFileContent(
   path: string,
   branch?: string,
 ): Promise<string> {
-  let url = `${baseUrl(org, project)}/git/repositories/${encodeURIComponent(repoId)}/items?scopePath=${encodeURIComponent(path)}&api-version=${API_VERSION}&$format=text`;
+  // Normalize: ensure absolute and collapse any '..' segments
+  const absPath = path.startsWith('/') ? path : `/${path}`;
+  const normalizedPath = collapsePath(absPath);
+  let url = `${baseUrl(org, project)}/git/repositories/${encodeURIComponent(repoId)}/items?scopePath=${encodeURIComponent(normalizedPath)}&api-version=${API_VERSION}&$format=text`;
   if (branch) {
     const descriptor = getVersionDescriptor(branch);
     url += `&versionDescriptor.version=${encodeURIComponent(descriptor.version)}&versionDescriptor.versionType=${descriptor.versionType}`;

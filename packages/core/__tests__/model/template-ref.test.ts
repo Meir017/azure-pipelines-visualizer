@@ -313,6 +313,30 @@ describe('resolveTemplateRefPaths', () => {
     expect(result.fallback).toBe('../../Variables/foo.yml');
   });
 
+  test('resolves .. from root-level absolute source path', () => {
+    // Source is at repo root with absolute path — .. should be clamped to root
+    const result = resolveTemplateRefPaths({
+      rawPath: '../onebranch-retail/common-templates/download-universal-artifacts.yaml',
+      normalizedPath: '../onebranch-retail/common-templates/download-universal-artifacts.yaml',
+      repoAlias: undefined,
+      sourcePath: '/template.yml',
+    });
+    // dirOf('/template.yml') should return '/' → collapsePath('/../onebranch-retail/...') → '/onebranch-retail/...'
+    expect(result.primary).toBe('/onebranch-retail/common-templates/download-universal-artifacts.yaml');
+    expect(result.fallback).toBe('../onebranch-retail/common-templates/download-universal-artifacts.yaml');
+  });
+
+  test('resolves sibling path from root-level absolute source', () => {
+    const result = resolveTemplateRefPaths({
+      rawPath: 'steps/build.yml',
+      normalizedPath: 'steps/build.yml',
+      repoAlias: undefined,
+      sourcePath: '/pipeline.yml',
+    });
+    expect(result.primary).toBe('/steps/build.yml');
+    expect(result.fallback).toBe('steps/build.yml');
+  });
+
   test('cross-repo ref with sourcePath skips relative resolution', () => {
     const result = resolveTemplateRefPaths({
       rawPath: 'build.yml@external',
@@ -364,6 +388,10 @@ describe('collapsePath', () => {
 
   test('does not go above root for absolute paths', () => {
     expect(collapsePath('/a/../../foo.yml')).toBe('/foo.yml');
+  });
+
+  test('collapses /../ at root to /', () => {
+    expect(collapsePath('/../onebranch-retail/common-templates/file.yaml')).toBe('/onebranch-retail/common-templates/file.yaml');
   });
 
   test('preserves leading .. for relative paths', () => {
