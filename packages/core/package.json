@@ -6,7 +6,8 @@
   "types": "src/index.ts",
   "scripts": {
     "test": "bun test",
-    "build": "bun build src/index.ts --outdir dist --target node"
+    "build": "bun build src/index.ts --outdir dist --target node",
+    "build:browser": "bun build src/index.ts --outdir dist --target browser --format esm --outfile dist/apv-core.browser.js"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9"

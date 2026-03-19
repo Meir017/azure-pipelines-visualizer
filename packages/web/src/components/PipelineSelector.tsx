@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { parseAdoUrl } from '@apv/core';
 import { usePipelineStore } from '../store/pipeline-store.js';
 import { fetchPipelines, fetchPipelineYaml, fetchFileByRepoName } from '../services/api-client.js';
@@ -26,40 +26,58 @@ export default function PipelineSelector() {
   const [mode, setMode] = useState<'url' | 'browse'>('url');
 
   const [urlLoading, setUrlLoading] = useState(false);
+  const autoLoaded = useRef(false);
 
-  const handleLoadFromUrl = async () => {
-    if (!urlInput.trim()) return;
-    setUrlError(null);
+  // Auto-load pipeline from URL search params on mount
+  useEffect(() => {
+    if (autoLoaded.current) return;
+    autoLoaded.current = true;
 
-    const parsed = parseAdoUrl(urlInput.trim());
+    const params = new URLSearchParams(window.location.search);
+    const adoUrl = params.get('url');
+    const paramOrg = params.get('org');
+    const paramProject = params.get('project');
+    const paramRepo = params.get('repo');
+    const paramPath = params.get('path');
+    const paramBranch = params.get('branch') ?? undefined;
+    const paramPipelineId = params.get('pipelineId');
+
+    if (adoUrl) {
+      // Mode 1: full ADO URL passed as ?url=...
+      setUrlInput(adoUrl);
+      loadFromAdoUrl(adoUrl);
+    } else if (paramOrg && paramProject && paramRepo && paramPath) {
+      // Mode 2: individual params ?org=&project=&repo=&path=&branch=
+      const fullUrl = `https://dev.azure.com/${paramOrg}/${paramProject}/_git/${paramRepo}?path=${paramPath}${paramBranch ? `&version=GB${paramBranch}` : ''}`;
+      setUrlInput(fullUrl);
+      loadFromAdoUrl(fullUrl);
+    } else if (paramOrg && paramProject && paramPipelineId) {
+      // Mode 3: pipeline ID ?org=&project=&pipelineId=
+      loadFromPipelineId(paramOrg, paramProject, Number(paramPipelineId));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const loadFromAdoUrl = async (url: string) => {
+    const parsed = parseAdoUrl(url);
     if (!parsed) {
-      setUrlError('Invalid Azure DevOps URL. Expected format: https://dev.azure.com/{org}/{project}/_git/{repo}?path={filePath}');
+      setUrlError('Invalid Azure DevOps URL');
       return;
     }
-
     setConnection(parsed.org, parsed.project);
     setSelectedPipelineLoading(true);
     setSelectedPipelineError(null);
     setUrlLoading(true);
     try {
       const resp = await fetchFileByRepoName(
-        parsed.org,
-        parsed.project,
-        parsed.repoName,
-        parsed.filePath,
-        parsed.branch,
+        parsed.org, parsed.project, parsed.repoName, parsed.filePath, parsed.branch,
       );
       setSelectedPipeline({
         definition: {
           id: 0,
           name: parsed.filePath.split('/').pop() || parsed.filePath,
           path: parsed.filePath,
-          repository: {
-            id: resp.repoId,
-            name: resp.repoName,
-            type: 'git',
-            defaultBranch: resp.branch || '',
-          },
+          repository: { id: resp.repoId, name: resp.repoName, type: 'git', defaultBranch: resp.branch || '' },
         },
         yaml: resp.content,
       });
@@ -69,6 +87,26 @@ export default function PipelineSelector() {
       setSelectedPipelineLoading(false);
       setUrlLoading(false);
     }
+  };
+
+  const loadFromPipelineId = async (pOrg: string, pProject: string, pipelineId: number) => {
+    setConnection(pOrg, pProject);
+    setSelectedPipelineLoading(true);
+    setSelectedPipelineError(null);
+    try {
+      const data = await fetchPipelineYaml(pOrg, pProject, pipelineId);
+      setSelectedPipeline(data);
+    } catch (err) {
+      setSelectedPipelineError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSelectedPipelineLoading(false);
+    }
+  };
+
+  const handleLoadFromUrl = async () => {
+    if (!urlInput.trim()) return;
+    setUrlError(null);
+    await loadFromAdoUrl(urlInput.trim());
   };
 
   const handleLoadPipelines= async () => {
