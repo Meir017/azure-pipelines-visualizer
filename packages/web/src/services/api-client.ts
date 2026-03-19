@@ -1,4 +1,10 @@
+import * as directAdo from './direct-ado-client.js';
+
 const API_BASE = '/api';
+
+/** True when running inside a Chrome extension page (no server available). */
+const isExtensionPage =
+  typeof window !== 'undefined' && window.location?.protocol === 'chrome-extension:';
 
 export interface PipelineInfo {
   id: number;
@@ -40,6 +46,7 @@ async function apiFetch<T>(path: string): Promise<T> {
 }
 
 export function fetchPipelines(org: string, project: string): Promise<PipelineInfo[]> {
+  if (isExtensionPage) return directAdo.fetchPipelines(org, project);
   return apiFetch(`/${org}/${project}/pipelines`);
 }
 
@@ -48,6 +55,7 @@ export function fetchPipelineYaml(
   project: string,
   pipelineId: number,
 ): Promise<PipelineYamlResponse> {
+  if (isExtensionPage) return directAdo.fetchPipelineYaml(org, project, pipelineId);
   return apiFetch(`/${org}/${project}/pipelines/${pipelineId}/yaml`);
 }
 
@@ -62,6 +70,7 @@ export function fetchFileByRepoName(
   path: string,
   branch?: string,
 ): Promise<FileByRepoNameResponse> {
+  if (isExtensionPage) return directAdo.fetchFileByRepoName(org, project, repoName, path, branch);
   const params = new URLSearchParams({ repo: repoName, path });
   if (branch) params.set('branch', branch);
   return apiFetch(`/${org}/${project}/file-by-repo-name?${params}`);
@@ -72,6 +81,7 @@ export interface TaskDocsConfig {
 }
 
 export function fetchTaskDocsConfig(): Promise<TaskDocsConfig> {
+  if (isExtensionPage) return directAdo.fetchTaskDocsConfig();
   return apiFetch('/config/task-docs');
 }
 
@@ -88,5 +98,6 @@ export interface TaskSchemaResponse {
 }
 
 export function fetchTaskSchema(org: string): Promise<TaskSchemaResponse> {
+  if (isExtensionPage) return directAdo.fetchTaskSchema(org);
   return apiFetch(`/${org}/schema/tasks`);
 }
