@@ -27,6 +27,7 @@ import {
   extractVariableValues,
   pathHasExpressions,
   resolveAllExpressions,
+  evaluateExpression,
   type TemplateReference,
   type ResourceRepository,
 } from '@apv/core';
@@ -206,10 +207,20 @@ export default function PipelineDiagram() {
     if (autoExpandRunning.current) return;
 
     const collapsedNodes = nodes.filter(
-      (n) =>
-        (n.data as unknown as FileNodeData).status === 'collapsed' &&
-        !autoExpandAttempted.current.has(n.id) &&
-        !loadingNodes.has(n.id),
+      (n) => {
+        const d = n.data as unknown as FileNodeData;
+        if (d.status !== 'collapsed') return false;
+        if (autoExpandAttempted.current.has(n.id)) return false;
+        if (loadingNodes.has(n.id)) return false;
+
+        // Skip conditional template refs whose condition evaluated to false.
+        // When the condition couldn't be fully resolved (unknown params/vars),
+        // _conditionResult is undefined — we skip those too (conservative).
+        const condResult = (d as unknown as Record<string, unknown>)._conditionResult;
+        if (condResult === false || condResult === 'unknown') return false;
+
+        return true;
+      },
     );
     if (collapsedNodes.length === 0) return;
 
@@ -847,6 +858,32 @@ function buildTemplateNodesAndEdges(
     // Check if the node already exists in the graph (cross-parent dedup)
     const nodeAlreadyExists = existingNodeIds?.has(nodeId);
 
+    // Evaluate condition expression for conditional template refs.
+    // true → condition met, expand normally
+    // false → condition not met, skip auto-expand
+    // 'unknown' → couldn't determine (missing context), skip auto-expand
+    let conditionResult: true | false | 'unknown' | undefined;
+    if (ref.conditional && ref.conditionExpression) {
+      try {
+        const evalResult = evaluateExpression(ref.conditionExpression, {
+          parameters: parameterContext,
+          variables: variableContext,
+        });
+        if (typeof evalResult === 'boolean') {
+          conditionResult = evalResult;
+        } else if (evalResult === undefined || evalResult === ref.conditionExpression) {
+          conditionResult = 'unknown';
+        } else {
+          conditionResult = !!evalResult;
+        }
+      } catch {
+        conditionResult = 'unknown';
+      }
+    } else if (ref.conditional) {
+      // Conditional but no expression (e.g. ${{ else }} block) — can't evaluate
+      conditionResult = 'unknown';
+    }
+
     if (!nodeAlreadyExists) {
       const label =
         pathForNode.length > 40
@@ -906,6 +943,9 @@ function buildTemplateNodesAndEdges(
           _accumulatedResources: repositories,
           // Stash accumulated variables for expression resolution in descendants
           _accumulatedVariables: variableContext,
+          // Condition evaluation result for conditional refs
+          // true = expand, false = skip, 'unknown' = skip (conservative)
+          _conditionResult: conditionResult,
         },
       });
     }
@@ -936,6 +976,7 @@ function buildTemplateNodesAndEdges(
         isExternal: isExternalEdge || undefined,
         conditional: ref.conditional || undefined,
         conditionExpression: ref.conditionExpression,
+        conditionResult,
         dynamicPath: isDynamic || undefined,
         expressionResolved: isDynamic ? isFullyResolved : undefined,
         originalPath: originalPath || (repoAliasDynamic ? ref.rawPath : undefined),

@@ -21,6 +21,8 @@ export interface TemplateEdgeData {
   conditional?: boolean;
   /** The condition expression text, e.g. `eq(parameters.enablePSSA, true)` */
   conditionExpression?: string;
+  /** Evaluated condition result: true (will expand), false (skipped), 'unknown' (can't determine) */
+  conditionResult?: true | false | 'unknown';
   /** Whether the template path originally contained expressions */
   dynamicPath?: boolean;
   /** Whether all expressions in the path were fully resolved */
@@ -100,15 +102,27 @@ function TemplateEdge({
             <span className="template-edge__category">{d?.edgeLabel}</span>
             {d?.conditional && (
               <BadgeWithTooltip
-                className="template-edge__badge template-edge__badge--conditional"
-                label="conditional"
+                className={`template-edge__badge template-edge__badge--conditional${d.conditionResult === false ? ' template-edge__badge--condition-false' : d.conditionResult === true ? ' template-edge__badge--condition-true' : ''}`}
+                label={d.conditionResult === false ? '⊘ false' : d.conditionResult === true ? '✓ conditional' : 'conditional'}
               >
                 <div className="template-edge__badge-tooltip-title">⚡ Conditional Reference</div>
-                <p>This template is inside a conditional block and may not execute in every pipeline run.</p>
+                <p>
+                  {d.conditionResult === true
+                    ? 'Condition evaluated to true — this template will be included.'
+                    : d.conditionResult === false
+                      ? 'Condition evaluated to false — this template will NOT be included in this pipeline run.'
+                      : 'This template is inside a conditional block. The condition could not be fully evaluated.'}
+                </p>
                 {d.conditionExpression && (
                   <div className="template-edge__badge-tooltip-row">
                     <span className="template-edge__badge-tooltip-label">Condition</span>
                     <code>{d.conditionExpression}</code>
+                  </div>
+                )}
+                {d.conditionResult != null && (
+                  <div className="template-edge__badge-tooltip-row">
+                    <span className="template-edge__badge-tooltip-label">Result</span>
+                    <code>{String(d.conditionResult)}</code>
                   </div>
                 )}
               </BadgeWithTooltip>
