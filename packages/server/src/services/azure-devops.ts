@@ -111,7 +111,7 @@ export async function resolveCommitSha(
     return descriptor.version;
   }
 
-  const cacheKey = `${org}/${project}/${repoId}/${normalizedRef}`;
+  const cacheKey = `${org}/${project}/${repoId}/${normalizedRef}`.toLowerCase();
   return commitShaCache.getOrFetch(cacheKey, async () => {
     const filter = normalizedRef.replace(/^refs\//, '');
     const url = `${baseUrl(org, project)}/git/repositories/${encodeURIComponent(repoId)}/refs?filter=${encodeURIComponent(filter)}&api-version=${API_VERSION}`;
@@ -170,7 +170,7 @@ export async function getRepository(
   project: string,
   repoName: string,
 ): Promise<RepositoryInfo> {
-  const cacheKey = `${org}/${project}/${repoName}`;
+  const cacheKey = `${org}/${project}/${repoName}`.toLowerCase();
   return repoCache.getOrFetch(cacheKey, async () => {
     const url = `${baseUrl(org, project)}/git/repositories/${encodeURIComponent(repoName)}?api-version=${API_VERSION}`;
     const resp = await adoFetch(url);
