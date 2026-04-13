@@ -69,3 +69,33 @@ packages/
   server/   # Hono API server (ADO proxy + disk-backed file cache)
   web/      # React + Vite frontend (ReactFlow diagram, Monaco editor)
 ```
+
+## Docker
+
+A pre-built image is available on GitHub Container Registry:
+
+```bash
+docker pull ghcr.io/meir017/azure-pipelines-visualizer:latest
+```
+
+### Running the container
+
+The container exposes port **3001** and serves both the API and web UI.
+
+```bash
+# Basic usage — browse to http://localhost:3001
+docker run -p 3001:3001 ghcr.io/meir017/azure-pipelines-visualizer
+
+# With a custom config file
+docker run -p 3001:3001 \
+  -v ./apv.config.json:/app/apv.config.json \
+  ghcr.io/meir017/azure-pipelines-visualizer
+
+# Or point to a config file via environment variable
+docker run -p 3001:3001 \
+  -v ./my-config.json:/config/apv.config.json \
+  -e APV_CONFIG=/config/apv.config.json \
+  ghcr.io/meir017/azure-pipelines-visualizer
+```
+
+See [`apv.config.example.json`](apv.config.example.json) for available options.

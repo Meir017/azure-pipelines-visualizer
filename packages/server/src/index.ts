@@ -1,4 +1,7 @@
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { Hono } from 'hono';
+import { serveStatic } from 'hono/bun';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { getConfig } from './config.js';
@@ -26,6 +29,16 @@ app.get('/api/config/task-docs', (c) => {
 app.route('/api', pipelines);
 app.route('/api', files);
 app.route('/api', schema);
+
+// In production, serve the built web frontend as static files.
+// The Dockerfile sets WORKDIR to /app/packages/server and copies the
+// web dist output into ./public, so the relative root works in Docker.
+const publicDir = resolve(import.meta.dir, '..', 'public');
+if (existsSync(publicDir)) {
+  app.use('/*', serveStatic({ root: './public' }));
+  // SPA fallback: serve index.html for non-API, non-file routes
+  app.use('/*', serveStatic({ path: './public/index.html' }));
+}
 
 // Global error handler
 app.onError((err, c) => {
