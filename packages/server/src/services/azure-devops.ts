@@ -1,8 +1,15 @@
 import type { IFileProvider } from '@apv/core';
 import { collapsePath } from '@apv/core';
 import { getAzureDevOpsToken } from '../auth.js';
+import { MemoryTTLCache } from './memory-cache.js';
 
 const API_VERSION = '7.1';
+
+// In-memory caches to avoid redundant ADO API round-trips.
+// Repo metadata rarely changes — cache for 10 minutes.
+const repoCache = new MemoryTTLCache<RepositoryInfo>(600);
+// Branch→commit resolution — cache for 2 minutes (balances freshness vs speed).
+const commitShaCache = new MemoryTTLCache<string>(120);
 
 export interface PipelineInfo {
   id: number;
@@ -104,17 +111,20 @@ export async function resolveCommitSha(
     return descriptor.version;
   }
 
-  const filter = normalizedRef.replace(/^refs\//, '');
-  const url = `${baseUrl(org, project)}/git/repositories/${encodeURIComponent(repoId)}/refs?filter=${encodeURIComponent(filter)}&api-version=${API_VERSION}`;
-  const resp = await adoFetch(url);
-  const data = await resp.json() as { value?: Array<{ name?: string; objectId?: string }> };
-  const match = data.value?.find((item) => item.name === normalizedRef);
+  const cacheKey = `${org}/${project}/${repoId}/${normalizedRef}`;
+  return commitShaCache.getOrFetch(cacheKey, async () => {
+    const filter = normalizedRef.replace(/^refs\//, '');
+    const url = `${baseUrl(org, project)}/git/repositories/${encodeURIComponent(repoId)}/refs?filter=${encodeURIComponent(filter)}&api-version=${API_VERSION}`;
+    const resp = await adoFetch(url);
+    const data = await resp.json() as { value?: Array<{ name?: string; objectId?: string }> };
+    const match = data.value?.find((item) => item.name === normalizedRef);
 
-  if (!match?.objectId) {
-    throw new Error(`Git ref not found: ${normalizedRef}`);
-  }
+    if (!match?.objectId) {
+      throw new Error(`Git ref not found: ${normalizedRef}`);
+    }
 
-  return match.objectId;
+    return match.objectId;
+  });
 }
 
 export async function listPipelines(org: string, project: string): Promise<PipelineInfo[]> {
@@ -160,9 +170,12 @@ export async function getRepository(
   project: string,
   repoName: string,
 ): Promise<RepositoryInfo> {
-  const url = `${baseUrl(org, project)}/git/repositories/${encodeURIComponent(repoName)}?api-version=${API_VERSION}`;
-  const resp = await adoFetch(url);
-  return resp.json();
+  const cacheKey = `${org}/${project}/${repoName}`;
+  return repoCache.getOrFetch(cacheKey, async () => {
+    const url = `${baseUrl(org, project)}/git/repositories/${encodeURIComponent(repoName)}?api-version=${API_VERSION}`;
+    const resp = await adoFetch(url);
+    return resp.json();
+  });
 }
 
 export async function getFileContent(
