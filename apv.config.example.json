@@ -2,10 +2,9 @@
   "$schema": "./apv.config.schema.json",
   "cacheDir": ".cache/ado-file-cache",
   "localRepos": {
-    "microsoft/WDATP/MyRepo": "D:/git/MyRepo"
+    "myorg/myproject/MyRepo": "/path/to/local/clone"
   },
   "customTaskDocs": {
-    "OneBranch.Pipeline.Build@1": "https://onebranch.dev/docs/tasks/build",
-    "OneBranch.Pipeline.Signing": "https://onebranch.dev/docs/tasks/signing"
+    "MyCustomTask@1": "https://example.com/docs/my-task"
   }
 }

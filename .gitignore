@@ -10,3 +10,4 @@ apv.config.json
 *.png
 *.jpeg
 .cache/
+plan.md
