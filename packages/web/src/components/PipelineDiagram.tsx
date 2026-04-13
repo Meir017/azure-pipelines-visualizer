@@ -980,6 +980,7 @@ function buildTemplateNodesAndEdges(
         dynamicPath: isDynamic || undefined,
         expressionResolved: isDynamic ? isFullyResolved : undefined,
         originalPath: originalPath || (repoAliasDynamic ? ref.rawPath : undefined),
+        resolvedPath: isDynamic ? resolvedPath : undefined,
         unresolvedExpressions,
       } satisfies TemplateEdgeData,
       style: isExternalEdge

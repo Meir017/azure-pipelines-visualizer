@@ -29,6 +29,8 @@ export interface TemplateEdgeData {
   expressionResolved?: boolean;
   /** The original raw path before expression resolution */
   originalPath?: string;
+  /** The resolved path after expression evaluation */
+  resolvedPath?: string;
   /** Unresolved expression parameter names */
   unresolvedExpressions?: string[];
 }
@@ -138,6 +140,12 @@ function TemplateEdge({
                   <span className="template-edge__badge-tooltip-label">Original</span>
                   <code>{d.originalPath}</code>
                 </div>
+                {d.resolvedPath && (
+                  <div className="template-edge__badge-tooltip-row">
+                    <span className="template-edge__badge-tooltip-label">Resolved</span>
+                    <code>{d.resolvedPath}</code>
+                  </div>
+                )}
               </BadgeWithTooltip>
             )}
             {d?.dynamicPath && !d.expressionResolved && (
@@ -151,6 +159,12 @@ function TemplateEdge({
                   <span className="template-edge__badge-tooltip-label">Original</span>
                   <code>{d.originalPath}</code>
                 </div>
+                {d.resolvedPath && d.resolvedPath !== d.originalPath && (
+                  <div className="template-edge__badge-tooltip-row">
+                    <span className="template-edge__badge-tooltip-label">Partial</span>
+                    <code>{d.resolvedPath}</code>
+                  </div>
+                )}
                 {d.unresolvedExpressions && d.unresolvedExpressions.length > 0 && (
                   <div className="template-edge__badge-tooltip-row">
                     <span className="template-edge__badge-tooltip-label">Unresolved</span>
