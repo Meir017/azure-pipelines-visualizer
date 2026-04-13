@@ -37,20 +37,23 @@ export function pathHasExpressions(templatePath: string): boolean {
 }
 
 /**
- * Resolve expressions in a template path using available parameter values.
+ * Resolve expressions in a template path using available parameter and variable values.
  *
- * Supports simple parameter substitution (`${{ parameters.x }}`), nested
- * parameter access (`${{ parameters.featureFlags.obcanary }}`), and function
- * calls (`${{ coalesce(parameters.x, 'fallback') }}`).
+ * Supports simple parameter substitution (`${{ parameters.x }}`), variable
+ * substitution (`${{ variables.buildType }}`), nested access
+ * (`${{ parameters.featureFlags.obcanary }}`), and function calls
+ * (`${{ coalesce(parameters.x, 'fallback') }}`).
  *
  * @param templatePath The raw template path possibly containing `${{ ... }}`
  * @param callerParams Parameters passed by the parent (higher priority)
  * @param fileParamDefaults Parameter defaults declared in the file's `parameters:` section
+ * @param variables Pipeline variables (from the `variables:` section)
  */
 export function resolveExpressionPath(
   templatePath: string,
   callerParams?: Record<string, unknown>,
   fileParamDefaults?: Record<string, unknown>,
+  variables?: Record<string, unknown>,
 ): PathResolutionResult {
   if (!pathHasExpressions(templatePath)) {
     return {
@@ -68,7 +71,10 @@ export function resolveExpressionPath(
     ...(callerParams ?? {}),
   };
 
-  const context: ExpressionContext = { parameters: merged };
+  const context: ExpressionContext = {
+    parameters: merged,
+    variables: variables,
+  };
   const { result, hadExpressions, isFullyResolved, substituted, unresolved } =
     resolveAllExpressions(templatePath, context);
 
@@ -130,4 +136,60 @@ export function extractDeclaredParameterNames(
       p != null && typeof p === 'object' && 'name' in p && typeof p.name === 'string',
     )
     .map((p) => p.name);
+}
+
+/**
+ * Extract variable values from a parsed YAML file's `variables:` section.
+ *
+ * Azure Pipelines variables can be declared as:
+ * ```yaml
+ * # Array style (name/value pairs, groups, templates)
+ * variables:
+ *   - name: buildType
+ *     value: standard
+ *   - group: my-group
+ *   - template: variables/common.yml
+ *
+ * # Object/mapping style
+ * variables:
+ *   buildType: standard
+ *   region: eastus
+ * ```
+ *
+ * Only concrete name/value pairs are extracted; groups and template references
+ * are skipped since their values aren't statically known.
+ */
+export function extractVariableValues(
+  parsed: Record<string, unknown>,
+): Record<string, string> {
+  const vars = parsed.variables;
+  if (!vars) return {};
+
+  // Array style: [{ name, value }, { group }, { template }]
+  if (Array.isArray(vars)) {
+    const result: Record<string, string> = {};
+    for (const entry of vars) {
+      if (
+        entry &&
+        typeof entry === 'object' &&
+        'name' in entry &&
+        'value' in entry
+      ) {
+        const v = entry as { name: string; value: unknown };
+        result[v.name] = String(v.value);
+      }
+    }
+    return result;
+  }
+
+  // Object/mapping style: { key: value }
+  if (typeof vars === 'object') {
+    const result: Record<string, string> = {};
+    for (const [name, value] of Object.entries(vars as Record<string, unknown>)) {
+      result[name] = String(value);
+    }
+    return result;
+  }
+
+  return {};
 }

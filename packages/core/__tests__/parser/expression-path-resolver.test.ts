@@ -4,6 +4,7 @@ import {
   pathHasExpressions,
   extractParameterDefaults,
   extractDeclaredParameterNames,
+  extractVariableValues,
 } from '../../src/parser/expression-path-resolver.js';
 
 describe('pathHasExpressions', () => {
@@ -119,13 +120,48 @@ describe('resolveExpressionPath', () => {
     expect(result.isFullyResolved).toBe(true);
   });
 
-  test('detects non-parameter expressions as unresolved', () => {
+  test('resolves variable expression when variables provided', () => {
+    const result = resolveExpressionPath(
+      'governed/${{variables.buildType}}.yaml',
+      undefined,
+      undefined,
+      { buildType: 'standard' },
+    );
+    expect(result.resolvedPath).toBe('governed/standard.yaml');
+    expect(result.isFullyResolved).toBe(true);
+    expect(result.hadExpressions).toBe(true);
+    expect(result.substituted).toEqual(['variables.buildType']);
+  });
+
+  test('reports unresolved variable when no variables provided', () => {
     const result = resolveExpressionPath(
       'governed/${{variables.buildType}}.yaml',
     );
     expect(result.isFullyResolved).toBe(false);
     expect(result.hadExpressions).toBe(true);
     expect(result.unresolved.length).toBeGreaterThan(0);
+  });
+
+  test('resolves mixed parameter and variable expressions', () => {
+    const result = resolveExpressionPath(
+      '${{parameters.dir}}/${{variables.buildType}}.yaml',
+      { dir: 'governed' },
+      undefined,
+      { buildType: 'official' },
+    );
+    expect(result.resolvedPath).toBe('governed/official.yaml');
+    expect(result.isFullyResolved).toBe(true);
+  });
+
+  test('variables do not override parameters', () => {
+    const result = resolveExpressionPath(
+      '${{parameters.buildType}}.yaml',
+      { buildType: 'from-params' },
+      undefined,
+      { buildType: 'from-vars' },
+    );
+    expect(result.resolvedPath).toBe('from-params.yaml');
+    expect(result.isFullyResolved).toBe(true);
   });
 
   test('resolves coalesce function in path', () => {
@@ -217,5 +253,65 @@ describe('extractDeclaredParameterNames', () => {
   test('returns empty for no parameters', () => {
     expect(extractDeclaredParameterNames({})).toEqual([]);
     expect(extractDeclaredParameterNames({ parameters: 'not-array' } as any)).toEqual([]);
+  });
+});
+
+describe('extractVariableValues', () => {
+  test('extracts from array-style variables', () => {
+    const parsed = {
+      variables: [
+        { name: 'buildType', value: 'standard' },
+        { name: 'region', value: 'eastus' },
+      ],
+    };
+    expect(extractVariableValues(parsed)).toEqual({
+      buildType: 'standard',
+      region: 'eastus',
+    });
+  });
+
+  test('extracts from object-style variables', () => {
+    const parsed = {
+      variables: {
+        buildType: 'official',
+        region: 'westus',
+      },
+    };
+    expect(extractVariableValues(parsed)).toEqual({
+      buildType: 'official',
+      region: 'westus',
+    });
+  });
+
+  test('skips groups and template entries in array style', () => {
+    const parsed = {
+      variables: [
+        { name: 'buildType', value: 'standard' },
+        { group: 'my-group' },
+        { template: 'variables/common.yml' },
+      ],
+    };
+    const result = extractVariableValues(parsed);
+    expect(result).toEqual({ buildType: 'standard' });
+    expect('group' in result).toBe(false);
+    expect('template' in result).toBe(false);
+  });
+
+  test('converts non-string values to strings', () => {
+    const parsed = {
+      variables: [
+        { name: 'count', value: 5 },
+        { name: 'enabled', value: true },
+      ],
+    };
+    expect(extractVariableValues(parsed)).toEqual({
+      count: '5',
+      enabled: 'true',
+    });
+  });
+
+  test('returns empty for no variables', () => {
+    expect(extractVariableValues({})).toEqual({});
+    expect(extractVariableValues({ variables: null } as any)).toEqual({});
   });
 });

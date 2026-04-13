@@ -22,6 +22,7 @@ export {
   pathHasExpressions,
   extractParameterDefaults,
   extractDeclaredParameterNames,
+  extractVariableValues,
   type PathResolutionResult,
 } from './expression-path-resolver.js';
 export {

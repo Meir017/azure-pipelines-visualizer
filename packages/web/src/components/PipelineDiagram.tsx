@@ -24,6 +24,7 @@ import {
   resolveExpressionPath,
   extractParameterDefaults,
   extractDeclaredParameterNames,
+  extractVariableValues,
   pathHasExpressions,
   resolveAllExpressions,
   type TemplateReference,
@@ -91,6 +92,17 @@ export default function PipelineDiagram() {
     }
   }, [selectedPipeline?.yaml]);
 
+  // Extract variables from the root pipeline YAML for expression resolution
+  const rootVariables: Record<string, string> = useMemo(() => {
+    if (!selectedPipeline?.yaml) return {};
+    try {
+      const raw = parseYaml(selectedPipeline.yaml) as Record<string, unknown>;
+      return extractVariableValues(raw ?? {});
+    } catch {
+      return {};
+    }
+  }, [selectedPipeline?.yaml]);
+
   // Build initial graph when a pipeline is selected
   useEffect(() => {
     if (!selectedPipeline?.yaml) {
@@ -141,6 +153,8 @@ export default function PipelineDiagram() {
       defaultRepoName,
       rootResources,
       rootParamDefaults,
+      undefined, // existingNodeIds
+      rootVariables,
     );
 
     const allNodes = [rootNode, ...templateNodes];
@@ -256,9 +270,14 @@ export default function PipelineDiagram() {
             // Non-leaf with auto-expand enabled — fully expand
             const fileDefaults = extractParameterDefaults(parsed);
             const parentParamContext = (d as unknown as Record<string, unknown>)._parentParamContext as Record<string, unknown> | undefined;
+            const parentVariables = (d as unknown as Record<string, unknown>)._accumulatedVariables as Record<string, string> | undefined;
             const rawCallerParams = parentRef?.parameters as Record<string, unknown> | undefined;
-            const callerParams = resolveCallerParams(rawCallerParams, parentParamContext);
+            const callerParams = resolveCallerParams(rawCallerParams, parentParamContext, parentVariables);
             const paramContext = { ...fileDefaults, ...callerParams };
+
+            // Merge accumulated variables: parent's variables + this template's own variables
+            const templateVariables = extractVariableValues(parsed);
+            const mergedVariables = { ...(parentVariables ?? rootVariables), ...templateVariables };
 
             // Merge accumulated resources: parent's resources + this template's own resources
             const parentResources = (d as unknown as Record<string, unknown>)._accumulatedResources as ResourceRepository[] | undefined;
@@ -282,6 +301,7 @@ export default function PipelineDiagram() {
               mergedResources,
               paramContext,
               existingIds,
+              mergedVariables,
             );
 
             setNodes((currentNodes) => {
@@ -439,13 +459,18 @@ export default function PipelineDiagram() {
         // File's own parameter defaults, overridden by caller-passed parameter values
         const fileDefaults = extractParameterDefaults(parsed);
         const parentParamContext = (d as unknown as Record<string, unknown>)._parentParamContext as Record<string, unknown> | undefined;
+        const parentVariables = (d as unknown as Record<string, unknown>)._accumulatedVariables as Record<string, string> | undefined;
         const rawCallerParams = parentRef?.parameters as Record<string, unknown> | undefined;
-        const callerParams = resolveCallerParams(rawCallerParams, parentParamContext);
+        const callerParams = resolveCallerParams(rawCallerParams, parentParamContext, parentVariables);
         const paramContext = { ...fileDefaults, ...callerParams };
         const declaredParamNames = extractDeclaredParameterNames(parsed);
 
         // Determine the baseDir for this expanded template (use actual resolved path)
         const expandedFileDir = dirOf(actualPath);
+
+        // Merge accumulated variables: parent's variables + this template's own variables
+        const templateVariables = extractVariableValues(parsed);
+        const mergedVariables = { ...(parentVariables ?? rootVariables), ...templateVariables };
 
         // Merge accumulated resources: parent's resources + this template's own resources
         const parentResources = (d as unknown as Record<string, unknown>)._accumulatedResources as ResourceRepository[] | undefined;
@@ -466,6 +491,7 @@ export default function PipelineDiagram() {
           mergedResources,
           paramContext,
           existingIds,
+          mergedVariables,
         );
 
         // Atomic update: add new nodes with layout, then add new edges
@@ -643,22 +669,24 @@ function updateEdgesWithDeclaredParams(
 }
 
 /**
- * Resolve `${{ parameters.X }}` expression strings in a callerParams object.
+ * Resolve `${{ parameters.X }}` and `${{ variables.X }}` expression strings in a callerParams object.
  * When a template passes `featureFlags: ${{ parameters.featureFlags }}`, the YAML
  * parser stores the literal string. This function evaluates such expressions
- * using the parent's parameter context to get the actual values.
+ * using the parent's parameter context and variables to get the actual values.
  */
 function resolveCallerParams(
   callerParams: Record<string, unknown> | undefined,
   parentParamContext: Record<string, unknown> | undefined,
+  variableContext?: Record<string, string>,
 ): Record<string, unknown> | undefined {
-  if (!callerParams || !parentParamContext) return callerParams;
+  if (!callerParams || (!parentParamContext && !variableContext)) return callerParams;
 
   const resolved: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(callerParams)) {
     if (typeof value === 'string' && pathHasExpressions(value)) {
       const { result, isFullyResolved } = resolveAllExpressions(value, {
         parameters: parentParamContext,
+        variables: variableContext,
       });
       resolved[key] = isFullyResolved ? tryParseResolved(result) : value;
     } else if (value && typeof value === 'object' && !Array.isArray(value)) {
@@ -666,6 +694,7 @@ function resolveCallerParams(
       resolved[key] = resolveCallerParams(
         value as Record<string, unknown>,
         parentParamContext,
+        variableContext,
       ) ?? value;
     } else {
       resolved[key] = value;
@@ -743,6 +772,8 @@ function buildTemplateNodesAndEdges(
   parameterContext?: Record<string, unknown>,
   /** IDs of nodes that already exist in the graph — used for cross-parent dedup */
   existingNodeIds?: Set<string>,
+  /** Pipeline variables for expression resolution */
+  variableContext?: Record<string, string>,
 ): { templateNodes: Node[]; templateEdges: Edge[] } {
   // De-duplicate within this batch (same resolved identity from the same parent)
   const seenInBatch = new Set<string>();
@@ -752,7 +783,7 @@ function buildTemplateNodesAndEdges(
   for (let i = 0; i < refs.length; i++) {
     const ref = refs[i];
 
-    // Attempt to resolve expression paths (e.g. ${{parameters.buildType}})
+    // Attempt to resolve expression paths (e.g. ${{parameters.buildType}} or ${{variables.buildType}})
     let pathForNode = ref.normalizedPath;
     let pathDynamic = false;
     let pathResolved = true;
@@ -765,6 +796,8 @@ function buildTemplateNodesAndEdges(
       const resolution = resolveExpressionPath(
         ref.normalizedPath,
         parameterContext,
+        undefined,
+        variableContext,
       );
       pathForNode = resolution.resolvedPath;
       pathResolved = resolution.isFullyResolved;
@@ -779,7 +812,7 @@ function buildTemplateNodesAndEdges(
     let repoAliasResolved = true;
     if (resolvedRepoAlias && pathHasExpressions(resolvedRepoAlias)) {
       repoAliasDynamic = true;
-      const aliasResolution = resolveExpressionPath(resolvedRepoAlias, parameterContext);
+      const aliasResolution = resolveExpressionPath(resolvedRepoAlias, parameterContext, undefined, variableContext);
       if (aliasResolution.isFullyResolved) {
         resolvedRepoAlias = aliasResolution.resolvedPath;
       } else {
@@ -835,6 +868,7 @@ function buildTemplateNodesAndEdges(
       const resolvedRefParams = resolveCallerParams(
         ref.parameters as Record<string, unknown> | undefined,
         parameterContext,
+        variableContext,
       );
 
       // Create a modified ref with the resolved repo alias and parameters for fetching
@@ -870,6 +904,8 @@ function buildTemplateNodesAndEdges(
           _parentParamContext: parameterContext,
           // Stash accumulated resources (root + all ancestor template resources)
           _accumulatedResources: repositories,
+          // Stash accumulated variables for expression resolution in descendants
+          _accumulatedVariables: variableContext,
         },
       });
     }

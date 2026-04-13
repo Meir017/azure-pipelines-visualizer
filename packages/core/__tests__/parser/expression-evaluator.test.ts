@@ -527,6 +527,26 @@ describe('resolveAllExpressions', () => {
     expect(result.unresolved).toHaveLength(1);
   });
 
+  test('resolves variable expressions when variables provided', () => {
+    const result = resolveAllExpressions(
+      '${{ variables.buildType }}.yml',
+      { variables: { buildType: 'release' } },
+    );
+    expect(result.result).toBe('release.yml');
+    expect(result.isFullyResolved).toBe(true);
+    expect(result.substituted).toEqual(['variables.buildType']);
+  });
+
+  test('resolves mixed parameters and variables', () => {
+    const result = resolveAllExpressions(
+      '${{ parameters.dir }}/${{ variables.buildType }}.yml',
+      { parameters: { dir: 'governed' }, variables: { buildType: 'official' } },
+    );
+    expect(result.result).toBe('governed/official.yml');
+    expect(result.isFullyResolved).toBe(true);
+    expect(result.substituted).toHaveLength(2);
+  });
+
   test('no expressions returns unchanged', () => {
     const result = resolveAllExpressions('plain/path.yml');
     expect(result.result).toBe('plain/path.yml');
