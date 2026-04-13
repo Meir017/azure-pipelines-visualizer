@@ -4,13 +4,19 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "bun --watch src/index.ts",
+    "dev": "bun --watch src/dev.ts",
     "start": "bun src/index.ts",
+    "build:web": "cd ../web && bunx --bun vite build",
     "test": "bun test"
   },
   "dependencies": {
     "@apv/core": "workspace:*",
     "@azure/identity": "^4.0.0",
+    "@hono/node-server": "^1.19.14",
     "hono": "^4.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.1",
+    "vite": "^8.0.8"
   }
 }

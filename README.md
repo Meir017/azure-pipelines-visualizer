@@ -16,7 +16,17 @@ bun install
 bun run dev
 ```
 
-This starts the API server (port 3001) and the web UI (port 3000). Open http://localhost:3000.
+This starts a single dev server at http://localhost:3000 serving both the API and web UI with hot reload.
+
+## Production
+
+```bash
+bun install
+bun run build   # Build the web UI
+bun run start   # Start the production server
+```
+
+Open http://localhost:3000.
 
 ## Usage
 
@@ -54,9 +64,9 @@ You can optionally override the cache location in `apv.config.json`:
 
 | Command | Description |
 |---------|-------------|
-| `bun run dev` | Start server + web UI in watch mode |
-| `bun run dev:server` | Start only the API server |
-| `bun run dev:web` | Start only the Vite dev server |
+| `bun run dev` | Start dev server (API + web UI with HMR) |
+| `bun run build` | Build the web UI for production |
+| `bun run start` | Start the production server |
 | `bun test` | Run all tests |
 | `bun run lint` | Lint with Biome |
 | `bun run lint:fix` | Lint and auto-fix |

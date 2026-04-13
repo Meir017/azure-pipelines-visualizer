@@ -17,10 +17,4 @@ export default defineConfig(({ command }) => ({
       },
     },
   },
-  server: {
-    port: 3000,
-    proxy: {
-      '/api': 'http://localhost:3001',
-    },
-  },
 }));
