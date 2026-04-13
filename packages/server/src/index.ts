@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
-import { pipelines } from './routes/pipelines.js';
-import { files } from './routes/files.js';
-import { schema } from './routes/schema.js';
 import { getConfig } from './config.js';
+import { files } from './routes/files.js';
+import { pipelines } from './routes/pipelines.js';
+import { schema } from './routes/schema.js';
 
 // Load config on startup
 getConfig();
@@ -32,10 +32,14 @@ app.onError((err, c) => {
   console.error('Server error:', err.message);
 
   // Auth errors
-  if (err.message.includes('DefaultAzureCredential') || err.message.includes('authentication')) {
+  if (
+    err.message.includes('DefaultAzureCredential') ||
+    err.message.includes('authentication')
+  ) {
     return c.json(
       {
-        error: 'Authentication failed. Ensure you are logged in via `az login`.',
+        error:
+          'Authentication failed. Ensure you are logged in via `az login`.',
         details: err.message,
       },
       401,

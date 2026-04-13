@@ -5,9 +5,9 @@
  */
 import { collapsePath } from '@apv/core';
 import type {
+  FileByRepoNameResponse,
   PipelineInfo,
   PipelineYamlResponse,
-  FileByRepoNameResponse,
   TaskDocsConfig,
   TaskSchemaResponse,
 } from './api-client.js';
@@ -18,7 +18,10 @@ function baseUrl(org: string, project: string): string {
   return `https://dev.azure.com/${encodeURIComponent(org)}/${encodeURIComponent(project)}/_apis`;
 }
 
-function getVersionDescriptor(ref: string): { version: string; versionType: string } {
+function getVersionDescriptor(ref: string): {
+  version: string;
+  versionType: string;
+} {
   if (ref.startsWith('refs/heads/')) {
     return { version: ref.slice('refs/heads/'.length), versionType: 'branch' };
   }
@@ -60,7 +63,10 @@ async function fetchFileContent(
 
 // --- Exported API (same signatures as api-client.ts) ---
 
-export async function fetchPipelines(org: string, project: string): Promise<PipelineInfo[]> {
+export async function fetchPipelines(
+  org: string,
+  project: string,
+): Promise<PipelineInfo[]> {
   const url = `${baseUrl(org, project)}/pipelines?api-version=${API_VERSION}`;
   const resp = await adoFetch(url);
   const data = await resp.json();
@@ -115,7 +121,9 @@ export async function fetchTaskDocsConfig(): Promise<TaskDocsConfig> {
   return { customTaskDocs: {} };
 }
 
-export async function fetchTaskSchema(_org: string): Promise<TaskSchemaResponse> {
+export async function fetchTaskSchema(
+  _org: string,
+): Promise<TaskSchemaResponse> {
   // Task schema not available without the server
   return { tasks: [], cached: false };
 }

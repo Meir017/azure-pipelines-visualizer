@@ -1,13 +1,17 @@
 import { describe, expect, test } from 'bun:test';
-import type { IFileProvider } from '../../src/resolver/types.js';
-import { expandPipeline } from '../../src/resolver/template-expander.js';
 import { toYaml } from '../../src/parser/yaml-parser.js';
+import { expandPipeline } from '../../src/resolver/template-expander.js';
+import type { IFileProvider } from '../../src/resolver/types.js';
 
 /** In-memory file provider mirroring PipelineParserL0's YamlFileProvider. */
 class InMemoryFileProvider implements IFileProvider {
   constructor(private files: Map<string, string>) {}
 
-  async getFileContent(repo: string, path: string, _ref?: string): Promise<string> {
+  async getFileContent(
+    repo: string,
+    path: string,
+    _ref?: string,
+  ): Promise<string> {
     const key = repo ? `${repo}:${path}` : path;
     const content = this.files.get(key);
     if (content === undefined) {
@@ -424,10 +428,7 @@ steps:
   test('enforces max depth limit', async () => {
     const files = new Map<string, string>();
     for (let i = 0; i < 20; i++) {
-      files.set(
-        `level${i}.yml`,
-        `steps:\n  - template: level${i + 1}.yml\n`,
-      );
+      files.set(`level${i}.yml`, `steps:\n  - template: level${i + 1}.yml\n`);
     }
     files.set('level20.yml', 'steps:\n  - script: echo done\n');
 

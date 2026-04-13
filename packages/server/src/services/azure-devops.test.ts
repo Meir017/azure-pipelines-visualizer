@@ -9,7 +9,9 @@ describe('normalizeGitRef', () => {
 
   test('treats plain names as branches', () => {
     expect(normalizeGitRef('main')).toBe('refs/heads/main');
-    expect(normalizeGitRef('feature/my-branch')).toBe('refs/heads/feature/my-branch');
+    expect(normalizeGitRef('feature/my-branch')).toBe(
+      'refs/heads/feature/my-branch',
+    );
   });
 
   test('preserves commit SHAs', () => {

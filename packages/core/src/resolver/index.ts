@@ -1,13 +1,13 @@
-export type { IFileProvider } from './types.js';
 export {
-  resolveTemplateReferences,
-  type ResolvedTemplate,
-  type ResolveOptions,
-} from './template-resolver.js';
-export {
-  expandPipeline,
   type ExpandedPipeline,
   type ExpandOptions,
-  type ExpansionRecord,
   type ExpansionError,
+  type ExpansionRecord,
+  expandPipeline,
 } from './template-expander.js';
+export {
+  type ResolvedTemplate,
+  type ResolveOptions,
+  resolveTemplateReferences,
+} from './template-resolver.js';
+export type { IFileProvider } from './types.js';

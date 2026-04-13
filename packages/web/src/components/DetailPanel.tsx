@@ -1,16 +1,21 @@
-import { useMemo } from 'react';
-import Editor from '@monaco-editor/react';
 import {
-  parseYaml,
   extractTaskReferences,
+  parseYaml,
   resolveTaskDocUrl,
   type TaskReference,
 } from '@apv/core';
-import { usePipelineStore } from '../store/pipeline-store.js';
+import Editor from '@monaco-editor/react';
+import { useMemo } from 'react';
 import type { TaskSchemaEntry } from '../services/api-client.js';
+import { usePipelineStore } from '../store/pipeline-store.js';
 
 export default function DetailPanel() {
-  const { selectedNodeDetail, customTaskDocs, taskSchema, setSelectedNodeDetail } = usePipelineStore();
+  const {
+    selectedNodeDetail,
+    customTaskDocs,
+    taskSchema,
+    setSelectedNodeDetail,
+  } = usePipelineStore();
 
   const taskRefs = useMemo(() => {
     if (!selectedNodeDetail?.yaml) return [];
@@ -34,9 +39,7 @@ export default function DetailPanel() {
     <div className="detail-panel">
       <div className="detail-panel__header">
         <div className="detail-panel__header-row">
-          <h3 className="detail-panel__title">
-            {selectedNodeDetail.label}
-          </h3>
+          <h3 className="detail-panel__title">{selectedNodeDetail.label}</h3>
           <button
             className="detail-panel__close"
             onClick={() => setSelectedNodeDetail(null)}
@@ -49,7 +52,10 @@ export default function DetailPanel() {
         <div className="detail-panel__path">
           {selectedNodeDetail.filePath}
           {selectedNodeDetail.repoAlias && (
-            <span className="detail-panel__repo"> @{selectedNodeDetail.repoAlias}</span>
+            <span className="detail-panel__repo">
+              {' '}
+              @{selectedNodeDetail.repoAlias}
+            </span>
           )}
         </div>
       </div>
@@ -65,7 +71,10 @@ export default function DetailPanel() {
                 key={ref.raw}
                 ref_={ref}
                 customDocs={customTaskDocs}
-                schemaEntry={taskSchema.get(ref.raw) ?? taskSchema.get(`${ref.name}@${ref.version}`)}
+                schemaEntry={
+                  taskSchema.get(ref.raw) ??
+                  taskSchema.get(`${ref.name}@${ref.version}`)
+                }
               />
             ))}
           </ul>
@@ -128,7 +137,9 @@ function TaskItem({
           </span>
         )}
         {schemaEntry?.description && (
-          <div className="task-item__description">{schemaEntry.description}</div>
+          <div className="task-item__description">
+            {schemaEntry.description}
+          </div>
         )}
       </div>
     </li>

@@ -1,14 +1,17 @@
-import { describe, expect, test, beforeAll, afterAll } from 'bun:test';
-import { getLocalFileContent } from './local-files.js';
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { getLocalFileContent } from './local-files.js';
 
 const tmpDir = join(import.meta.dir, '__test_repo__');
 
 beforeAll(() => {
   mkdirSync(join(tmpDir, 'subdir'), { recursive: true });
   writeFileSync(join(tmpDir, 'hello.txt'), 'hello world');
-  writeFileSync(join(tmpDir, 'subdir', 'nested.yml'), 'steps:\n  - script: echo hi');
+  writeFileSync(
+    join(tmpDir, 'subdir', 'nested.yml'),
+    'steps:\n  - script: echo hi',
+  );
 });
 
 afterAll(() => {
@@ -54,8 +57,6 @@ describe('getLocalFileContent', () => {
   });
 
   test('throws on directory path (not a file)', async () => {
-    await expect(
-      getLocalFileContent(tmpDir, 'subdir'),
-    ).rejects.toThrow(); // readFile on a directory throws
+    await expect(getLocalFileContent(tmpDir, 'subdir')).rejects.toThrow(); // readFile on a directory throws
   });
 });

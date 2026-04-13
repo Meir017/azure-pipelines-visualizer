@@ -1,5 +1,8 @@
-import type { TemplateReference, TemplateLocation } from '../model/pipeline.js';
-import { createTemplateRef, type TemplateRefContext } from '../model/template-ref.js';
+import type { TemplateLocation, TemplateReference } from '../model/pipeline.js';
+import {
+  createTemplateRef,
+  type TemplateRefContext,
+} from '../model/template-ref.js';
 
 /**
  * Walks a raw parsed YAML pipeline object and extracts all template references.
@@ -44,7 +47,10 @@ export function detectTemplateReferences(
                 condObj.template,
                 'extends',
                 // Use parameters from the conditional block, or fall back to shared parameters
-                (condObj.parameters ?? ext.parameters) as Record<string, unknown>,
+                (condObj.parameters ?? ext.parameters) as Record<
+                  string,
+                  unknown
+                >,
                 true, // conditional
                 context,
                 extractConditionExpression(key),
@@ -57,7 +63,11 @@ export function detectTemplateReferences(
 
     // Walk extends.parameters for nested template refs
     if (ext.parameters && typeof ext.parameters === 'object') {
-      walkExtendsParameters(ext.parameters as Record<string, unknown>, refs, context);
+      walkExtendsParameters(
+        ext.parameters as Record<string, unknown>,
+        refs,
+        context,
+      );
     }
   }
 
@@ -128,7 +138,13 @@ function walkItems(
     for (const key of Object.keys(obj)) {
       if (isDirectiveKey(key)) {
         const conditionalBlock = obj[key];
-        walkConditionalValue(conditionalBlock, location, refs, context, extractConditionExpression(key));
+        walkConditionalValue(
+          conditionalBlock,
+          location,
+          refs,
+          context,
+          extractConditionExpression(key),
+        );
       }
     }
 
@@ -208,7 +224,13 @@ function walkConditionalItems(
     // Check for nested directive blocks inside conditional items
     for (const key of Object.keys(obj)) {
       if (isDirectiveKey(key)) {
-        walkConditionalValue(obj[key], location, refs, context, extractConditionExpression(key));
+        walkConditionalValue(
+          obj[key],
+          location,
+          refs,
+          context,
+          extractConditionExpression(key),
+        );
       }
     }
 
@@ -263,7 +285,11 @@ function walkExtendsParameters(
   for (const [, value] of Object.entries(params)) {
     if (Array.isArray(value)) {
       for (const item of value) {
-        if (item && typeof item === 'object' && typeof (item as Record<string, unknown>).template === 'string') {
+        if (
+          item &&
+          typeof item === 'object' &&
+          typeof (item as Record<string, unknown>).template === 'string'
+        ) {
           const obj = item as Record<string, unknown>;
           refs.push(
             createTemplateRef(

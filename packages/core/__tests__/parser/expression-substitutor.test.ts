@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import {
-  substituteParameters,
   findExpressions,
+  substituteParameters,
 } from '../../src/parser/expression-substitutor.js';
 
 describe('substituteParameters', () => {
@@ -72,7 +72,7 @@ describe('substituteParameters', () => {
   });
 
   test('does not touch conditional expressions', () => {
-    const yaml = "${{ if eq(parameters.foo, true) }}:\n  - script: echo hi";
+    const yaml = '${{ if eq(parameters.foo, true) }}:\n  - script: echo hi';
     const result = substituteParameters(yaml, { parameters: { foo: true } });
     expect(result.text).toBe(yaml); // unchanged
   });
@@ -101,13 +101,15 @@ describe('findExpressions', () => {
   });
 
   test('classifies variable expressions', () => {
-    const exprs = findExpressions("${{ variables.myVar }} ${{ variables['other'] }}");
+    const exprs = findExpressions(
+      "${{ variables.myVar }} ${{ variables['other'] }}",
+    );
     expect(exprs).toHaveLength(2);
     expect(exprs.every((e) => e.type === 'variable')).toBe(true);
   });
 
   test('classifies conditional expressions', () => {
-    const exprs = findExpressions("${{ if eq(parameters.a, true) }}");
+    const exprs = findExpressions('${{ if eq(parameters.a, true) }}');
     expect(exprs).toHaveLength(1);
     expect(exprs[0].type).toBe('conditional');
   });
@@ -125,7 +127,7 @@ describe('findExpressions', () => {
   });
 
   test('classifies other expressions as generic', () => {
-    const exprs = findExpressions('${{ format(\'{0}\', variables.x) }}');
+    const exprs = findExpressions("${{ format('{0}', variables.x) }}");
     expect(exprs).toHaveLength(1);
     expect(exprs[0].type).toBe('expression');
   });

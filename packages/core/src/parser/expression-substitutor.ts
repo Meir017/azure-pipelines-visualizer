@@ -24,10 +24,8 @@ export interface SubstitutionResult {
 
 // Matches ${{ parameters.NAME }} or ${{ parameters['NAME'] }}
 // Also handles whitespace variations: ${{parameters.NAME}}
-const PARAM_DOT_RE =
-  /\$\{\{\s*parameters\.([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}/g;
-const PARAM_BRACKET_RE =
-  /\$\{\{\s*parameters\['\s*([^']+)\s*'\]\s*\}\}/g;
+const PARAM_DOT_RE = /\$\{\{\s*parameters\.([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}/g;
+const PARAM_BRACKET_RE = /\$\{\{\s*parameters\['\s*([^']+)\s*'\]\s*\}\}/g;
 
 /**
  * Replace `${{ parameters.x }}` with the actual parameter value.
@@ -81,9 +79,17 @@ export function findExpressions(yaml: string): Expression[] {
 
     if (inner.startsWith('parameters.') || inner.startsWith("parameters['")) {
       expressions.push({ raw: fullMatch, type: 'parameter', inner, offset });
-    } else if (inner.startsWith('variables.') || inner.startsWith("variables['") || inner.startsWith('variables[')) {
+    } else if (
+      inner.startsWith('variables.') ||
+      inner.startsWith("variables['") ||
+      inner.startsWith('variables[')
+    ) {
       expressions.push({ raw: fullMatch, type: 'variable', inner, offset });
-    } else if (inner.startsWith('if ') || inner.startsWith('elseif ') || inner === 'else') {
+    } else if (
+      inner.startsWith('if ') ||
+      inner.startsWith('elseif ') ||
+      inner === 'else'
+    ) {
       expressions.push({ raw: fullMatch, type: 'conditional', inner, offset });
     } else if (inner.startsWith('each ')) {
       expressions.push({ raw: fullMatch, type: 'iterator', inner, offset });

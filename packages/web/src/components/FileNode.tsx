@@ -1,5 +1,5 @@
+import { Handle, type NodeProps, Position } from '@xyflow/react';
 import { memo, useState } from 'react';
-import { Handle, Position, type NodeProps } from '@xyflow/react';
 
 /** Resolved repo info for tooltip display */
 export interface RepoInfo {
@@ -124,7 +124,9 @@ function FileNode({ data }: NodeProps) {
       )}
 
       <div className="file-node__meta">
-        {d.status === 'loading' && <span className="file-node__spinner">⏳ Loading...</span>}
+        {d.status === 'loading' && (
+          <span className="file-node__spinner">⏳ Loading...</span>
+        )}
         {d.status === 'error' && (
           <span className="file-node__error" title={d.errorMessage}>
             ❌ {d.errorMessage?.slice(0, 80)}
@@ -136,9 +138,12 @@ function FileNode({ data }: NodeProps) {
         {d.status === 'expanded' && d.templateCount === 0 && !d.isRoot && (
           <span className="file-node__leaf">✓ no nested templates</span>
         )}
-        {(d.status === 'root' || d.status === 'expanded') && d.templateCount > 0 && (
-          <span className="file-node__count">{d.templateCount} template ref(s)</span>
-        )}
+        {(d.status === 'root' || d.status === 'expanded') &&
+          d.templateCount > 0 && (
+            <span className="file-node__count">
+              {d.templateCount} template ref(s)
+            </span>
+          )}
       </div>
 
       <Handle type="source" position={Position.Bottom} />

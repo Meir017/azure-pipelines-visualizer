@@ -1,5 +1,11 @@
 import { describe, expect, test } from 'bun:test';
-import type { Pipeline, Stage, Job, Step, TemplateReference } from '../../src/model/pipeline.js';
+import type {
+  Job,
+  Pipeline,
+  Stage,
+  Step,
+  TemplateReference,
+} from '../../src/model/pipeline.js';
 
 describe('Pipeline model types', () => {
   test('simple pipeline can be constructed', () => {

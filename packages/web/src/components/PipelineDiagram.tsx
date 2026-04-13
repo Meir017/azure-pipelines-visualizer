@@ -1,39 +1,38 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ReactFlow,
   Background,
-  Controls,
-  type Node,
-  type Edge,
-  type ReactFlowInstance,
-  type NodeMouseHandler,
   BackgroundVariant,
+  Controls,
+  type Edge,
   MarkerType,
-  useNodesState,
+  type Node,
+  type NodeMouseHandler,
+  ReactFlow,
+  type ReactFlowInstance,
   useEdgesState,
+  useNodesState,
 } from '@xyflow/react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import '@xyflow/react/dist/style.css';
 
 import {
-  parseYaml,
-  detectTemplateReferences,
-  resolveTemplateSource,
-  getEffectiveRepoAlias,
   buildAdoFileUrl,
-  resolveTemplateRefPaths,
-  resolveExpressionPath,
-  extractParameterDefaults,
-  extractDeclaredParameterNames,
-  extractVariableValues,
-  pathHasExpressions,
-  resolveAllExpressions,
+  detectTemplateReferences,
   evaluateExpression,
-  type TemplateReference,
+  extractDeclaredParameterNames,
+  extractParameterDefaults,
+  extractVariableValues,
+  getEffectiveRepoAlias,
+  parseYaml,
+  pathHasExpressions,
   type ResourceRepository,
+  resolveAllExpressions,
+  resolveExpressionPath,
+  resolveTemplateRefPaths,
+  resolveTemplateSource,
+  type TemplateReference,
 } from '@apv/core';
-
-import { usePipelineStore } from '../store/pipeline-store.js';
 import { fetchFileByRepoName } from '../services/api-client.js';
+import { usePipelineStore } from '../store/pipeline-store.js';
 import { getLayoutedElements } from './diagram-layout.js';
 import FileNode, { type FileNodeData, type RepoInfo } from './FileNode.js';
 import TemplateEdge, { type TemplateEdgeData } from './TemplateEdge.js';
@@ -67,7 +66,9 @@ export default function PipelineDiagram() {
 
   // Keep a ref to current edges so expansion callbacks always read the latest
   const edgesRef = useRef<Edge[]>([]);
-  useEffect(() => { edgesRef.current = edges; }, [edges]);
+  useEffect(() => {
+    edgesRef.current = edges;
+  }, [edges]);
 
   // Track which nodes are being loaded to prevent double-clicks
   const [loadingNodes, setLoadingNodes] = useState<Set<string>>(new Set());
@@ -126,10 +127,21 @@ export default function PipelineDiagram() {
 
     // Build ADO URL for root node
     const rootRepoName = selectedPipeline.definition?.repository?.name ?? '';
-    const rootBranch = selectedPipeline.definition?.repository?.defaultBranch?.replace(/^refs\/heads\//, '');
-    const rootAdoUrl = org && project && rootRepoName
-      ? buildAdoFileUrl({ org, project, repoName: rootRepoName, filePath: rootPath, branch: rootBranch })
-      : undefined;
+    const rootBranch =
+      selectedPipeline.definition?.repository?.defaultBranch?.replace(
+        /^refs\/heads\//,
+        '',
+      );
+    const rootAdoUrl =
+      org && project && rootRepoName
+        ? buildAdoFileUrl({
+            org,
+            project,
+            repoName: rootRepoName,
+            filePath: rootPath,
+            branch: rootBranch,
+          })
+        : undefined;
 
     const rootNode: Node = {
       id: 'root',
@@ -206,22 +218,21 @@ export default function PipelineDiagram() {
   useEffect(() => {
     if (autoExpandRunning.current) return;
 
-    const collapsedNodes = nodes.filter(
-      (n) => {
-        const d = n.data as unknown as FileNodeData;
-        if (d.status !== 'collapsed') return false;
-        if (autoExpandAttempted.current.has(n.id)) return false;
-        if (loadingNodes.has(n.id)) return false;
+    const collapsedNodes = nodes.filter((n) => {
+      const d = n.data as unknown as FileNodeData;
+      if (d.status !== 'collapsed') return false;
+      if (autoExpandAttempted.current.has(n.id)) return false;
+      if (loadingNodes.has(n.id)) return false;
 
-        // Skip conditional template refs whose condition evaluated to false.
-        // When the condition couldn't be fully resolved (unknown params/vars),
-        // _conditionResult is undefined — we skip those too (conservative).
-        const condResult = (d as unknown as Record<string, unknown>)._conditionResult;
-        if (condResult === false || condResult === 'unknown') return false;
+      // Skip conditional template refs whose condition evaluated to false.
+      // When the condition couldn't be fully resolved (unknown params/vars),
+      // _conditionResult is undefined — we skip those too (conservative).
+      const condResult = (d as unknown as Record<string, unknown>)
+        ._conditionResult;
+      if (condResult === false || condResult === 'unknown') return false;
 
-        return true;
-      },
-    );
+      return true;
+    });
     if (collapsedNodes.length === 0) return;
 
     // Mark as attempted so we don't retry
@@ -270,8 +281,11 @@ export default function PipelineDiagram() {
                         ...n.data,
                         status: 'expanded',
                         templateCount: 0,
-                        totalParameterCount: declaredParamNames.length || undefined,
-                        declaredParameterNames: declaredParamNames.length ? declaredParamNames : undefined,
+                        totalParameterCount:
+                          declaredParamNames.length || undefined,
+                        declaredParameterNames: declaredParamNames.length
+                          ? declaredParamNames
+                          : undefined,
                       },
                     }
                   : n,
@@ -280,18 +294,30 @@ export default function PipelineDiagram() {
           } else if (autoExpandAll) {
             // Non-leaf with auto-expand enabled — fully expand
             const fileDefaults = extractParameterDefaults(parsed);
-            const parentParamContext = (d as unknown as Record<string, unknown>)._parentParamContext as Record<string, unknown> | undefined;
-            const parentVariables = (d as unknown as Record<string, unknown>)._accumulatedVariables as Record<string, string> | undefined;
-            const rawCallerParams = parentRef?.parameters as Record<string, unknown> | undefined;
-            const callerParams = resolveCallerParams(rawCallerParams, parentParamContext, parentVariables);
+            const parentParamContext = (d as unknown as Record<string, unknown>)
+              ._parentParamContext as Record<string, unknown> | undefined;
+            const parentVariables = (d as unknown as Record<string, unknown>)
+              ._accumulatedVariables as Record<string, string> | undefined;
+            const rawCallerParams = parentRef?.parameters as
+              | Record<string, unknown>
+              | undefined;
+            const callerParams = resolveCallerParams(
+              rawCallerParams,
+              parentParamContext,
+              parentVariables,
+            );
             const paramContext = { ...fileDefaults, ...callerParams };
 
             // Merge accumulated variables: parent's variables + this template's own variables
             const templateVariables = extractVariableValues(parsed);
-            const mergedVariables = { ...(parentVariables ?? rootVariables), ...templateVariables };
+            const mergedVariables = {
+              ...(parentVariables ?? rootVariables),
+              ...templateVariables,
+            };
 
             // Merge accumulated resources: parent's resources + this template's own resources
-            const parentResources = (d as unknown as Record<string, unknown>)._accumulatedResources as ResourceRepository[] | undefined;
+            const parentResources = (d as unknown as Record<string, unknown>)
+              ._accumulatedResources as ResourceRepository[] | undefined;
             const templateResources = extractResourceRepositories(parsed);
             const mergedResources = deduplicateResources([
               ...(parentResources ?? rootResources),
@@ -318,7 +344,9 @@ export default function PipelineDiagram() {
             setNodes((currentNodes) => {
               // Re-check against current state (may have changed)
               const currentIds = new Set(currentNodes.map((n) => n.id));
-              const newNodes = templateNodes.filter((n) => !currentIds.has(n.id));
+              const newNodes = templateNodes.filter(
+                (n) => !currentIds.has(n.id),
+              );
 
               const updated = currentNodes.map((n) =>
                 n.id === node.id
@@ -328,8 +356,11 @@ export default function PipelineDiagram() {
                         ...n.data,
                         status: 'expanded',
                         templateCount: nestedRefs.length,
-                        totalParameterCount: declaredParamNames.length || undefined,
-                        declaredParameterNames: declaredParamNames.length ? declaredParamNames : undefined,
+                        totalParameterCount:
+                          declaredParamNames.length || undefined,
+                        declaredParameterNames: declaredParamNames.length
+                          ? declaredParamNames
+                          : undefined,
                       },
                     }
                   : n,
@@ -338,7 +369,11 @@ export default function PipelineDiagram() {
 
               // Propagate declared param info to edges targeting this node
               const updatedEdges = declaredParamNames.length
-                ? updateEdgesWithDeclaredParams(edgesRef.current, node.id, declaredParamNames)
+                ? updateEdgesWithDeclaredParams(
+                    edgesRef.current,
+                    node.id,
+                    declaredParamNames,
+                  )
                 : edgesRef.current;
               const allEdges = [...updatedEdges, ...templateEdges];
               return getLayoutedElements(allNodes, allEdges).nodes;
@@ -346,7 +381,11 @@ export default function PipelineDiagram() {
 
             setEdges((currentEdges) => {
               const updated = declaredParamNames.length
-                ? updateEdgesWithDeclaredParams(currentEdges, node.id, declaredParamNames)
+                ? updateEdgesWithDeclaredParams(
+                    currentEdges,
+                    node.id,
+                    declaredParamNames,
+                  )
                 : currentEdges;
               return [...updated, ...templateEdges];
             });
@@ -366,7 +405,19 @@ export default function PipelineDiagram() {
         setNodes((n) => [...n]);
       }
     })();
-  }, [nodes, org, project, defaultRepoName, rootResources, expandedTemplates, setExpandedTemplate, loadingNodes, setNodes, setEdges, autoExpandAll]);
+  }, [
+    nodes,
+    org,
+    project,
+    defaultRepoName,
+    rootResources,
+    expandedTemplates,
+    setExpandedTemplate,
+    loadingNodes,
+    setNodes,
+    setEdges,
+    autoExpandAll,
+  ]);
 
   // Handle clicking a node:
   // - Root/expanded node → show details in panel
@@ -393,10 +444,16 @@ export default function PipelineDiagram() {
           | undefined;
         const alias = getEffectiveRepoAlias(ref ?? {}) || '';
         const cacheKey = `${alias}:${d.filePath}`;
-        const fallbackPath = (d as unknown as Record<string, unknown>)._fallbackPath as string | undefined;
-        const fallbackCacheKey = fallbackPath ? `${alias}:${fallbackPath}` : undefined;
-        const cached = expandedTemplates.get(cacheKey)
-          ?? (fallbackCacheKey ? expandedTemplates.get(fallbackCacheKey) : undefined);
+        const fallbackPath = (d as unknown as Record<string, unknown>)
+          ._fallbackPath as string | undefined;
+        const fallbackCacheKey = fallbackPath
+          ? `${alias}:${fallbackPath}`
+          : undefined;
+        const cached =
+          expandedTemplates.get(cacheKey) ??
+          (fallbackCacheKey
+            ? expandedTemplates.get(fallbackCacheKey)
+            : undefined);
 
         if (cached) {
           setSelectedNodeDetail({
@@ -469,10 +526,18 @@ export default function PipelineDiagram() {
         // Build parameter context for resolving expression paths in nested refs:
         // File's own parameter defaults, overridden by caller-passed parameter values
         const fileDefaults = extractParameterDefaults(parsed);
-        const parentParamContext = (d as unknown as Record<string, unknown>)._parentParamContext as Record<string, unknown> | undefined;
-        const parentVariables = (d as unknown as Record<string, unknown>)._accumulatedVariables as Record<string, string> | undefined;
-        const rawCallerParams = parentRef?.parameters as Record<string, unknown> | undefined;
-        const callerParams = resolveCallerParams(rawCallerParams, parentParamContext, parentVariables);
+        const parentParamContext = (d as unknown as Record<string, unknown>)
+          ._parentParamContext as Record<string, unknown> | undefined;
+        const parentVariables = (d as unknown as Record<string, unknown>)
+          ._accumulatedVariables as Record<string, string> | undefined;
+        const rawCallerParams = parentRef?.parameters as
+          | Record<string, unknown>
+          | undefined;
+        const callerParams = resolveCallerParams(
+          rawCallerParams,
+          parentParamContext,
+          parentVariables,
+        );
         const paramContext = { ...fileDefaults, ...callerParams };
         const declaredParamNames = extractDeclaredParameterNames(parsed);
 
@@ -481,10 +546,14 @@ export default function PipelineDiagram() {
 
         // Merge accumulated variables: parent's variables + this template's own variables
         const templateVariables = extractVariableValues(parsed);
-        const mergedVariables = { ...(parentVariables ?? rootVariables), ...templateVariables };
+        const mergedVariables = {
+          ...(parentVariables ?? rootVariables),
+          ...templateVariables,
+        };
 
         // Merge accumulated resources: parent's resources + this template's own resources
-        const parentResources = (d as unknown as Record<string, unknown>)._accumulatedResources as ResourceRepository[] | undefined;
+        const parentResources = (d as unknown as Record<string, unknown>)
+          ._accumulatedResources as ResourceRepository[] | undefined;
         const templateResources = extractResourceRepositories(parsed);
         const mergedResources = deduplicateResources([
           ...(parentResources ?? rootResources),
@@ -519,7 +588,9 @@ export default function PipelineDiagram() {
                     status: 'expanded',
                     templateCount: nestedRefs.length,
                     totalParameterCount: declaredParamNames.length || undefined,
-                    declaredParameterNames: declaredParamNames.length ? declaredParamNames : undefined,
+                    declaredParameterNames: declaredParamNames.length
+                      ? declaredParamNames
+                      : undefined,
                   },
                 }
               : n,
@@ -528,7 +599,11 @@ export default function PipelineDiagram() {
 
           // Propagate declared param info to edges targeting this node
           const updatedEdges = declaredParamNames.length
-            ? updateEdgesWithDeclaredParams(edgesRef.current, node.id, declaredParamNames)
+            ? updateEdgesWithDeclaredParams(
+                edgesRef.current,
+                node.id,
+                declaredParamNames,
+              )
             : edgesRef.current;
           const allEdges = [...updatedEdges, ...templateEdges];
           return getLayoutedElements(allNodes, allEdges).nodes;
@@ -536,7 +611,11 @@ export default function PipelineDiagram() {
 
         setEdges((currentEdges) => {
           const updated = declaredParamNames.length
-            ? updateEdgesWithDeclaredParams(currentEdges, node.id, declaredParamNames)
+            ? updateEdgesWithDeclaredParams(
+                currentEdges,
+                node.id,
+                declaredParamNames,
+              )
             : currentEdges;
           return [...updated, ...templateEdges];
         });
@@ -636,7 +715,11 @@ export default function PipelineDiagram() {
         maxZoom={2}
         proOptions={{ hideAttribution: true }}
       >
-        <Background variant={BackgroundVariant.Dots} color="var(--border)" gap={20} />
+        <Background
+          variant={BackgroundVariant.Dots}
+          color="var(--border)"
+          gap={20}
+        />
         <Controls />
       </ReactFlow>
       <label className="auto-expand-toggle">
@@ -667,7 +750,8 @@ function updateEdgesWithDeclaredParams(
 ): Edge[] {
   return edges.map((e) => {
     if (e.target !== targetNodeId) return e;
-    const d = (e.data as TemplateEdgeData | undefined) ?? {} as TemplateEdgeData;
+    const d =
+      (e.data as TemplateEdgeData | undefined) ?? ({} as TemplateEdgeData);
     return {
       ...e,
       data: {
@@ -690,7 +774,8 @@ function resolveCallerParams(
   parentParamContext: Record<string, unknown> | undefined,
   variableContext?: Record<string, string>,
 ): Record<string, unknown> | undefined {
-  if (!callerParams || (!parentParamContext && !variableContext)) return callerParams;
+  if (!callerParams || (!parentParamContext && !variableContext))
+    return callerParams;
 
   const resolved: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(callerParams)) {
@@ -702,11 +787,12 @@ function resolveCallerParams(
       resolved[key] = isFullyResolved ? tryParseResolved(result) : value;
     } else if (value && typeof value === 'object' && !Array.isArray(value)) {
       // Recursively resolve nested objects
-      resolved[key] = resolveCallerParams(
-        value as Record<string, unknown>,
-        parentParamContext,
-        variableContext,
-      ) ?? value;
+      resolved[key] =
+        resolveCallerParams(
+          value as Record<string, unknown>,
+          parentParamContext,
+          variableContext,
+        ) ?? value;
     } else {
       resolved[key] = value;
     }
@@ -723,9 +809,15 @@ function tryParseResolved(value: string): unknown {
   if (value === 'False' || value === 'false') return false;
   if (value === 'null') return null;
   // Don't try JSON.parse for plain strings — only if it looks like JSON
-  if ((value.startsWith('{') && value.endsWith('}')) ||
-      (value.startsWith('[') && value.endsWith(']'))) {
-    try { return JSON.parse(value); } catch { /* fall through */ }
+  if (
+    (value.startsWith('{') && value.endsWith('}')) ||
+    (value.startsWith('[') && value.endsWith(']'))
+  ) {
+    try {
+      return JSON.parse(value);
+    } catch {
+      /* fall through */
+    }
   }
   return value;
 }
@@ -753,7 +845,9 @@ function extractResourceRepositories(
 }
 
 /** De-duplicate resources by alias name, later entries take priority. */
-function deduplicateResources(resources: ResourceRepository[]): ResourceRepository[] {
+function deduplicateResources(
+  resources: ResourceRepository[],
+): ResourceRepository[] {
   const map = new Map<string, ResourceRepository>();
   for (const r of resources) {
     map.set(r.repository, r);
@@ -766,7 +860,10 @@ function deduplicateResources(resources: ResourceRepository[]): ResourceReposito
  * Two references pointing to the same file (and repo) produce the same ID,
  * enabling node de-duplication across the entire graph.
  */
-function canonicalNodeId(resolvedRepoAlias: string | undefined, resolvedPath: string): string {
+function canonicalNodeId(
+  resolvedRepoAlias: string | undefined,
+  resolvedPath: string,
+): string {
   const repo = resolvedRepoAlias || 'self';
   return `tpl::${repo}::${resolvedPath}`;
 }
@@ -823,7 +920,12 @@ function buildTemplateNodesAndEdges(
     let repoAliasResolved = true;
     if (resolvedRepoAlias && pathHasExpressions(resolvedRepoAlias)) {
       repoAliasDynamic = true;
-      const aliasResolution = resolveExpressionPath(resolvedRepoAlias, parameterContext, undefined, variableContext);
+      const aliasResolution = resolveExpressionPath(
+        resolvedRepoAlias,
+        parameterContext,
+        undefined,
+        variableContext,
+      );
       if (aliasResolution.isFullyResolved) {
         resolvedRepoAlias = aliasResolution.resolvedPath;
       } else {
@@ -841,12 +943,13 @@ function buildTemplateNodesAndEdges(
 
     // Resolve non-aliased nested refs relative to the template that declared them.
     // Azure Pipelines tries relative-to-source first, then repo-root as fallback.
-    const { primary: resolvedPath, fallback: fallbackPath } = resolveTemplateRefPaths({
-      ...ref,
-      normalizedPath: pathForNode,
-      repoAlias: ref.repoAlias,
-      sourcePath: ref.sourcePath,
-    });
+    const { primary: resolvedPath, fallback: fallbackPath } =
+      resolveTemplateRefPaths({
+        ...ref,
+        normalizedPath: pathForNode,
+        repoAlias: ref.repoAlias,
+        sourcePath: ref.sourcePath,
+      });
 
     // Canonical ID based on resolved identity
     const nodeId = canonicalNodeId(resolvedRepoAlias, resolvedPath);
@@ -871,7 +974,10 @@ function buildTemplateNodesAndEdges(
         });
         if (typeof evalResult === 'boolean') {
           conditionResult = evalResult;
-        } else if (evalResult === undefined || evalResult === ref.conditionExpression) {
+        } else if (
+          evalResult === undefined ||
+          evalResult === ref.conditionExpression
+        ) {
           conditionResult = 'unknown';
         } else {
           conditionResult = !!evalResult;
@@ -889,9 +995,7 @@ function buildTemplateNodesAndEdges(
 
     if (!nodeAlreadyExists) {
       const label =
-        pathForNode.length > 40
-          ? `...${pathForNode.slice(-37)}`
-          : pathForNode;
+        pathForNode.length > 40 ? `...${pathForNode.slice(-37)}` : pathForNode;
 
       // Resolve repo info and ADO URL using the resolved repo alias
       const { repoInfo, adoUrl } = resolveNodeMetadata(
@@ -912,14 +1016,16 @@ function buildTemplateNodesAndEdges(
       );
 
       // Create a modified ref with the resolved repo alias and parameters for fetching
-      const resolvedRef: TemplateReference = resolvedRepoAlias !== getEffectiveRepoAlias(ref) || resolvedRefParams !== ref.parameters
-        ? {
-            ...ref,
-            repoAlias: resolvedRepoAlias || ref.repoAlias,
-            contextRepoAlias: resolvedRepoAlias || ref.contextRepoAlias,
-            parameters: resolvedRefParams as TemplateReference['parameters'],
-          }
-        : ref;
+      const resolvedRef: TemplateReference =
+        resolvedRepoAlias !== getEffectiveRepoAlias(ref) ||
+        resolvedRefParams !== ref.parameters
+          ? {
+              ...ref,
+              repoAlias: resolvedRepoAlias || ref.repoAlias,
+              contextRepoAlias: resolvedRepoAlias || ref.contextRepoAlias,
+              parameters: resolvedRefParams as TemplateReference['parameters'],
+            }
+          : ref;
 
       templateNodes.push({
         id: nodeId,
@@ -982,12 +1088,17 @@ function buildTemplateNodesAndEdges(
         conditionResult,
         dynamicPath: isDynamic || undefined,
         expressionResolved: isDynamic ? isFullyResolved : undefined,
-        originalPath: originalPath || (repoAliasDynamic ? ref.rawPath : undefined),
+        originalPath:
+          originalPath || (repoAliasDynamic ? ref.rawPath : undefined),
         resolvedPath: isDynamic ? resolvedPath : undefined,
         unresolvedExpressions,
       } satisfies TemplateEdgeData,
       style: isExternalEdge
-        ? { stroke: 'var(--badge-resources)', strokeWidth: 2, strokeDasharray: '6 3' }
+        ? {
+            stroke: 'var(--badge-resources)',
+            strokeWidth: 2,
+            strokeDasharray: '6 3',
+          }
         : undefined,
       markerEnd: isExternalEdge
         ? { type: MarkerType.ArrowClosed, color: 'var(--badge-resources)' }
@@ -1016,9 +1127,8 @@ async function fetchTemplateContent(
 
   // Use the resolved filePath from node data (already resolved relative to parent dir)
   const fetchPath = nodeData.filePath;
-  const fallbackPath = (nodeData as unknown as Record<string, unknown>)._fallbackPath as
-    | string
-    | undefined;
+  const fallbackPath = (nodeData as unknown as Record<string, unknown>)
+    ._fallbackPath as string | undefined;
   const effectiveRepoAlias = getEffectiveRepoAlias(ref);
   const cacheKey = `${effectiveRepoAlias || ''}:${fetchPath}`;
   const cached = cache.get(cacheKey);
@@ -1028,13 +1138,13 @@ async function fetchTemplateContent(
   if (fallbackPath) {
     const fallbackCacheKey = `${effectiveRepoAlias || ''}:${fallbackPath}`;
     const fallbackCached = cache.get(fallbackCacheKey);
-    if (fallbackCached) return { content: fallbackCached, actualPath: fallbackPath };
+    if (fallbackCached)
+      return { content: fallbackCached, actualPath: fallbackPath };
   }
 
   // Use node-specific accumulated resources if available, otherwise fall back to root resources
-  const nodeResources = (nodeData as unknown as Record<string, unknown>)._accumulatedResources as
-    | ResourceRepository[]
-    | undefined;
+  const nodeResources = (nodeData as unknown as Record<string, unknown>)
+    ._accumulatedResources as ResourceRepository[] | undefined;
   const effectiveRepos = nodeResources ?? repositories;
 
   // Resolve the repo alias
@@ -1109,7 +1219,9 @@ function resolveNodeMetadata(
 
   if (effectiveRepoAlias && repositories.length) {
     const source = resolveTemplateSource(effectiveRepoAlias, repositories);
-    const repoResource = repositories.find((r) => r.repository === effectiveRepoAlias);
+    const repoResource = repositories.find(
+      (r) => r.repository === effectiveRepoAlias,
+    );
     if (source) {
       targetProject = source.project || project;
       targetRepo = source.repoName;
@@ -1131,15 +1243,16 @@ function resolveNodeMetadata(
   }
 
   // Build ADO URL
-  const adoUrl = org && targetProject && targetRepo
-    ? buildAdoFileUrl({
-        org,
-        project: targetProject,
-        repoName: targetRepo,
-        filePath: resolvedPath,
-        ref: targetRef,
-      })
-    : undefined;
+  const adoUrl =
+    org && targetProject && targetRepo
+      ? buildAdoFileUrl({
+          org,
+          project: targetProject,
+          repoName: targetRepo,
+          filePath: resolvedPath,
+          ref: targetRef,
+        })
+      : undefined;
 
   return { repoInfo, adoUrl };
 }

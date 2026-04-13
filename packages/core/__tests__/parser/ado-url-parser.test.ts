@@ -1,5 +1,8 @@
 import { describe, expect, test } from 'bun:test';
-import { parseAdoUrl, buildAdoFileUrl } from '../../src/parser/ado-url-parser.js';
+import {
+  buildAdoFileUrl,
+  parseAdoUrl,
+} from '../../src/parser/ado-url-parser.js';
 
 describe('parseAdoUrl', () => {
   test('parses standard ADO file URL', () => {
@@ -53,9 +56,7 @@ describe('parseAdoUrl', () => {
   });
 
   test('returns null for ADO URL without path param', () => {
-    expect(
-      parseAdoUrl('https://dev.azure.com/org/proj/_git/repo'),
-    ).toBeNull();
+    expect(parseAdoUrl('https://dev.azure.com/org/proj/_git/repo')).toBeNull();
   });
 
   test('returns null for invalid URL', () => {
@@ -178,14 +179,27 @@ describe('buildAdoFileUrl', () => {
   });
 
   test('round-trips branch URL with parseAdoUrl', () => {
-    const parts = { org: 'myorg', project: 'myproj', repoName: 'myrepo', filePath: '/ci.yml', branch: 'develop', ref: 'refs/heads/develop' };
+    const parts = {
+      org: 'myorg',
+      project: 'myproj',
+      repoName: 'myrepo',
+      filePath: '/ci.yml',
+      branch: 'develop',
+      ref: 'refs/heads/develop',
+    };
     const url = buildAdoFileUrl(parts);
     const parsed = parseAdoUrl(url);
     expect(parsed).toEqual(parts);
   });
 
   test('round-trips tag URL with parseAdoUrl', () => {
-    const parts = { org: 'myorg', project: 'myproj', repoName: 'myrepo', filePath: '/ci.yml', ref: 'refs/tags/3.stable' };
+    const parts = {
+      org: 'myorg',
+      project: 'myproj',
+      repoName: 'myrepo',
+      filePath: '/ci.yml',
+      ref: 'refs/tags/3.stable',
+    };
     const url = buildAdoFileUrl(parts);
     const parsed = parseAdoUrl(url);
     expect(parsed!.ref).toBe('refs/tags/3.stable');

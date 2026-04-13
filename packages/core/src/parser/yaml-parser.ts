@@ -24,10 +24,13 @@ function preprocessAzurePipelinesDirectiveKeys(content: string): string {
   return content
     .split(/\r?\n/)
     .map((line) =>
-      line.replace(DIRECTIVE_KEY_PATTERN, (_match, prefix: string, key: string, suffix: string) => {
-        const uniqueKey = `${key}__apv_${counter++}`;
-        return `${prefix}${JSON.stringify(uniqueKey)}${suffix}`;
-      }),
+      line.replace(
+        DIRECTIVE_KEY_PATTERN,
+        (_match, prefix: string, key: string, suffix: string) => {
+          const uniqueKey = `${key}__apv_${counter++}`;
+          return `${prefix}${JSON.stringify(uniqueKey)}${suffix}`;
+        },
+      ),
     )
     .join('\n');
 }

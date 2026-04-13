@@ -11,7 +11,10 @@
  * 2. The parameter defaults declared in the file's own `parameters:` section
  */
 
-import { resolveAllExpressions, type ExpressionContext } from './expression-evaluator';
+import {
+  type ExpressionContext,
+  resolveAllExpressions,
+} from './expression-evaluator';
 
 // Matches any ${{ ... }} expression
 const ANY_EXPR_RE = /\$\{\{.*?\}\}/g;
@@ -132,8 +135,12 @@ export function extractDeclaredParameterNames(
   if (!Array.isArray(params)) return [];
 
   return params
-    .filter((p): p is { name: string } =>
-      p != null && typeof p === 'object' && 'name' in p && typeof p.name === 'string',
+    .filter(
+      (p): p is { name: string } =>
+        p != null &&
+        typeof p === 'object' &&
+        'name' in p &&
+        typeof p.name === 'string',
     )
     .map((p) => p.name);
 }
@@ -185,7 +192,9 @@ export function extractVariableValues(
   // Object/mapping style: { key: value }
   if (typeof vars === 'object') {
     const result: Record<string, string> = {};
-    for (const [name, value] of Object.entries(vars as Record<string, unknown>)) {
+    for (const [name, value] of Object.entries(
+      vars as Record<string, unknown>,
+    )) {
       result[name] = String(value);
     }
     return result;

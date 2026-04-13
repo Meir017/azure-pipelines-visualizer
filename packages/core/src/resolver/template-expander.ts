@@ -10,11 +10,11 @@
  * is flattened as if the user had copy-pasted each template's content.
  */
 
-import type { IFileProvider } from '../resolver/types.js';
 import type { ResourceRepository } from '../model/pipeline.js';
-import { parseYaml } from '../parser/yaml-parser.js';
-import { substituteParameters } from '../parser/expression-substitutor.js';
 import { resolveRepoAlias } from '../model/resources.js';
+import { substituteParameters } from '../parser/expression-substitutor.js';
+import { parseYaml } from '../parser/yaml-parser.js';
+import type { IFileProvider } from '../resolver/types.js';
 
 // ─── Public types ────────────────────────────────────────────────────────────
 
@@ -129,30 +129,64 @@ async function resolveAllTemplates(
   if (obj.extends && typeof obj.extends === 'object') {
     const ext = obj.extends as Record<string, unknown>;
     if (typeof ext.template === 'string') {
-      await resolveExtendsTemplate(ctx, obj, ext, defaultDir, defaultRepo, depth);
+      await resolveExtendsTemplate(
+        ctx,
+        obj,
+        ext,
+        defaultDir,
+        defaultRepo,
+        depth,
+      );
     }
   }
 
   // 2. Resolve stages
   if (Array.isArray(obj.stages)) {
-    await resolveListTemplates(ctx, obj.stages, 'stages', defaultDir, defaultRepo, depth);
+    await resolveListTemplates(
+      ctx,
+      obj.stages,
+      'stages',
+      defaultDir,
+      defaultRepo,
+      depth,
+    );
   }
 
   // 3. Resolve jobs
   if (Array.isArray(obj.jobs)) {
-    await resolveListTemplates(ctx, obj.jobs, 'jobs', defaultDir, defaultRepo, depth);
+    await resolveListTemplates(
+      ctx,
+      obj.jobs,
+      'jobs',
+      defaultDir,
+      defaultRepo,
+      depth,
+    );
   }
 
   // 4. Resolve steps
   if (Array.isArray(obj.steps)) {
-    await resolveListTemplates(ctx, obj.steps, 'steps', defaultDir, defaultRepo, depth);
+    await resolveListTemplates(
+      ctx,
+      obj.steps,
+      'steps',
+      defaultDir,
+      defaultRepo,
+      depth,
+    );
   }
 
   // 5. Resolve variables
   if (Array.isArray(obj.variables)) {
-    await resolveListTemplates(ctx, obj.variables, 'variables', defaultDir, defaultRepo, depth);
+    await resolveListTemplates(
+      ctx,
+      obj.variables,
+      'variables',
+      defaultDir,
+      defaultRepo,
+      depth,
+    );
   }
-
 }
 
 /**
@@ -170,17 +204,30 @@ async function resolveExtendsTemplate(
   const templatePath = ext.template as string;
   const parameters = (ext.parameters ?? {}) as Record<string, unknown>;
   const { repo, path: resolvedPath } = resolveTemplatePath(
-    ctx, templatePath, defaultDir, defaultRepo,
+    ctx,
+    templatePath,
+    defaultDir,
+    defaultRepo,
   );
   const key = `${repo}:${resolvedPath}`;
 
   if (ctx.visited.has(key)) {
-    ctx.errors.push({ templatePath, location: 'extends', message: 'Circular reference detected', depth });
+    ctx.errors.push({
+      templatePath,
+      location: 'extends',
+      message: 'Circular reference detected',
+      depth,
+    });
     return;
   }
 
   if (depth >= ctx.maxDepth) {
-    ctx.errors.push({ templatePath, location: 'extends', message: `Max depth (${ctx.maxDepth}) exceeded`, depth });
+    ctx.errors.push({
+      templatePath,
+      location: 'extends',
+      message: `Max depth (${ctx.maxDepth}) exceeded`,
+      depth,
+    });
     return;
   }
 
@@ -196,7 +243,13 @@ async function resolveExtendsTemplate(
   const childCtx: ExpandContext = { ...ctx, visited: branchVisited };
 
   // Recursively resolve templates within the extends template
-  await resolveAllTemplates(childCtx, template, dirOf(resolvedPath), repo, depth + 1);
+  await resolveAllTemplates(
+    childCtx,
+    template,
+    dirOf(resolvedPath),
+    repo,
+    depth + 1,
+  );
 
   // Sync shared mutable state back
   ctx.fileCount = childCtx.fileCount;
@@ -242,7 +295,14 @@ async function resolveListTemplates(
       if (key.startsWith('${{')) {
         const condValue = obj[key];
         if (Array.isArray(condValue)) {
-          await resolveListTemplates(ctx, condValue, location, defaultDir, defaultRepo, depth);
+          await resolveListTemplates(
+            ctx,
+            condValue,
+            location,
+            defaultDir,
+            defaultRepo,
+            depth,
+          );
         }
       }
     }
@@ -260,18 +320,31 @@ async function resolveListTemplates(
     const templatePath = obj.template as string;
     const parameters = (obj.parameters ?? {}) as Record<string, unknown>;
     const { repo, path: resolvedPath } = resolveTemplatePath(
-      ctx, templatePath, defaultDir, defaultRepo,
+      ctx,
+      templatePath,
+      defaultDir,
+      defaultRepo,
     );
     const key = `${repo}:${resolvedPath}`;
 
     if (ctx.visited.has(key)) {
-      ctx.errors.push({ templatePath, location, message: 'Circular reference detected', depth });
+      ctx.errors.push({
+        templatePath,
+        location,
+        message: 'Circular reference detected',
+        depth,
+      });
       i++;
       continue;
     }
 
     if (depth >= ctx.maxDepth) {
-      ctx.errors.push({ templatePath, location, message: `Max depth (${ctx.maxDepth}) exceeded`, depth });
+      ctx.errors.push({
+        templatePath,
+        location,
+        message: `Max depth (${ctx.maxDepth}) exceeded`,
+        depth,
+      });
       i++;
       continue;
     }
@@ -289,7 +362,13 @@ async function resolveListTemplates(
     const branchVisited = new Set(ctx.visited);
     branchVisited.add(key);
     const childCtx: ExpandContext = { ...ctx, visited: branchVisited };
-    await resolveAllTemplates(childCtx, template, dirOf(resolvedPath), repo, depth + 1);
+    await resolveAllTemplates(
+      childCtx,
+      template,
+      dirOf(resolvedPath),
+      repo,
+      depth + 1,
+    );
     ctx.fileCount = childCtx.fileCount;
 
     // Extract the items from the template that match this location
@@ -380,9 +459,7 @@ function resolveTemplatePath(
 }
 
 function normalizePath(path: string): string {
-  return path
-    .replace(/\\/g, '/')
-    .replace(/^\.\//, '');
+  return path.replace(/\\/g, '/').replace(/^\.\//, '');
 }
 
 function dirOf(filePath: string): string {
@@ -412,7 +489,9 @@ function mergeExtends(
 
   // Merge variables (pipeline vars take precedence over template vars)
   if (Array.isArray(template.variables)) {
-    const existing = Array.isArray(pipeline.variables) ? pipeline.variables as unknown[] : [];
+    const existing = Array.isArray(pipeline.variables)
+      ? (pipeline.variables as unknown[])
+      : [];
     pipeline.variables = [...(template.variables as unknown[]), ...existing];
     count += (template.variables as unknown[]).length;
   }
@@ -452,7 +531,12 @@ function extractItems(
 
   // A steps template referenced in a stages list → wrap in implicit stage+job
   if (location === 'stages' && Array.isArray(template.steps)) {
-    return [{ stage: '__expanded', jobs: [{ job: '__expanded', steps: template.steps }] }];
+    return [
+      {
+        stage: '__expanded',
+        jobs: [{ job: '__expanded', steps: template.steps }],
+      },
+    ];
   }
   if (location === 'stages' && Array.isArray(template.jobs)) {
     return [{ stage: '__expanded', jobs: template.jobs }];

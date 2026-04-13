@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'bun:test';
 import {
-  resolveExpressionPath,
-  pathHasExpressions,
-  extractParameterDefaults,
   extractDeclaredParameterNames,
+  extractParameterDefaults,
   extractVariableValues,
+  pathHasExpressions,
+  resolveExpressionPath,
 } from '../../src/parser/expression-path-resolver.js';
 
 describe('pathHasExpressions', () => {
@@ -13,11 +13,15 @@ describe('pathHasExpressions', () => {
   });
 
   test('returns true for path with parameter expression', () => {
-    expect(pathHasExpressions('governed/${{parameters.buildType}}.yaml')).toBe(true);
+    expect(pathHasExpressions('governed/${{parameters.buildType}}.yaml')).toBe(
+      true,
+    );
   });
 
   test('returns true for path with spaces in expression', () => {
-    expect(pathHasExpressions('governed/${{ parameters.buildType }}.yaml')).toBe(true);
+    expect(
+      pathHasExpressions('governed/${{ parameters.buildType }}.yaml'),
+    ).toBe(true);
   });
 });
 
@@ -223,7 +227,9 @@ describe('extractParameterDefaults', () => {
 
   test('returns empty for no parameters', () => {
     expect(extractParameterDefaults({})).toEqual({});
-    expect(extractParameterDefaults({ parameters: 'not-array' } as any)).toEqual({});
+    expect(
+      extractParameterDefaults({ parameters: 'not-array' } as any),
+    ).toEqual({});
   });
 
   test('handles object-style parameters', () => {
@@ -252,7 +258,9 @@ describe('extractDeclaredParameterNames', () => {
 
   test('returns empty for no parameters', () => {
     expect(extractDeclaredParameterNames({})).toEqual([]);
-    expect(extractDeclaredParameterNames({ parameters: 'not-array' } as any)).toEqual([]);
+    expect(
+      extractDeclaredParameterNames({ parameters: 'not-array' } as any),
+    ).toEqual([]);
   });
 });
 

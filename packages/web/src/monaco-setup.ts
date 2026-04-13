@@ -11,10 +11,11 @@ import 'monaco-editor/esm/vs/basic-languages/yaml/yaml.contribution';
 
 // Disable web workers (we only need syntax highlighting, no language services)
 (globalThis as Record<string, unknown>).MonacoEnvironment = {
-  getWorker: () => new Worker(
-    new URL('monaco-editor/esm/vs/editor/editor.worker.js', import.meta.url),
-    { type: 'module' },
-  ),
+  getWorker: () =>
+    new Worker(
+      new URL('monaco-editor/esm/vs/editor/editor.worker.js', import.meta.url),
+      { type: 'module' },
+    ),
 };
 
 loader.config({ monaco });

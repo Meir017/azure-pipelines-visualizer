@@ -1,9 +1,15 @@
-import type { TemplateReference, ResourceRepository } from '../model/pipeline.js';
-import type { IFileProvider } from './types.js';
-import { parseYaml } from '../parser/yaml-parser.js';
-import { detectTemplateReferences } from '../parser/template-detector.js';
+import type {
+  ResourceRepository,
+  TemplateReference,
+} from '../model/pipeline.js';
 import { resolveRepoAlias } from '../model/resources.js';
-import { getEffectiveRepoAlias, resolveTemplateRefPaths } from '../model/template-ref.js';
+import {
+  getEffectiveRepoAlias,
+  resolveTemplateRefPaths,
+} from '../model/template-ref.js';
+import { detectTemplateReferences } from '../parser/template-detector.js';
+import { parseYaml } from '../parser/yaml-parser.js';
+import type { IFileProvider } from './types.js';
 
 /** A resolved template with its content and any nested template references. */
 export interface ResolvedTemplate {
@@ -70,12 +76,18 @@ async function resolveSingle(
 ): Promise<ResolvedTemplate> {
   // Build a unique key for cycle detection
   const repoKey = getEffectiveRepoAlias(ref) ?? '';
-  const { primary: primaryPath, fallback: fallbackPath } = resolveTemplateRefPaths(ref);
+  const { primary: primaryPath, fallback: fallbackPath } =
+    resolveTemplateRefPaths(ref);
   const cacheKey = `${repoKey}:${primaryPath}`;
 
   // Cycle detection (check both primary and fallback)
-  const fallbackCacheKey = fallbackPath ? `${repoKey}:${fallbackPath}` : undefined;
-  if (visited.has(cacheKey) || (fallbackCacheKey && visited.has(fallbackCacheKey))) {
+  const fallbackCacheKey = fallbackPath
+    ? `${repoKey}:${fallbackPath}`
+    : undefined;
+  if (
+    visited.has(cacheKey) ||
+    (fallbackCacheKey && visited.has(fallbackCacheKey))
+  ) {
     return {
       ref,
       content: '',
@@ -128,7 +140,11 @@ async function resolveSingle(
       content = await fileProvider.getFileContent(repoId, primaryPath, gitRef);
     } catch (primaryErr) {
       if (fallbackPath) {
-        content = await fileProvider.getFileContent(repoId, fallbackPath, gitRef);
+        content = await fileProvider.getFileContent(
+          repoId,
+          fallbackPath,
+          gitRef,
+        );
         resolvedPath = fallbackPath;
       } else {
         throw primaryErr;

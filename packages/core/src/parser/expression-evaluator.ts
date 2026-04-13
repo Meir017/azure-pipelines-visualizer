@@ -158,7 +158,10 @@ function tokenize(input: string): Token[] {
     }
 
     // Number
-    if (/\d/.test(input[i]) || (input[i] === '-' && i + 1 < input.length && /\d/.test(input[i + 1]))) {
+    if (
+      /\d/.test(input[i]) ||
+      (input[i] === '-' && i + 1 < input.length && /\d/.test(input[i + 1]))
+    ) {
       let num = '';
       if (input[i] === '-') {
         num += '-';
@@ -225,7 +228,9 @@ class Parser {
   private expect(type: TokenType): Token {
     const tok = this.advance();
     if (!tok || tok.type !== type) {
-      throw new Error(`Expected ${type} but got ${tok?.type ?? 'EOF'} (${tok?.value})`);
+      throw new Error(
+        `Expected ${type} but got ${tok?.type ?? 'EOF'} (${tok?.value})`,
+      );
     }
     return tok;
   }
@@ -371,7 +376,8 @@ function toString(value: unknown): string {
 /** Convert to boolean for Azure Pipelines expression semantics. */
 function toBool(value: unknown): boolean {
   if (typeof value === 'boolean') return value;
-  if (typeof value === 'string') return value !== '' && value.toLowerCase() !== 'false';
+  if (typeof value === 'string')
+    return value !== '' && value.toLowerCase() !== 'false';
   if (typeof value === 'number') return value !== 0;
   if (value === null || value === undefined) return false;
   return true; // objects are truthy
@@ -400,7 +406,10 @@ function looseEqual(a: unknown, b: unknown): boolean {
 }
 
 // Built-in function implementations
-const builtinFunctions: Record<string, (args: unknown[], ctx: ExpressionContext) => unknown> = {
+const builtinFunctions: Record<
+  string,
+  (args: unknown[], ctx: ExpressionContext) => unknown
+> = {
   coalesce: (args) => {
     for (const arg of args) {
       if (arg !== null && arg !== undefined && arg !== '') return arg;
@@ -456,11 +465,15 @@ const builtinFunctions: Record<string, (args: unknown[], ctx: ExpressionContext)
   },
 
   startswith: (args) => {
-    return toString(args[0]).toLowerCase().startsWith(toString(args[1]).toLowerCase());
+    return toString(args[0])
+      .toLowerCase()
+      .startsWith(toString(args[1]).toLowerCase());
   },
 
   endswith: (args) => {
-    return toString(args[0]).toLowerCase().endsWith(toString(args[1]).toLowerCase());
+    return toString(args[0])
+      .toLowerCase()
+      .endsWith(toString(args[1]).toLowerCase());
   },
 
   contains: (args) => {
@@ -557,7 +570,10 @@ function evaluateNode(node: ASTNode, ctx: ExpressionContext): unknown {
  * @param context - Parameter and variable values
  * @returns The evaluated result
  */
-export function evaluateExpression(expression: string, context: ExpressionContext = {}): unknown {
+export function evaluateExpression(
+  expression: string,
+  context: ExpressionContext = {},
+): unknown {
   const trimmed = expression.trim();
   if (!trimmed) return '';
 

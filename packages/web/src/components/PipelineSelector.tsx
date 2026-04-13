@@ -1,7 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
 import { parseAdoUrl } from '@apv/core';
+import { useEffect, useRef, useState } from 'react';
+import {
+  fetchFileByRepoName,
+  fetchPipelines,
+  fetchPipelineYaml,
+} from '../services/api-client.js';
 import { usePipelineStore } from '../store/pipeline-store.js';
-import { fetchPipelines, fetchPipelineYaml, fetchFileByRepoName } from '../services/api-client.js';
 
 export default function PipelineSelector() {
   const {
@@ -55,7 +59,7 @@ export default function PipelineSelector() {
       // Mode 3: pipeline ID ?org=&project=&pipelineId=
       loadFromPipelineId(paramOrg, paramProject, Number(paramPipelineId));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadFromAdoUrl = async (url: string) => {
@@ -70,26 +74,41 @@ export default function PipelineSelector() {
     setUrlLoading(true);
     try {
       const resp = await fetchFileByRepoName(
-        parsed.org, parsed.project, parsed.repoName, parsed.filePath, parsed.branch,
+        parsed.org,
+        parsed.project,
+        parsed.repoName,
+        parsed.filePath,
+        parsed.branch,
       );
       setSelectedPipeline({
         definition: {
           id: 0,
           name: parsed.filePath.split('/').pop() || parsed.filePath,
           path: parsed.filePath,
-          repository: { id: resp.repoId, name: resp.repoName, type: 'git', defaultBranch: resp.branch || '' },
+          repository: {
+            id: resp.repoId,
+            name: resp.repoName,
+            type: 'git',
+            defaultBranch: resp.branch || '',
+          },
         },
         yaml: resp.content,
       });
     } catch (err) {
-      setSelectedPipelineError(err instanceof Error ? err.message : String(err));
+      setSelectedPipelineError(
+        err instanceof Error ? err.message : String(err),
+      );
     } finally {
       setSelectedPipelineLoading(false);
       setUrlLoading(false);
     }
   };
 
-  const loadFromPipelineId = async (pOrg: string, pProject: string, pipelineId: number) => {
+  const loadFromPipelineId = async (
+    pOrg: string,
+    pProject: string,
+    pipelineId: number,
+  ) => {
     setConnection(pOrg, pProject);
     setSelectedPipelineLoading(true);
     setSelectedPipelineError(null);
@@ -97,7 +116,9 @@ export default function PipelineSelector() {
       const data = await fetchPipelineYaml(pOrg, pProject, pipelineId);
       setSelectedPipeline(data);
     } catch (err) {
-      setSelectedPipelineError(err instanceof Error ? err.message : String(err));
+      setSelectedPipelineError(
+        err instanceof Error ? err.message : String(err),
+      );
     } finally {
       setSelectedPipelineLoading(false);
     }
@@ -109,7 +130,7 @@ export default function PipelineSelector() {
     await loadFromAdoUrl(urlInput.trim());
   };
 
-  const handleLoadPipelines= async () => {
+  const handleLoadPipelines = async () => {
     if (!orgInput || !projectInput) return;
     setConnection(orgInput, projectInput);
     setPipelinesLoading(true);
@@ -131,7 +152,9 @@ export default function PipelineSelector() {
       const data = await fetchPipelineYaml(org, project, pipelineId);
       setSelectedPipeline(data);
     } catch (err) {
-      setSelectedPipelineError(err instanceof Error ? err.message : String(err));
+      setSelectedPipelineError(
+        err instanceof Error ? err.message : String(err),
+      );
     } finally {
       setSelectedPipelineLoading(false);
     }
@@ -163,7 +186,10 @@ export default function PipelineSelector() {
             onChange={(e) => setUrlInput(e.target.value)}
             rows={3}
           />
-          <button onClick={handleLoadFromUrl} disabled={!urlInput.trim() || urlLoading}>
+          <button
+            onClick={handleLoadFromUrl}
+            disabled={!urlInput.trim() || urlLoading}
+          >
             {urlLoading ? '⏳ Loading...' : 'Load Pipeline'}
           </button>
           {urlError && <div className="error">{urlError}</div>}

@@ -1,10 +1,10 @@
-import { memo, useState, useCallback } from 'react';
 import {
   BaseEdge,
   EdgeLabelRenderer,
-  getBezierPath,
   type EdgeProps,
+  getBezierPath,
 } from '@xyflow/react';
+import { memo, useCallback, useState } from 'react';
 
 export interface TemplateEdgeData {
   /** Edge category label: extends, stages, jobs, steps, etc. */
@@ -52,9 +52,7 @@ function BadgeWithTooltip({
       onMouseLeave={() => setShow(false)}
     >
       {label}
-      {show && (
-        <div className="template-edge__badge-tooltip">{children}</div>
-      )}
+      {show && <div className="template-edge__badge-tooltip">{children}</div>}
     </span>
   );
 }
@@ -105,9 +103,17 @@ function TemplateEdge({
             {d?.conditional && (
               <BadgeWithTooltip
                 className={`template-edge__badge template-edge__badge--conditional${d.conditionResult === false ? ' template-edge__badge--condition-false' : d.conditionResult === true ? ' template-edge__badge--condition-true' : ''}`}
-                label={d.conditionResult === false ? '⊘ false' : d.conditionResult === true ? '✓ conditional' : 'conditional'}
+                label={
+                  d.conditionResult === false
+                    ? '⊘ false'
+                    : d.conditionResult === true
+                      ? '✓ conditional'
+                      : 'conditional'
+                }
               >
-                <div className="template-edge__badge-tooltip-title">⚡ Conditional Reference</div>
+                <div className="template-edge__badge-tooltip-title">
+                  ⚡ Conditional Reference
+                </div>
                 <p>
                   {d.conditionResult === true
                     ? 'Condition evaluated to true — this template will be included.'
@@ -117,13 +123,17 @@ function TemplateEdge({
                 </p>
                 {d.conditionExpression && (
                   <div className="template-edge__badge-tooltip-row">
-                    <span className="template-edge__badge-tooltip-label">Condition</span>
+                    <span className="template-edge__badge-tooltip-label">
+                      Condition
+                    </span>
                     <code>{d.conditionExpression}</code>
                   </div>
                 )}
                 {d.conditionResult != null && (
                   <div className="template-edge__badge-tooltip-row">
-                    <span className="template-edge__badge-tooltip-label">Result</span>
+                    <span className="template-edge__badge-tooltip-label">
+                      Result
+                    </span>
                     <code>{String(d.conditionResult)}</code>
                   </div>
                 )}
@@ -134,15 +144,24 @@ function TemplateEdge({
                 className="template-edge__badge template-edge__badge--resolved"
                 label="🔮 resolved"
               >
-                <div className="template-edge__badge-tooltip-title">🔮 Expression Resolved</div>
-                <p>The template path contained expressions that were successfully evaluated.</p>
+                <div className="template-edge__badge-tooltip-title">
+                  🔮 Expression Resolved
+                </div>
+                <p>
+                  The template path contained expressions that were successfully
+                  evaluated.
+                </p>
                 <div className="template-edge__badge-tooltip-row">
-                  <span className="template-edge__badge-tooltip-label">Original</span>
+                  <span className="template-edge__badge-tooltip-label">
+                    Original
+                  </span>
                   <code>{d.originalPath}</code>
                 </div>
                 {d.resolvedPath && (
                   <div className="template-edge__badge-tooltip-row">
-                    <span className="template-edge__badge-tooltip-label">Resolved</span>
+                    <span className="template-edge__badge-tooltip-label">
+                      Resolved
+                    </span>
                     <code>{d.resolvedPath}</code>
                   </div>
                 )}
@@ -153,24 +172,36 @@ function TemplateEdge({
                 className="template-edge__badge template-edge__badge--unresolved"
                 label="⚠️ dynamic"
               >
-                <div className="template-edge__badge-tooltip-title">⚠️ Unresolved Expressions</div>
-                <p>The template path contains expressions that could not be evaluated at analysis time.</p>
+                <div className="template-edge__badge-tooltip-title">
+                  ⚠️ Unresolved Expressions
+                </div>
+                <p>
+                  The template path contains expressions that could not be
+                  evaluated at analysis time.
+                </p>
                 <div className="template-edge__badge-tooltip-row">
-                  <span className="template-edge__badge-tooltip-label">Original</span>
+                  <span className="template-edge__badge-tooltip-label">
+                    Original
+                  </span>
                   <code>{d.originalPath}</code>
                 </div>
                 {d.resolvedPath && d.resolvedPath !== d.originalPath && (
                   <div className="template-edge__badge-tooltip-row">
-                    <span className="template-edge__badge-tooltip-label">Partial</span>
+                    <span className="template-edge__badge-tooltip-label">
+                      Partial
+                    </span>
                     <code>{d.resolvedPath}</code>
                   </div>
                 )}
-                {d.unresolvedExpressions && d.unresolvedExpressions.length > 0 && (
-                  <div className="template-edge__badge-tooltip-row">
-                    <span className="template-edge__badge-tooltip-label">Unresolved</span>
-                    <span>{d.unresolvedExpressions.join(', ')}</span>
-                  </div>
-                )}
+                {d.unresolvedExpressions &&
+                  d.unresolvedExpressions.length > 0 && (
+                    <div className="template-edge__badge-tooltip-row">
+                      <span className="template-edge__badge-tooltip-label">
+                        Unresolved
+                      </span>
+                      <span>{d.unresolvedExpressions.join(', ')}</span>
+                    </div>
+                  )}
               </BadgeWithTooltip>
             )}
           </div>
@@ -212,7 +243,12 @@ function ParamsTooltip({ data: d }: { data: TemplateEdgeData }) {
           </div>
           <ul className="template-edge__params-list">
             {d.parameterNames.map((n) => (
-              <li key={n} className="template-edge__params-item template-edge__params-item--passed">{n}</li>
+              <li
+                key={n}
+                className="template-edge__params-item template-edge__params-item--passed"
+              >
+                {n}
+              </li>
             ))}
           </ul>
         </div>
@@ -224,13 +260,20 @@ function ParamsTooltip({ data: d }: { data: TemplateEdgeData }) {
           </div>
           <ul className="template-edge__params-list">
             {notPassed.map((n) => (
-              <li key={n} className="template-edge__params-item template-edge__params-item--missing">{n}</li>
+              <li
+                key={n}
+                className="template-edge__params-item template-edge__params-item--missing"
+              >
+                {n}
+              </li>
             ))}
           </ul>
         </div>
       )}
       {d.totalParameterCount == null && !d.declaredParameterNames?.length && (
-        <div className="template-edge__params-hint">Expand node to see all declared params</div>
+        <div className="template-edge__params-hint">
+          Expand node to see all declared params
+        </div>
       )}
     </div>
   );

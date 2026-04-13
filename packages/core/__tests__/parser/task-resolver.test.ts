@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'bun:test';
 import {
+  extractTaskReferences,
   parseTaskReference,
   pascalToKebab,
   resolveTaskDocUrl,
-  extractTaskReferences,
 } from '../../src/parser/task-resolver.js';
 
 describe('parseTaskReference', () => {
@@ -35,7 +35,9 @@ describe('parseTaskReference', () => {
 
 describe('pascalToKebab', () => {
   test('simple PascalCase', () => {
-    expect(pascalToKebab('PublishBuildArtifacts')).toBe('publish-build-artifacts');
+    expect(pascalToKebab('PublishBuildArtifacts')).toBe(
+      'publish-build-artifacts',
+    );
   });
 
   test('consecutive uppercase (CLI)', () => {
@@ -192,64 +194,69 @@ describe('extractTaskReferences', () => {
   test('extracts tasks inside conditional ${{ if }} blocks in steps', () => {
     const refs = extractTaskReferences({
       steps: [
-        { '${{ if eq(parameters.isLinux, true) }}': [
-          { task: 'ContainerSecurityCopacetic@0' },
-        ]},
+        {
+          '${{ if eq(parameters.isLinux, true) }}': [
+            { task: 'ContainerSecurityCopacetic@0' },
+          ],
+        },
         { task: 'ContainerSecurityCredScan@0' },
       ],
     });
     expect(refs).toHaveLength(2);
-    expect(refs.map(r => r.name)).toContain('ContainerSecurityCopacetic');
-    expect(refs.map(r => r.name)).toContain('ContainerSecurityCredScan');
+    expect(refs.map((r) => r.name)).toContain('ContainerSecurityCopacetic');
+    expect(refs.map((r) => r.name)).toContain('ContainerSecurityCredScan');
   });
 
   test('extracts tasks from nested conditional blocks (if/elseif/else)', () => {
     const refs = extractTaskReferences({
       steps: [
-        { '${{ if eq(parameters.mode, "patch") }}': [
-          { task: 'PatchTask@1' },
-        ]},
-        { '${{ elseif eq(parameters.mode, "scan") }}': [
-          { task: 'ScanTask@1' },
-        ]},
-        { '${{ else }}': [
-          { task: 'AnalyzeTask@1' },
-        ]},
+        { '${{ if eq(parameters.mode, "patch") }}': [{ task: 'PatchTask@1' }] },
+        {
+          '${{ elseif eq(parameters.mode, "scan") }}': [{ task: 'ScanTask@1' }],
+        },
+        { '${{ else }}': [{ task: 'AnalyzeTask@1' }] },
       ],
     });
     expect(refs).toHaveLength(3);
-    expect(refs.map(r => r.name)).toEqual(['PatchTask', 'ScanTask', 'AnalyzeTask']);
+    expect(refs.map((r) => r.name)).toEqual([
+      'PatchTask',
+      'ScanTask',
+      'AnalyzeTask',
+    ]);
   });
 
   test('extracts tasks from doubly-nested conditional blocks', () => {
     const refs = extractTaskReferences({
       steps: [
-        { '${{ if parameters.isLinux }}': [
-          { '${{ if eq(parameters.enablePatching, true) }}': [
-            { task: 'LinuxPatch@0' },
-          ]},
-          { '${{ else }}': [
-            { task: 'LinuxScan@0' },
-          ]},
-        ]},
+        {
+          '${{ if parameters.isLinux }}': [
+            {
+              '${{ if eq(parameters.enablePatching, true) }}': [
+                { task: 'LinuxPatch@0' },
+              ],
+            },
+            { '${{ else }}': [{ task: 'LinuxScan@0' }] },
+          ],
+        },
         { task: 'AlwaysRun@1' },
       ],
     });
     expect(refs).toHaveLength(3);
-    expect(refs.map(r => r.name)).toContain('LinuxPatch');
-    expect(refs.map(r => r.name)).toContain('LinuxScan');
-    expect(refs.map(r => r.name)).toContain('AlwaysRun');
+    expect(refs.map((r) => r.name)).toContain('LinuxPatch');
+    expect(refs.map((r) => r.name)).toContain('LinuxScan');
+    expect(refs.map((r) => r.name)).toContain('AlwaysRun');
   });
 
   test('extracts tasks from conditional blocks inside jobs', () => {
     const refs = extractTaskReferences({
       jobs: [
-        { job: 'Build', steps: [
-          { '${{ if parameters.useCache }}': [
-            { task: 'Cache@2' },
-          ]},
-          { task: 'DotNetCoreCLI@2' },
-        ]},
+        {
+          job: 'Build',
+          steps: [
+            { '${{ if parameters.useCache }}': [{ task: 'Cache@2' }] },
+            { task: 'DotNetCoreCLI@2' },
+          ],
+        },
       ],
     });
     expect(refs).toHaveLength(2);
@@ -268,13 +275,15 @@ describe('extractTaskReferences', () => {
   test('extracts tasks from triply-nested conditional blocks', () => {
     const refs = extractTaskReferences({
       steps: [
-        { '${{ if parameters.a }}': [
-          { '${{ if parameters.b }}': [
-            { '${{ if parameters.c }}': [
-              { task: 'DeepTask@1' },
-            ]},
-          ]},
-        ]},
+        {
+          '${{ if parameters.a }}': [
+            {
+              '${{ if parameters.b }}': [
+                { '${{ if parameters.c }}': [{ task: 'DeepTask@1' }] },
+              ],
+            },
+          ],
+        },
       ],
     });
     expect(refs).toHaveLength(1);
@@ -297,19 +306,23 @@ describe('extractTaskReferences', () => {
         {
           stage: 'Build',
           jobs: [
-            { '${{ if parameters.useDocker }}': [
-              { job: 'DockerBuild', steps: [{ task: 'Docker@2' }] },
-            ]},
-            { '${{ else }}': [
-              { job: 'NativeBuild', steps: [{ task: 'MSBuild@1' }] },
-            ]},
+            {
+              '${{ if parameters.useDocker }}': [
+                { job: 'DockerBuild', steps: [{ task: 'Docker@2' }] },
+              ],
+            },
+            {
+              '${{ else }}': [
+                { job: 'NativeBuild', steps: [{ task: 'MSBuild@1' }] },
+              ],
+            },
           ],
         },
       ],
     });
     expect(refs).toHaveLength(2);
-    expect(refs.map(r => r.name)).toContain('Docker');
-    expect(refs.map(r => r.name)).toContain('MSBuild');
+    expect(refs.map((r) => r.name)).toContain('Docker');
+    expect(refs.map((r) => r.name)).toContain('MSBuild');
   });
 
   test('handles null and non-object steps gracefully', () => {
@@ -342,7 +355,7 @@ describe('extractTaskReferences', () => {
       ],
     });
     expect(refs).toHaveLength(3);
-    expect(refs.map(r => r.name)).toEqual(['Before', 'Middle', 'After']);
+    expect(refs.map((r) => r.name)).toEqual(['Before', 'Middle', 'After']);
   });
 });
 

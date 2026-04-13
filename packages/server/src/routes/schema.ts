@@ -1,6 +1,12 @@
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import { Hono } from 'hono';
-import { existsSync, mkdirSync, readFileSync, writeFileSync, statSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
 import { getAzureDevOpsToken } from '../auth.js';
 
 const schema = new Hono();
@@ -46,12 +52,17 @@ function writeCache(org: string, entries: TaskSchemaEntry[]): void {
  * The schema has `definitions.task.properties.task.anyOf` containing entries like:
  * { description: "...", enum: ["TaskName@Version"] }
  */
-export function extractTasksFromSchema(schemaJson: Record<string, unknown>): TaskSchemaEntry[] {
-  const definitions = schemaJson.definitions as Record<string, unknown> | undefined;
+export function extractTasksFromSchema(
+  schemaJson: Record<string, unknown>,
+): TaskSchemaEntry[] {
+  const definitions = schemaJson.definitions as
+    | Record<string, unknown>
+    | undefined;
   if (!definitions) return [];
 
   const taskDef = definitions.task as Record<string, unknown> | undefined;
-  const taskProp = (taskDef?.properties as Record<string, unknown> | undefined)?.task as Record<string, unknown> | undefined;
+  const taskProp = (taskDef?.properties as Record<string, unknown> | undefined)
+    ?.task as Record<string, unknown> | undefined;
   const anyOf = taskProp?.anyOf as Array<Record<string, unknown>> | undefined;
   if (!anyOf) return [];
 
@@ -62,7 +73,8 @@ export function extractTasksFromSchema(schemaJson: Record<string, unknown>): Tas
     if (!enumVal?.length) continue;
 
     const raw = enumVal[0];
-    const description = typeof entry.description === 'string' ? entry.description : '';
+    const description =
+      typeof entry.description === 'string' ? entry.description : '';
     const atIdx = raw.lastIndexOf('@');
 
     let name: string;
@@ -110,7 +122,10 @@ schema.get('/:org/schema/tasks', async (c) => {
 
   if (!resp.ok) {
     const text = await resp.text();
-    return c.json({ error: `Failed to fetch schema: ${resp.status} ${text}` }, resp.status as 400);
+    return c.json(
+      { error: `Failed to fetch schema: ${resp.status} ${text}` },
+      resp.status as 400,
+    );
   }
 
   const schemaJson = (await resp.json()) as Record<string, unknown>;

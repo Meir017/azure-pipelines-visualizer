@@ -1,15 +1,15 @@
 import type {
-  Pipeline,
-  Stage,
-  Job,
-  Step,
-  Resources,
-  ResourceRepository,
-  ResourcePipeline,
-  VariableEntry,
   ExtendsBlock,
+  Job,
+  Pipeline,
   Pool,
+  ResourcePipeline,
+  ResourceRepository,
+  Resources,
+  Stage,
+  Step,
   Trigger,
+  VariableEntry,
 } from '../model/pipeline.js';
 import { toYaml } from './yaml-parser.js';
 
@@ -85,10 +85,12 @@ function parseVariables(raw: unknown): VariableEntry[] | undefined {
   }
   // Object-style variables: { key: value }
   if (typeof raw === 'object') {
-    return Object.entries(raw as Record<string, unknown>).map(([name, value]) => ({
-      name,
-      value: String(value),
-    }));
+    return Object.entries(raw as Record<string, unknown>).map(
+      ([name, value]) => ({
+        name,
+        value: String(value),
+      }),
+    );
   }
   return undefined;
 }

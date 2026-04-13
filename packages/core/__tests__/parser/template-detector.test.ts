@@ -1,13 +1,16 @@
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { parseYaml } from '../../src/parser/yaml-parser.js';
 import { detectTemplateReferences } from '../../src/parser/template-detector.js';
+import { parseYaml } from '../../src/parser/yaml-parser.js';
 
 const fixturesDir = join(import.meta.dir, '..', 'fixtures');
 const detectFromFixture = (name: string) =>
   detectTemplateReferences(
-    parseYaml(readFileSync(join(fixturesDir, name), 'utf-8')) as Record<string, unknown>,
+    parseYaml(readFileSync(join(fixturesDir, name), 'utf-8')) as Record<
+      string,
+      unknown
+    >,
   );
 
 describe('detectTemplateReferences', () => {
@@ -32,18 +35,22 @@ describe('detectTemplateReferences', () => {
     // extends: v2/OneBranch.Official.CrossPlat.yml@GovernedTemplates
     const extendsRef = refs.find((r) => r.location === 'extends');
     expect(extendsRef).toBeDefined();
-    expect(extendsRef!.normalizedPath).toBe('v2/OneBranch.Official.CrossPlat.yml');
+    expect(extendsRef!.normalizedPath).toBe(
+      'v2/OneBranch.Official.CrossPlat.yml',
+    );
     expect(extendsRef!.repoAlias).toBe('GovernedTemplates');
 
     // Templates inside extends.parameters.stages
     const nestedRefs = refs.filter((r) => r.location === 'extends-parameters');
     expect(nestedRefs.length).toBeGreaterThanOrEqual(2);
 
-    const buildRef = nestedRefs.find((r) => r.normalizedPath === '.pipelines/build-template.yml');
+    const buildRef = nestedRefs.find(
+      (r) => r.normalizedPath === '.pipelines/build-template.yml',
+    );
     expect(buildRef).toBeDefined();
 
-    const validationRef = nestedRefs.find((r) =>
-      r.normalizedPath === 'validation-stage-template.yml',
+    const validationRef = nestedRefs.find(
+      (r) => r.normalizedPath === 'validation-stage-template.yml',
     );
     expect(validationRef).toBeDefined();
   });
@@ -58,7 +65,9 @@ describe('detectTemplateReferences', () => {
     expect(templatesRef).toBeDefined();
     expect(templatesRef!.normalizedPath).toBe('jobs/build.yml');
 
-    const govRef = externalRefs.find((r) => r.repoAlias === 'GovernedTemplates');
+    const govRef = externalRefs.find(
+      (r) => r.repoAlias === 'GovernedTemplates',
+    );
     expect(govRef).toBeDefined();
   });
 
@@ -73,14 +82,18 @@ describe('detectTemplateReferences', () => {
     );
     expect(pssaRef).toBeDefined();
     expect(pssaRef!.conditional).toBe(true);
-    expect(pssaRef!.conditionExpression).toBe('eq(parameters.enablePSSA, true)');
+    expect(pssaRef!.conditionExpression).toBe(
+      'eq(parameters.enablePSSA, true)',
+    );
 
     const armRef = conditionalRefs.find((r) =>
       r.normalizedPath.includes('arm-ev2-test-steps-template'),
     );
     expect(armRef).toBeDefined();
     expect(armRef!.conditional).toBe(true);
-    expect(armRef!.conditionExpression).toBe('eq(parameters.enableArmTests, true)');
+    expect(armRef!.conditionExpression).toBe(
+      'eq(parameters.enableArmTests, true)',
+    );
   });
 
   test('detects template references in else branches', () => {
@@ -174,11 +187,15 @@ steps:
     // .pipelines/build-template.yml@self → .pipelines/build-template.yml (preserved)
     // ./build-template.yml@self → build-template.yml
     // build-template.yml → build-template.yml
-    const buildRefs = refs.filter((r) => r.normalizedPath === 'build-template.yml');
+    const buildRefs = refs.filter(
+      (r) => r.normalizedPath === 'build-template.yml',
+    );
     expect(buildRefs).toHaveLength(2);
 
     // The .pipelines/ prefixed one is separate now
-    const pipelinesRef = refs.find((r) => r.normalizedPath === '.pipelines/build-template.yml');
+    const pipelinesRef = refs.find(
+      (r) => r.normalizedPath === '.pipelines/build-template.yml',
+    );
     expect(pipelinesRef).toBeDefined();
 
     // All should have no repoAlias (self = local)
@@ -188,9 +205,13 @@ steps:
 
     // .pipelines/templates/steps.yml@self → .pipelines/templates/steps.yml (preserved)
     // templates/steps.yml → templates/steps.yml
-    const stepsRefs = refs.filter((r) => r.normalizedPath === 'templates/steps.yml');
+    const stepsRefs = refs.filter(
+      (r) => r.normalizedPath === 'templates/steps.yml',
+    );
     expect(stepsRefs).toHaveLength(1);
-    const pipelinesStepsRef = refs.find((r) => r.normalizedPath === '.pipelines/templates/steps.yml');
+    const pipelinesStepsRef = refs.find(
+      (r) => r.normalizedPath === '.pipelines/templates/steps.yml',
+    );
     expect(pipelinesStepsRef).toBeDefined();
   });
 
@@ -208,7 +229,9 @@ extends:
     );
 
     expect(refs).toHaveLength(2);
-    expect(refs[0].normalizedPath).toBe('/v2/Core.Dialtone.OnPrem.Template.yml');
+    expect(refs[0].normalizedPath).toBe(
+      '/v2/Core.Dialtone.OnPrem.Template.yml',
+    );
     expect(refs[0].location).toBe('extends');
     expect(refs[0].conditional).toBe(true);
     expect(refs[0].conditionExpression).toBe("eq(parameters.mode, 'dialtone')");
@@ -326,7 +349,7 @@ steps:
     expect(refs[0].normalizedPath).toBe('templates/build.yml');
     expect(refs[1].normalizedPath).toBe('templates/test.yml');
     expect(refs[2].normalizedPath).toBe('templates/deploy.yml');
-    expect(refs.every(r => r.conditional)).toBe(true);
+    expect(refs.every((r) => r.conditional)).toBe(true);
   });
 
   test('detects templates in conditionals at different nesting levels', () => {
@@ -342,8 +365,8 @@ stages:
 `) as Record<string, unknown>,
     );
     expect(refs).toHaveLength(2);
-    expect(refs.map(r => r.normalizedPath)).toContain('jobs/approval.yml');
-    expect(refs.map(r => r.normalizedPath)).toContain('jobs/deploy.yml');
+    expect(refs.map((r) => r.normalizedPath)).toContain('jobs/approval.yml');
+    expect(refs.map((r) => r.normalizedPath)).toContain('jobs/deploy.yml');
   });
 
   test('handles empty conditional blocks gracefully', () => {

@@ -1,6 +1,6 @@
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { join, normalize } from 'node:path';
-import { existsSync } from 'node:fs';
 
 /**
  * Read a file from a local repo directory.

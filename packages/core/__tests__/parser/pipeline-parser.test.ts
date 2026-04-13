@@ -1,12 +1,17 @@
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { parseYaml } from '../../src/parser/yaml-parser.js';
 import { mapToPipeline } from '../../src/parser/pipeline-parser.js';
+import { parseYaml } from '../../src/parser/yaml-parser.js';
 
 const fixturesDir = join(import.meta.dir, '..', 'fixtures');
 const loadFixture = (name: string) =>
-  mapToPipeline(parseYaml(readFileSync(join(fixturesDir, name), 'utf-8')) as Record<string, unknown>);
+  mapToPipeline(
+    parseYaml(readFileSync(join(fixturesDir, name), 'utf-8')) as Record<
+      string,
+      unknown
+    >,
+  );
 
 describe('mapToPipeline', () => {
   test('maps simple pipeline with steps', () => {
@@ -49,7 +54,9 @@ describe('mapToPipeline', () => {
     expect(pipeline.resources!.repositories![0].repository).toBe('templates');
     expect(pipeline.resources!.repositories![0].type).toBe('github');
     expect(pipeline.resources!.repositories![0].ref).toBe('refs/tags/3.stable');
-    expect(pipeline.resources!.repositories![1].repository).toBe('GovernedTemplates');
+    expect(pipeline.resources!.repositories![1].repository).toBe(
+      'GovernedTemplates',
+    );
   });
 
   test('maps pipeline with variable templates', () => {
@@ -58,7 +65,10 @@ describe('mapToPipeline', () => {
     expect(pipeline.variables).toHaveLength(3);
     const tmpl1 = pipeline.variables![0] as { template: string };
     expect(tmpl1.template).toBe('variables/common.yml');
-    const tmpl2 = pipeline.variables![1] as { template: string; parameters: Record<string, unknown> };
+    const tmpl2 = pipeline.variables![1] as {
+      template: string;
+      parameters: Record<string, unknown>;
+    };
     expect(tmpl2.template).toBe('variables/env-specific.yml');
     expect(tmpl2.parameters).toEqual({ environment: 'production' });
     const named = pipeline.variables![2] as { name: string; value: string };

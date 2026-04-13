@@ -73,7 +73,10 @@ export function getEffectiveRepoAlias(
  * including file's directory, then falling back to repository root.
  */
 export function resolveTemplateRefPaths(
-  ref: Pick<TemplateReference, 'rawPath' | 'normalizedPath' | 'repoAlias' | 'sourcePath'>,
+  ref: Pick<
+    TemplateReference,
+    'rawPath' | 'normalizedPath' | 'repoAlias' | 'sourcePath'
+  >,
 ): { primary: string; fallback?: string } {
   if (ref.normalizedPath.startsWith('/')) {
     return { primary: ref.normalizedPath };
@@ -104,7 +107,10 @@ export function resolveTemplateRefPaths(
  * Use resolveTemplateRefPaths() when fallback resolution is needed.
  */
 export function resolveTemplateRefPath(
-  ref: Pick<TemplateReference, 'rawPath' | 'normalizedPath' | 'repoAlias' | 'sourcePath'>,
+  ref: Pick<
+    TemplateReference,
+    'rawPath' | 'normalizedPath' | 'repoAlias' | 'sourcePath'
+  >,
 ): string {
   return resolveTemplateRefPaths(ref).primary;
 }

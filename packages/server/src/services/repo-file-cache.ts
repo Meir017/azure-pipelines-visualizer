@@ -1,8 +1,8 @@
-import { collapsePath } from '@apv/core';
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { collapsePath } from '@apv/core';
 import { getConfig } from '../config.js';
 import {
   getFileContent,
@@ -67,14 +67,22 @@ export function getRepoFileCacheRoot(cacheRoot?: string): string {
   return resolve(import.meta.dir, '..', '..', '..', '.cache', 'ado-file-cache');
 }
 
-export function buildRepoFileCacheKey(metadata: Omit<RepoFileCacheMetadata, 'fetchedAt'>): string {
-  return createHash('sha256')
-    .update(JSON.stringify(metadata))
-    .digest('hex');
+export function buildRepoFileCacheKey(
+  metadata: Omit<RepoFileCacheMetadata, 'fetchedAt'>,
+): string {
+  return createHash('sha256').update(JSON.stringify(metadata)).digest('hex');
 }
 
-function getCacheEntryPaths(cacheRoot: string, cacheKey: string): CacheEntryPaths {
-  const dir = resolve(cacheRoot, cacheKey.slice(0, 2), cacheKey.slice(2, 4), cacheKey);
+function getCacheEntryPaths(
+  cacheRoot: string,
+  cacheKey: string,
+): CacheEntryPaths {
+  const dir = resolve(
+    cacheRoot,
+    cacheKey.slice(0, 2),
+    cacheKey.slice(2, 4),
+    cacheKey,
+  );
   return {
     dir,
     metadataPath: resolve(dir, 'metadata.json'),
@@ -82,7 +90,9 @@ function getCacheEntryPaths(cacheRoot: string, cacheKey: string): CacheEntryPath
   };
 }
 
-async function readCachedEntry(paths: CacheEntryPaths): Promise<{ metadata: RepoFileCacheMetadata; content: string } | null> {
+async function readCachedEntry(
+  paths: CacheEntryPaths,
+): Promise<{ metadata: RepoFileCacheMetadata; content: string } | null> {
   if (!existsSync(paths.metadataPath) || !existsSync(paths.contentPath)) {
     return null;
   }
@@ -113,7 +123,9 @@ async function writeCachedEntry(
 export async function fetchRepoFileWithCache(
   options: FetchRepoFileWithCacheOptions,
 ): Promise<CachedRepoFileResult> {
-  const normalizedPath = collapsePath(options.path.startsWith('/') ? options.path : `/${options.path}`);
+  const normalizedPath = collapsePath(
+    options.path.startsWith('/') ? options.path : `/${options.path}`,
+  );
   const normalizedRef = normalizeGitRef(options.ref);
   const refType = getVersionDescriptor(normalizedRef).versionType;
   const cacheRoot = getRepoFileCacheRoot(options.cacheRoot);

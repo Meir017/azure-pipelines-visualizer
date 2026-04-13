@@ -90,7 +90,9 @@ export function resolveTaskDocUrl(
  * Walks through stages → jobs → steps looking for `task:` fields,
  * including inside conditional `${{ if }}` / `${{ else }}` blocks.
  */
-export function extractTaskReferences(raw: Record<string, unknown>): TaskReference[] {
+export function extractTaskReferences(
+  raw: Record<string, unknown>,
+): TaskReference[] {
   const refs: TaskReference[] = [];
   const seen = new Set<string>();
 

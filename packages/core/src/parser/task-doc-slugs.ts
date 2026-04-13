@@ -42,7 +42,8 @@ export const TASK_DOC_SLUGS: Record<string, string> = {
 
   // Deploy tasks
   AppCenterDistribute: 'app-center-distribute',
-  AzureResourceManagerTemplateDeployment: 'azure-resource-manager-template-deployment',
+  AzureResourceManagerTemplateDeployment:
+    'azure-resource-manager-template-deployment',
   AzureAppConfigurationExport: 'azure-app-configuration-export',
   AzureAppConfigurationImport: 'azure-app-configuration-import',
   AzureAppConfigurationSnapshot: 'azure-app-configuration-snapshot',
@@ -141,7 +142,8 @@ export const TASK_DOC_SLUGS: Record<string, string> = {
   VisualStudioTestPlatformInstaller: 'visual-studio-test-platform-installer',
 
   // Utility tasks
-  'AdvancedSecurity-Dependency-Scanning': 'advanced-security-dependency-scanning',
+  'AdvancedSecurity-Dependency-Scanning':
+    'advanced-security-dependency-scanning',
   ArchiveFiles: 'archive-files',
   AzureNLBManagement: 'azure-nlb-management',
   Bash: 'bash',

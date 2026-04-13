@@ -7,7 +7,10 @@ const fixturesDir = join(import.meta.dir, '..', 'fixtures');
 
 describe('parseYaml', () => {
   test('parses simple pipeline', () => {
-    const content = readFileSync(join(fixturesDir, 'simple-pipeline.yml'), 'utf-8');
+    const content = readFileSync(
+      join(fixturesDir, 'simple-pipeline.yml'),
+      'utf-8',
+    );
     const result = parseYaml(content) as Record<string, unknown>;
 
     expect(result.trigger).toEqual(['main']);
@@ -17,7 +20,10 @@ describe('parseYaml', () => {
   });
 
   test('parses pipeline with extends', () => {
-    const content = readFileSync(join(fixturesDir, 'pipeline-with-extends.yml'), 'utf-8');
+    const content = readFileSync(
+      join(fixturesDir, 'pipeline-with-extends.yml'),
+      'utf-8',
+    );
     const result = parseYaml(content) as Record<string, unknown>;
 
     expect(result.extends).toBeDefined();
@@ -50,9 +56,9 @@ describe('parseYaml', () => {
   test('parses directive keys that contain embedded double quotes', () => {
     const content =
       'featureFlags:\n' +
-      '  ${{ if startsWith(convertToJson(parameters.featureFlags), \'{\') }}:\n' +
+      "  ${{ if startsWith(convertToJson(parameters.featureFlags), '{') }}:\n" +
       '    ${{ each property in parameters.featureFlags }}:\n' +
-      '      ${{ if or(contains(convertToJson(property.value), \'"task":\'), in(property.key, \'EnableClamd\')) }}:\n' +
+      "      ${{ if or(contains(convertToJson(property.value), '\"task\":'), in(property.key, 'EnableClamd')) }}:\n" +
       '        enabled: false\n';
 
     const result = parseYaml(content) as Record<string, unknown>;

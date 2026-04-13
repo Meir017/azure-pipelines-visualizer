@@ -1,5 +1,8 @@
-import { describe, test, expect } from 'bun:test';
-import { evaluateExpression, resolveAllExpressions } from '../../src/parser/expression-evaluator';
+import { describe, expect, test } from 'bun:test';
+import {
+  evaluateExpression,
+  resolveAllExpressions,
+} from '../../src/parser/expression-evaluator';
 
 describe('evaluateExpression', () => {
   // -----------------------------------------------------------------------
@@ -36,9 +39,11 @@ describe('evaluateExpression', () => {
   // -----------------------------------------------------------------------
   describe('parameter access', () => {
     test('simple parameter access', () => {
-      expect(evaluateExpression('parameters.name', { parameters: { name: 'hello' } })).toBe(
-        'hello',
-      );
+      expect(
+        evaluateExpression('parameters.name', {
+          parameters: { name: 'hello' },
+        }),
+      ).toBe('hello');
     });
 
     test('nested parameter access', () => {
@@ -75,7 +80,9 @@ describe('evaluateExpression', () => {
 
     test('bracket notation', () => {
       expect(
-        evaluateExpression("parameters['name']", { parameters: { name: 'value' } }),
+        evaluateExpression("parameters['name']", {
+          parameters: { name: 'value' },
+        }),
       ).toBe('value');
     });
 
@@ -102,11 +109,17 @@ describe('evaluateExpression', () => {
   // -----------------------------------------------------------------------
   describe('variable access', () => {
     test('simple variable access', () => {
-      expect(evaluateExpression('variables.buildType', { variables: { buildType: 'release' } })).toBe('release');
+      expect(
+        evaluateExpression('variables.buildType', {
+          variables: { buildType: 'release' },
+        }),
+      ).toBe('release');
     });
 
     test('missing variable returns undefined', () => {
-      expect(evaluateExpression('variables.missing', { variables: {} })).toBeUndefined();
+      expect(
+        evaluateExpression('variables.missing', { variables: {} }),
+      ).toBeUndefined();
     });
   });
 
@@ -140,17 +153,23 @@ describe('evaluateExpression', () => {
 
     test('nested parameter with coalesce for repo resolution', () => {
       expect(
-        evaluateExpression("coalesce(parameters.featureFlags.obcanary, 'obcoretemplates')", {
-          parameters: { featureFlags: { obcanary: undefined } },
-        }),
+        evaluateExpression(
+          "coalesce(parameters.featureFlags.obcanary, 'obcoretemplates')",
+          {
+            parameters: { featureFlags: { obcanary: undefined } },
+          },
+        ),
       ).toBe('obcoretemplates');
     });
 
     test('nested parameter found with coalesce', () => {
       expect(
-        evaluateExpression("coalesce(parameters.featureFlags.obcanary, 'obcoretemplates')", {
-          parameters: { featureFlags: { obcanary: 'customrepo' } },
-        }),
+        evaluateExpression(
+          "coalesce(parameters.featureFlags.obcanary, 'obcoretemplates')",
+          {
+            parameters: { featureFlags: { obcanary: 'customrepo' } },
+          },
+        ),
       ).toBe('customrepo');
     });
   });
@@ -177,13 +196,17 @@ describe('evaluateExpression', () => {
 
     test('eq with parameter', () => {
       expect(
-        evaluateExpression('eq(parameters.x, true)', { parameters: { x: true } }),
+        evaluateExpression('eq(parameters.x, true)', {
+          parameters: { x: true },
+        }),
       ).toBe(true);
     });
 
     test('eq returns false on mismatch', () => {
       expect(
-        evaluateExpression('eq(parameters.x, true)', { parameters: { x: false } }),
+        evaluateExpression('eq(parameters.x, true)', {
+          parameters: { x: false },
+        }),
       ).toBe(false);
     });
 
@@ -225,7 +248,9 @@ describe('evaluateExpression', () => {
     });
 
     test('nested and/or', () => {
-      expect(evaluateExpression("and(eq('a', 'a'), or(false, true))")).toBe(true);
+      expect(evaluateExpression("and(eq('a', 'a'), or(false, true))")).toBe(
+        true,
+      );
     });
   });
 
@@ -234,7 +259,9 @@ describe('evaluateExpression', () => {
   // -----------------------------------------------------------------------
   describe('replace', () => {
     test('simple string replacement', () => {
-      expect(evaluateExpression("replace('hello world', 'world', 'there')")).toBe('hello there');
+      expect(
+        evaluateExpression("replace('hello world', 'world', 'there')"),
+      ).toBe('hello there');
     });
 
     test('replaces all occurrences', () => {
@@ -244,12 +271,16 @@ describe('evaluateExpression', () => {
     test('replace with boolean value (Azure Pipelines pattern)', () => {
       // eq(false, true) returns false, then replace(false, false, 'stable')
       // toString(false) = 'False', so replace('False', 'False', 'stable') = 'stable'
-      expect(evaluateExpression("replace(false, false, 'stable')")).toBe('stable');
+      expect(evaluateExpression("replace(false, false, 'stable')")).toBe(
+        'stable',
+      );
     });
 
     test('replace does not match when search not found', () => {
       // replace(true, true, 'canary') → replace('True', 'True', 'canary') → 'canary'
-      expect(evaluateExpression("replace(true, true, 'canary')")).toBe('canary');
+      expect(evaluateExpression("replace(true, true, 'canary')")).toBe(
+        'canary',
+      );
     });
 
     test('the real-world nested replace/eq pattern for 1ES repo', () => {
@@ -298,11 +329,15 @@ describe('evaluateExpression', () => {
   // -----------------------------------------------------------------------
   describe('string functions', () => {
     test('startsWith true', () => {
-      expect(evaluateExpression("startsWith('hello world', 'hello')")).toBe(true);
+      expect(evaluateExpression("startsWith('hello world', 'hello')")).toBe(
+        true,
+      );
     });
 
     test('startsWith false', () => {
-      expect(evaluateExpression("startsWith('hello world', 'world')")).toBe(false);
+      expect(evaluateExpression("startsWith('hello world', 'world')")).toBe(
+        false,
+      );
     });
 
     test('endsWith true', () => {
@@ -319,9 +354,12 @@ describe('evaluateExpression', () => {
 
     test('contains with object (convertToJson pattern)', () => {
       expect(
-        evaluateExpression("contains(convertToJson(parameters.value), '\"task\":')", {
-          parameters: { value: { task: 'build' } },
-        }),
+        evaluateExpression(
+          'contains(convertToJson(parameters.value), \'"task":\')',
+          {
+            parameters: { value: { task: 'build' } },
+          },
+        ),
       ).toBe(true);
     });
   });
@@ -374,7 +412,9 @@ describe('evaluateExpression', () => {
   // -----------------------------------------------------------------------
   describe('format', () => {
     test('format with placeholders', () => {
-      expect(evaluateExpression("format('{0}/{1}', 'hello', 'world')")).toBe('hello/world');
+      expect(evaluateExpression("format('{0}/{1}', 'hello', 'world')")).toBe(
+        'hello/world',
+      );
     });
   });
 
@@ -452,7 +492,9 @@ describe('evaluateExpression', () => {
     });
 
     test('conditional check: isOfficial', () => {
-      expect(evaluateExpression('eq(parameters.isOfficial, true)', pipelineContext)).toBe(true);
+      expect(
+        evaluateExpression('eq(parameters.isOfficial, true)', pipelineContext),
+      ).toBe(true);
     });
   });
 
@@ -505,7 +547,9 @@ describe('resolveAllExpressions', () => {
       "/v1/1ES.Official.PipelineTemplate.yml@${{ replace(replace(eq(parameters.featureFlags.use1ESPTCanary, true), true, '1escoretemplatescanary'), false, '1escoretemplates') }}",
       { parameters: { featureFlags: {} } },
     );
-    expect(result.result).toBe('/v1/1ES.Official.PipelineTemplate.yml@1escoretemplates');
+    expect(result.result).toBe(
+      '/v1/1ES.Official.PipelineTemplate.yml@1escoretemplates',
+    );
     expect(result.isFullyResolved).toBe(true);
   });
 
@@ -519,19 +563,17 @@ describe('resolveAllExpressions', () => {
   });
 
   test('marks unresolvable expressions', () => {
-    const result = resolveAllExpressions(
-      '${{ variables.buildType }}.yml',
-      { parameters: {} },
-    );
+    const result = resolveAllExpressions('${{ variables.buildType }}.yml', {
+      parameters: {},
+    });
     expect(result.isFullyResolved).toBe(false);
     expect(result.unresolved).toHaveLength(1);
   });
 
   test('resolves variable expressions when variables provided', () => {
-    const result = resolveAllExpressions(
-      '${{ variables.buildType }}.yml',
-      { variables: { buildType: 'release' } },
-    );
+    const result = resolveAllExpressions('${{ variables.buildType }}.yml', {
+      variables: { buildType: 'release' },
+    });
     expect(result.result).toBe('release.yml');
     expect(result.isFullyResolved).toBe(true);
     expect(result.substituted).toEqual(['variables.buildType']);
@@ -569,7 +611,9 @@ describe('resolveAllExpressions', () => {
       "/v2/Stages/Dialtone.DTEnvBuild.Stage.yml@${{ coalesce(parameters.featureFlags.obcanary, 'obcoretemplates') }}",
       ctx,
     );
-    expect(r1.result).toBe('/v2/Stages/Dialtone.DTEnvBuild.Stage.yml@obcoretemplates');
+    expect(r1.result).toBe(
+      '/v2/Stages/Dialtone.DTEnvBuild.Stage.yml@obcoretemplates',
+    );
     expect(r1.isFullyResolved).toBe(true);
 
     // Repo expression for 1escoretemplates
@@ -577,7 +621,9 @@ describe('resolveAllExpressions', () => {
       "/v1/1ES.Official.PipelineTemplate.yml@${{ replace(replace(eq(parameters.featureFlags.use1ESPTCanary, true), true, '1escoretemplatescanary'), false, '1escoretemplates') }}",
       ctx,
     );
-    expect(r2.result).toBe('/v1/1ES.Official.PipelineTemplate.yml@1escoretemplates');
+    expect(r2.result).toBe(
+      '/v1/1ES.Official.PipelineTemplate.yml@1escoretemplates',
+    );
     expect(r2.isFullyResolved).toBe(true);
   });
 
@@ -624,23 +670,31 @@ describe('resolveAllExpressions', () => {
 
     test('and with mixed parameters and variables', () => {
       expect(
-        evaluateExpression("and(eq(parameters.isOfficial, true), ne(variables.env, 'dev'))", {
-          parameters: { isOfficial: true },
-          variables: { env: 'prod' },
-        }),
+        evaluateExpression(
+          "and(eq(parameters.isOfficial, true), ne(variables.env, 'dev'))",
+          {
+            parameters: { isOfficial: true },
+            variables: { env: 'prod' },
+          },
+        ),
       ).toBe(true);
       expect(
-        evaluateExpression("and(eq(parameters.isOfficial, true), ne(variables.env, 'dev'))", {
-          parameters: { isOfficial: false },
-          variables: { env: 'prod' },
-        }),
+        evaluateExpression(
+          "and(eq(parameters.isOfficial, true), ne(variables.env, 'dev'))",
+          {
+            parameters: { isOfficial: false },
+            variables: { env: 'prod' },
+          },
+        ),
       ).toBe(false);
     });
 
     test('missing parameter in condition', () => {
       // eq(undefined, 'value') → false
       expect(
-        evaluateExpression("eq(parameters.unknown, 'value')", { parameters: {} }),
+        evaluateExpression("eq(parameters.unknown, 'value')", {
+          parameters: {},
+        }),
       ).toBe(false);
     });
 

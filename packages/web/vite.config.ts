@@ -12,7 +12,7 @@ export default defineConfig(({ command }) => ({
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom'],
-          'reactflow': ['@xyflow/react'],
+          reactflow: ['@xyflow/react'],
         },
       },
     },

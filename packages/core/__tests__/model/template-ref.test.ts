@@ -1,5 +1,11 @@
 import { describe, expect, test } from 'bun:test';
-import { parseTemplatePath, createTemplateRef, resolveTemplateRefPath, resolveTemplateRefPaths, collapsePath } from '../../src/model/template-ref.js';
+import {
+  collapsePath,
+  createTemplateRef,
+  parseTemplatePath,
+  resolveTemplateRefPath,
+  resolveTemplateRefPaths,
+} from '../../src/model/template-ref.js';
 
 describe('parseTemplatePath', () => {
   test('simple path without alias', () => {
@@ -33,8 +39,12 @@ describe('parseTemplatePath', () => {
   });
 
   test('preserves .pipelines/ with nested path', () => {
-    const result = parseTemplatePath('.pipelines/templates/pssa-steps-template.yml@self');
-    expect(result.normalizedPath).toBe('.pipelines/templates/pssa-steps-template.yml');
+    const result = parseTemplatePath(
+      '.pipelines/templates/pssa-steps-template.yml@self',
+    );
+    expect(result.normalizedPath).toBe(
+      '.pipelines/templates/pssa-steps-template.yml',
+    );
     expect(result.repoAlias).toBeUndefined();
   });
 
@@ -44,14 +54,18 @@ describe('parseTemplatePath', () => {
   });
 
   test('external repo with nested path', () => {
-    const result = parseTemplatePath('helm-ev2/sharedEv2-build-steps.yaml@templates');
+    const result = parseTemplatePath(
+      'helm-ev2/sharedEv2-build-steps.yaml@templates',
+    );
     expect(result.normalizedPath).toBe('helm-ev2/sharedEv2-build-steps.yaml');
     expect(result.repoAlias).toBe('templates');
   });
 
   test('path with @ in directory name does not split incorrectly', () => {
     // Edge case: @ only splits on the last occurrence
-    const result = parseTemplatePath('v2/OneBranch.Official.CrossPlat.yml@GovernedTemplates');
+    const result = parseTemplatePath(
+      'v2/OneBranch.Official.CrossPlat.yml@GovernedTemplates',
+    );
     expect(result.normalizedPath).toBe('v2/OneBranch.Official.CrossPlat.yml');
     expect(result.repoAlias).toBe('GovernedTemplates');
   });
@@ -130,10 +144,16 @@ describe('createTemplateRef', () => {
   });
 
   test('inherits repo context for local references in external templates', () => {
-    const ref = createTemplateRef('./Core.Template.yml', 'extends', undefined, false, {
-      contextRepoAlias: 'GovernedTemplates',
-      sourcePath: 'v2/OneBranch.NonOfficial.CrossPlat.yml',
-    });
+    const ref = createTemplateRef(
+      './Core.Template.yml',
+      'extends',
+      undefined,
+      false,
+      {
+        contextRepoAlias: 'GovernedTemplates',
+        sourcePath: 'v2/OneBranch.NonOfficial.CrossPlat.yml',
+      },
+    );
 
     expect(ref.repoAlias).toBeUndefined();
     expect(ref.contextRepoAlias).toBe('GovernedTemplates');
@@ -316,14 +336,20 @@ describe('resolveTemplateRefPaths', () => {
   test('resolves .. from root-level absolute source path', () => {
     // Source is at repo root with absolute path — .. should be clamped to root
     const result = resolveTemplateRefPaths({
-      rawPath: '../onebranch-retail/common-templates/download-universal-artifacts.yaml',
-      normalizedPath: '../onebranch-retail/common-templates/download-universal-artifacts.yaml',
+      rawPath:
+        '../onebranch-retail/common-templates/download-universal-artifacts.yaml',
+      normalizedPath:
+        '../onebranch-retail/common-templates/download-universal-artifacts.yaml',
       repoAlias: undefined,
       sourcePath: '/template.yml',
     });
     // dirOf('/template.yml') should return '/' → collapsePath('/../onebranch-retail/...') → '/onebranch-retail/...'
-    expect(result.primary).toBe('/onebranch-retail/common-templates/download-universal-artifacts.yaml');
-    expect(result.fallback).toBe('../onebranch-retail/common-templates/download-universal-artifacts.yaml');
+    expect(result.primary).toBe(
+      '/onebranch-retail/common-templates/download-universal-artifacts.yaml',
+    );
+    expect(result.fallback).toBe(
+      '../onebranch-retail/common-templates/download-universal-artifacts.yaml',
+    );
   });
 
   test('resolves sibling path from root-level absolute source', () => {
@@ -375,11 +401,15 @@ describe('resolveTemplateRefPaths', () => {
 
 describe('collapsePath', () => {
   test('collapses .. segments', () => {
-    expect(collapsePath('v1/Core/Steps/../../Variables/foo.yml')).toBe('v1/Variables/foo.yml');
+    expect(collapsePath('v1/Core/Steps/../../Variables/foo.yml')).toBe(
+      'v1/Variables/foo.yml',
+    );
   });
 
   test('collapses . segments', () => {
-    expect(collapsePath('v1/./Core/./Steps/foo.yml')).toBe('v1/Core/Steps/foo.yml');
+    expect(collapsePath('v1/./Core/./Steps/foo.yml')).toBe(
+      'v1/Core/Steps/foo.yml',
+    );
   });
 
   test('handles absolute paths', () => {
@@ -391,7 +421,9 @@ describe('collapsePath', () => {
   });
 
   test('collapses /../ at root to /', () => {
-    expect(collapsePath('/../onebranch-retail/common-templates/file.yaml')).toBe('/onebranch-retail/common-templates/file.yaml');
+    expect(
+      collapsePath('/../onebranch-retail/common-templates/file.yaml'),
+    ).toBe('/onebranch-retail/common-templates/file.yaml');
   });
 
   test('preserves leading .. for relative paths', () => {
@@ -411,7 +443,9 @@ describe('collapsePath', () => {
   });
 
   test('handles excessive .. for relative paths', () => {
-    expect(collapsePath('../../../../../../foo.yml')).toBe('../../../../../../foo.yml');
+    expect(collapsePath('../../../../../../foo.yml')).toBe(
+      '../../../../../../foo.yml',
+    );
   });
 
   test('handles multiple consecutive forward slashes', () => {

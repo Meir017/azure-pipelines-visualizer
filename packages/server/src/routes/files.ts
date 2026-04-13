@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
-import { listRepositories, getRepository } from '../services/azure-devops.js';
-import { fetchRepoFileWithCache } from '../services/repo-file-cache.js';
 import { getLocalRepoPath } from '../config.js';
+import { getRepository, listRepositories } from '../services/azure-devops.js';
 import { getLocalFileContent } from '../services/local-files.js';
+import { fetchRepoFileWithCache } from '../services/repo-file-cache.js';
 
 const files = new Hono();
 
@@ -52,7 +52,10 @@ files.get('/:org/:project/file-by-repo-name', async (c) => {
   const branch = c.req.query('branch');
 
   if (!repoName || !path) {
-    return c.json({ error: 'repo and path query parameters are required' }, 400);
+    return c.json(
+      { error: 'repo and path query parameters are required' },
+      400,
+    );
   }
 
   // Try local repo first — avoids ADO API round-trip entirely

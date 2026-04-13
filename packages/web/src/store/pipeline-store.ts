@@ -1,5 +1,9 @@
 import { create } from 'zustand';
-import type { PipelineInfo, PipelineYamlResponse, TaskSchemaEntry } from '../services/api-client.js';
+import type {
+  PipelineInfo,
+  PipelineYamlResponse,
+  TaskSchemaEntry,
+} from '../services/api-client.js';
 
 export interface SelectedNodeDetail {
   nodeId: string;
@@ -68,9 +72,15 @@ export const usePipelineStore = create<PipelineStore>((set) => ({
   selectedPipelineLoading: false,
   selectedPipelineError: null,
   setSelectedPipeline: (selectedPipeline) =>
-    set({ selectedPipeline, selectedPipelineError: null, expandedNodes: new Set() }),
-  setSelectedPipelineLoading: (selectedPipelineLoading) => set({ selectedPipelineLoading }),
-  setSelectedPipelineError: (selectedPipelineError) => set({ selectedPipelineError }),
+    set({
+      selectedPipeline,
+      selectedPipelineError: null,
+      expandedNodes: new Set(),
+    }),
+  setSelectedPipelineLoading: (selectedPipelineLoading) =>
+    set({ selectedPipelineLoading }),
+  setSelectedPipelineError: (selectedPipelineError) =>
+    set({ selectedPipelineError }),
 
   expandedTemplates: new Map(loadCachedTemplates()),
   setExpandedTemplate: (key, content) =>

@@ -1,14 +1,18 @@
 import { describe, expect, test } from 'bun:test';
-import type { IFileProvider } from '../../src/resolver/types.js';
-import { resolveTemplateReferences } from '../../src/resolver/template-resolver.js';
-import { createTemplateRef } from '../../src/model/template-ref.js';
 import type { ResourceRepository } from '../../src/model/pipeline.js';
+import { createTemplateRef } from '../../src/model/template-ref.js';
+import { resolveTemplateReferences } from '../../src/resolver/template-resolver.js';
+import type { IFileProvider } from '../../src/resolver/types.js';
 
 /** In-memory file provider for tests — no I/O needed. */
 class InMemoryFileProvider implements IFileProvider {
   constructor(private files: Map<string, string>) {}
 
-  async getFileContent(repo: string, path: string, _ref?: string): Promise<string> {
+  async getFileContent(
+    repo: string,
+    path: string,
+    _ref?: string,
+  ): Promise<string> {
     const key = repo ? `${repo}:${path}` : path;
     const content = this.files.get(key);
     if (content === undefined) {
@@ -34,7 +38,9 @@ jobs:
       ]),
     );
 
-    const refs = [createTemplateRef('jobs/build.yml', 'jobs', { config: 'release' })];
+    const refs = [
+      createTemplateRef('jobs/build.yml', 'jobs', { config: 'release' }),
+    ];
     const resolved = await resolveTemplateReferences(refs, provider);
 
     expect(resolved).toHaveLength(1);
@@ -122,13 +128,18 @@ stages:
     // Create a chain: a→b→c→d→e (5 levels)
     const files = new Map<string, string>();
     for (let i = 0; i < 5; i++) {
-      const next = i < 4 ? `\nstages:\n  - template: level${i + 1}.yml\n` : '\nstages: []\n';
+      const next =
+        i < 4
+          ? `\nstages:\n  - template: level${i + 1}.yml\n`
+          : '\nstages: []\n';
       files.set(`level${i}.yml`, next);
     }
 
     const provider = new InMemoryFileProvider(files);
     const refs = [createTemplateRef('level0.yml', 'stages')];
-    const resolved = await resolveTemplateReferences(refs, provider, { maxDepth: 3 });
+    const resolved = await resolveTemplateReferences(refs, provider, {
+      maxDepth: 3,
+    });
 
     // Should resolve 3 levels then stop
     let current = resolved[0];
@@ -168,7 +179,9 @@ jobs:
     ];
 
     const refs = [createTemplateRef('jobs/build.yml@templates', 'jobs')];
-    const resolved = await resolveTemplateReferences(refs, provider, { repositories });
+    const resolved = await resolveTemplateReferences(refs, provider, {
+      repositories,
+    });
 
     expect(resolved).toHaveLength(1);
     expect(resolved[0].content).toContain('shared build');
@@ -179,7 +192,9 @@ jobs:
     const provider = new InMemoryFileProvider(new Map());
 
     const refs = [createTemplateRef('jobs/build.yml@unknown-repo', 'jobs')];
-    const resolved = await resolveTemplateReferences(refs, provider, { repositories: [] });
+    const resolved = await resolveTemplateReferences(refs, provider, {
+      repositories: [],
+    });
 
     expect(resolved).toHaveLength(1);
     expect(resolved[0].error).toContain('Unknown repository alias');
@@ -220,7 +235,9 @@ steps:
         'extends',
       ),
     ];
-    const resolved = await resolveTemplateReferences(refs, provider, { repositories });
+    const resolved = await resolveTemplateReferences(refs, provider, {
+      repositories,
+    });
 
     expect(resolved).toHaveLength(1);
     expect(resolved[0].error).toBeUndefined();
@@ -266,9 +283,15 @@ steps:
     );
 
     const refs = [
-      createTemplateRef('.pipelines/build-template.yml@self', 'steps', undefined, false, {
-        sourcePath: '.pipelines/pipeline.yml',
-      }),
+      createTemplateRef(
+        '.pipelines/build-template.yml@self',
+        'steps',
+        undefined,
+        false,
+        {
+          sourcePath: '.pipelines/pipeline.yml',
+        },
+      ),
     ];
     const resolved = await resolveTemplateReferences(refs, provider);
 
@@ -494,12 +517,14 @@ jobs:
     // When primary resolution finds the file, fallback should not be attempted
     let fetchCount = 0;
     const originalProvider = new InMemoryFileProvider(
-      new Map([
-        ['dir/template.yml', 'steps:\n  - script: echo ok\n'],
-      ]),
+      new Map([['dir/template.yml', 'steps:\n  - script: echo ok\n']]),
     );
     const countingProvider: IFileProvider = {
-      async getFileContent(repo: string, path: string, ref?: string): Promise<string> {
+      async getFileContent(
+        repo: string,
+        path: string,
+        ref?: string,
+      ): Promise<string> {
         fetchCount++;
         return originalProvider.getFileContent(repo, path, ref);
       },

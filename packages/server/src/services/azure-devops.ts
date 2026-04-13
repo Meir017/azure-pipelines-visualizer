@@ -116,7 +116,9 @@ export async function resolveCommitSha(
     const filter = normalizedRef.replace(/^refs\//, '');
     const url = `${baseUrl(org, project)}/git/repositories/${encodeURIComponent(repoId)}/refs?filter=${encodeURIComponent(filter)}&api-version=${API_VERSION}`;
     const resp = await adoFetch(url);
-    const data = await resp.json() as { value?: Array<{ name?: string; objectId?: string }> };
+    const data = (await resp.json()) as {
+      value?: Array<{ name?: string; objectId?: string }>;
+    };
     const match = data.value?.find((item) => item.name === normalizedRef);
 
     if (!match?.objectId) {
@@ -127,7 +129,10 @@ export async function resolveCommitSha(
   });
 }
 
-export async function listPipelines(org: string, project: string): Promise<PipelineInfo[]> {
+export async function listPipelines(
+  org: string,
+  project: string,
+): Promise<PipelineInfo[]> {
   const url = `${baseUrl(org, project)}/pipelines?api-version=${API_VERSION}`;
   const resp = await adoFetch(url);
   const data = await resp.json();
@@ -209,7 +214,11 @@ export class AzureDevOpsFileProvider implements IFileProvider {
     private readonly defaultBranch?: string,
   ) {}
 
-  async getFileContent(repo: string, path: string, ref?: string): Promise<string> {
+  async getFileContent(
+    repo: string,
+    path: string,
+    ref?: string,
+  ): Promise<string> {
     const repoId = repo || this.defaultRepoId;
     const branch = ref || this.defaultBranch;
     return getFileContent(this.org, this.project, repoId, path, branch);
