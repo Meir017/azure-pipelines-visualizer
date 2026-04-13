@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/meir017/azure-pipelines-visualizer/blob/main/apv.config.schema.json",
+  "title": "Azure Pipelines Visualizer Configuration",
+  "description": "Configuration file for the Azure Pipelines Visualizer (apv.config.json).",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Path or URL to this JSON schema."
+    },
+    "cacheDir": {
+      "type": "string",
+      "description": "Directory for the on-disk file cache. Relative paths are resolved from the project root. Defaults to '.cache/ado-file-cache'.",
+      "examples": [".cache/ado-file-cache", "/tmp/apv-cache"]
+    },
+    "localRepos": {
+      "type": "object",
+      "description": "Map Azure DevOps repositories to local directory paths. Keys use the format 'org/project/repoName' (case-insensitive matching). When a mapped repo is requested, files are served from the local directory instead of calling the ADO API.",
+      "additionalProperties": {
+        "type": "string",
+        "description": "Absolute local filesystem path to the repository root."
+      },
+      "examples": [
+        {
+          "microsoft/WDATP/MyRepo": "D:/git/MyRepo",
+          "microsoft/OneBranch.Pipelines/GovernedTemplates": "D:/git/GovernedTemplates"
+        }
+      ]
+    },
+    "customTaskDocs": {
+      "type": "object",
+      "description": "Map Azure Pipelines task names to custom documentation URLs. Keys can include a version suffix (e.g. 'TaskName@1') or omit it to match all versions.",
+      "additionalProperties": {
+        "type": "string",
+        "format": "uri",
+        "description": "URL to the task's documentation page."
+      },
+      "examples": [
+        {
+          "OneBranch.Pipeline.Build@1": "https://onebranch.dev/docs/tasks/build",
+          "OneBranch.Pipeline.Signing": "https://onebranch.dev/docs/tasks/signing"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
+}
