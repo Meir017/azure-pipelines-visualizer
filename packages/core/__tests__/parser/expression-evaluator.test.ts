@@ -580,4 +580,84 @@ describe('resolveAllExpressions', () => {
     expect(r2.result).toBe('/v1/1ES.Official.PipelineTemplate.yml@1escoretemplates');
     expect(r2.isFullyResolved).toBe(true);
   });
+
+  // -----------------------------------------------------------------------
+  // Condition expression evaluation (used by ${{ if }} pruning)
+  // -----------------------------------------------------------------------
+  describe('condition expressions', () => {
+    test('eq with matching parameter returns true', () => {
+      expect(
+        evaluateExpression("eq(parameters.buildType, 'official')", {
+          parameters: { buildType: 'official' },
+        }),
+      ).toBe(true);
+    });
+
+    test('eq with non-matching parameter returns false', () => {
+      expect(
+        evaluateExpression("eq(parameters.buildType, 'official')", {
+          parameters: { buildType: 'standard' },
+        }),
+      ).toBe(false);
+    });
+
+    test('eq with boolean parameter', () => {
+      expect(
+        evaluateExpression('eq(parameters.isOfficial, true)', {
+          parameters: { isOfficial: true },
+        }),
+      ).toBe(true);
+      expect(
+        evaluateExpression('eq(parameters.isOfficial, true)', {
+          parameters: { isOfficial: false },
+        }),
+      ).toBe(false);
+    });
+
+    test('ne with variable', () => {
+      expect(
+        evaluateExpression("ne(variables.env, 'prod')", {
+          variables: { env: 'staging' },
+        }),
+      ).toBe(true);
+    });
+
+    test('and with mixed parameters and variables', () => {
+      expect(
+        evaluateExpression("and(eq(parameters.isOfficial, true), ne(variables.env, 'dev'))", {
+          parameters: { isOfficial: true },
+          variables: { env: 'prod' },
+        }),
+      ).toBe(true);
+      expect(
+        evaluateExpression("and(eq(parameters.isOfficial, true), ne(variables.env, 'dev'))", {
+          parameters: { isOfficial: false },
+          variables: { env: 'prod' },
+        }),
+      ).toBe(false);
+    });
+
+    test('missing parameter in condition', () => {
+      // eq(undefined, 'value') → false
+      expect(
+        evaluateExpression("eq(parameters.unknown, 'value')", { parameters: {} }),
+      ).toBe(false);
+    });
+
+    test('contains with variable', () => {
+      expect(
+        evaluateExpression("contains(variables.tags, 'release')", {
+          variables: { tags: 'release-v1.0' },
+        }),
+      ).toBe(true);
+    });
+
+    test('not wrapping eq', () => {
+      expect(
+        evaluateExpression('not(eq(parameters.skipTests, true))', {
+          parameters: { skipTests: false },
+        }),
+      ).toBe(true);
+    });
+  });
 });

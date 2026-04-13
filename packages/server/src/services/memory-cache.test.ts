@@ -77,4 +77,16 @@ describe('MemoryTTLCache', () => {
     expect(cache.size).toBe(0);
     expect(cache.get('a')).toBeUndefined();
   });
+
+  test('keys are case-sensitive by default (callers lowercase for case-insensitive behavior)', () => {
+    const cache = new MemoryTTLCache<string>(60);
+    cache.set('Microsoft/WDATP/Repo', 'upper');
+    expect(cache.get('Microsoft/WDATP/Repo')).toBe('upper');
+    expect(cache.get('microsoft/wdatp/repo')).toBeUndefined();
+
+    // Callers should lowercase keys for case-insensitive matching
+    const ciCache = new MemoryTTLCache<string>(60);
+    ciCache.set('microsoft/wdatp/repo', 'value');
+    expect(ciCache.get('microsoft/wdatp/repo')).toBe('value');
+  });
 });
