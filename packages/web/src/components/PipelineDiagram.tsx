@@ -884,6 +884,9 @@ function buildTemplateNodesAndEdges(
       conditionResult = 'unknown';
     }
 
+    // Condition evaluated to false — don't create the node or edge at all
+    if (conditionResult === false) continue;
+
     if (!nodeAlreadyExists) {
       const label =
         pathForNode.length > 40
