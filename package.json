@@ -11,7 +11,9 @@
     "format": "biome format --write .",
     "dev": "bun run --filter '@apv/*' dev",
     "dev:server": "bun run --filter @apv/server dev",
-    "dev:web": "bun run --filter @apv/web dev"
+    "dev:web": "bun run --filter @apv/web dev",
+    "build:web": "bun run --filter @apv/web build",
+    "build:standalone": "bun run build:web && bun scripts/generate-web-assets.ts && bun build --compile packages/server/src/standalone.ts --outfile apv"
   },
   "devDependencies": {
     "@biomejs/biome": "~2.0.0"
