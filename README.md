@@ -26,23 +26,27 @@ This starts the API server (port 3001) and the web UI (port 3000). Open http://l
 3. Click any template node to expand it and fetch its contents recursively.
 4. Click an expanded node to view its YAML and task list in the detail panel.
 
-## Local File Serving
+## Disk Cache
 
-To serve pipeline files from your local filesystem instead of calling the ADO API, create an `apv.config.json` in the project root:
+Fetched pipeline and template files are cached on disk under `.cache/ado-file-cache` by default, so you do not need local Git clones for template repos. Cache entries are keyed by:
+
+- repo identity
+- normalized file path
+- requested branch or tag
+- resolved Git commit SHA
+
+This keeps cache hits accurate even when a branch moves forward.
+
+You can optionally override the cache location in `apv.config.json`:
 
 ```jsonc
 {
-  "localRepos": {
-    // key format: "org/project/repo"
-    "microsoft/WDATP/Wcd.Infra.ConfigurationGeneration": "/path/to/local/clone"
-  },
+  "cacheDir": ".cache/ado-file-cache",
   "customTaskDocs": {
     "OneBranch.Pipeline.Build@1": "https://example.com/docs/build-task"
   }
 }
 ```
-
-Locally mapped repos are resolved instantly without network calls.
 
 ## Scripts
 
@@ -60,6 +64,6 @@ Locally mapped repos are resolved instantly without network calls.
 ```
 packages/
   core/     # Pipeline model, YAML parser, template detector, task resolver
-  server/   # Hono API server (ADO proxy + local file provider)
+  server/   # Hono API server (ADO proxy + disk-backed file cache)
   web/      # React + Vite frontend (ReactFlow diagram, Monaco editor)
 ```

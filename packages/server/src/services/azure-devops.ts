@@ -35,6 +35,8 @@ interface VersionDescriptor {
   versionType: 'branch' | 'tag' | 'commit';
 }
 
+const COMMIT_SHA_RE = /^[0-9a-f]{7,40}$/i;
+
 async function adoFetch(url: string): Promise<Response> {
   const token = await getAzureDevOpsToken();
   const response = await fetch(url, {
@@ -54,25 +56,65 @@ function baseUrl(org: string, project: string): string {
   return `https://dev.azure.com/${encodeURIComponent(org)}/${encodeURIComponent(project)}/_apis`;
 }
 
+export function normalizeGitRef(ref: string): string {
+  if (ref.startsWith('refs/')) {
+    return ref;
+  }
+
+  if (COMMIT_SHA_RE.test(ref)) {
+    return ref;
+  }
+
+  return `refs/heads/${ref}`;
+}
+
 export function getVersionDescriptor(ref: string): VersionDescriptor {
-  if (ref.startsWith('refs/heads/')) {
+  const normalizedRef = normalizeGitRef(ref);
+
+  if (normalizedRef.startsWith('refs/heads/')) {
     return {
-      version: ref.slice('refs/heads/'.length),
+      version: normalizedRef.slice('refs/heads/'.length),
       versionType: 'branch',
     };
   }
 
-  if (ref.startsWith('refs/tags/')) {
+  if (normalizedRef.startsWith('refs/tags/')) {
     return {
-      version: ref.slice('refs/tags/'.length),
+      version: normalizedRef.slice('refs/tags/'.length),
       versionType: 'tag',
     };
   }
 
   return {
-    version: ref,
+    version: normalizedRef,
     versionType: 'commit',
   };
+}
+
+export async function resolveCommitSha(
+  org: string,
+  project: string,
+  repoId: string,
+  ref: string,
+): Promise<string> {
+  const normalizedRef = normalizeGitRef(ref);
+  const descriptor = getVersionDescriptor(normalizedRef);
+
+  if (descriptor.versionType === 'commit') {
+    return descriptor.version;
+  }
+
+  const filter = normalizedRef.replace(/^refs\//, '');
+  const url = `${baseUrl(org, project)}/git/repositories/${encodeURIComponent(repoId)}/refs?filter=${encodeURIComponent(filter)}&api-version=${API_VERSION}`;
+  const resp = await adoFetch(url);
+  const data = await resp.json() as { value?: Array<{ name?: string; objectId?: string }> };
+  const match = data.value?.find((item) => item.name === normalizedRef);
+
+  if (!match?.objectId) {
+    throw new Error(`Git ref not found: ${normalizedRef}`);
+  }
+
+  return match.objectId;
 }
 
 export async function listPipelines(org: string, project: string): Promise<PipelineInfo[]> {

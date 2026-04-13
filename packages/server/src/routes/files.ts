@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
-import { listRepositories, getRepository, getFileContent } from '../services/azure-devops.js';
-import { getLocalRepoPath } from '../config.js';
-import { getLocalFileContent } from '../services/local-files.js';
+import { listRepositories, getRepository } from '../services/azure-devops.js';
+import { fetchRepoFileWithCache } from '../services/repo-file-cache.js';
 
 const files = new Hono();
 
@@ -20,13 +19,29 @@ files.get('/:org/:project/repos/:repoId/file', async (c) => {
     return c.json({ error: 'path query parameter is required' }, 400);
   }
 
-  const content = await getFileContent(org, project, repoId, path, branch || undefined);
-  return c.json({ content, path, repoId, branch });
+  const repo = await getRepository(org, project, repoId);
+  const result = await fetchRepoFileWithCache({
+    org,
+    project,
+    repoId: repo.id,
+    repoName: repo.name,
+    path,
+    ref: branch || repo.defaultBranch,
+  });
+
+  return c.json({
+    content: result.content,
+    path: result.path,
+    repoId: result.repoId,
+    repoName: result.repoName,
+    branch: result.requestedRef,
+    commitSha: result.commitSha,
+    cache: result.cache,
+  });
 });
 
 /**
- * Fetch a file by repo name (not ID).
- * Checks local filesystem mappings first, falls back to ADO API.
+ * Fetch a file by repo name (not ID), using the on-disk cache.
  */
 files.get('/:org/:project/file-by-repo-name', async (c) => {
   const { org, project } = c.req.param();
@@ -38,33 +53,28 @@ files.get('/:org/:project/file-by-repo-name', async (c) => {
     return c.json({ error: 'repo and path query parameters are required' }, 400);
   }
 
-  // Check if this repo is mapped to a local directory
-  const localPath = getLocalRepoPath(org, project, repoName);
-  if (localPath) {
-    const content = await getLocalFileContent(localPath, path);
-    return c.json({
-      content,
-      path,
-      repoId: `local:${repoName}`,
-      repoName,
-      branch: branch || 'local',
-      local: true,
-    });
-  }
-
-  // Fall back to Azure DevOps API
   const repo = await getRepository(org, project, repoName);
   if (!repo) {
     return c.json({ error: `Repository not found: ${repoName}` }, 404);
   }
 
-  const content = await getFileContent(org, project, repo.id, path, branch || repo.defaultBranch);
-  return c.json({
-    content,
-    path,
+  const result = await fetchRepoFileWithCache({
+    org,
+    project,
     repoId: repo.id,
     repoName: repo.name,
-    branch: branch || repo.defaultBranch,
+    path,
+    ref: branch || repo.defaultBranch,
+  });
+
+  return c.json({
+    content: result.content,
+    path: result.path,
+    repoId: result.repoId,
+    repoName: result.repoName,
+    branch: result.requestedRef,
+    commitSha: result.commitSha,
+    cache: result.cache,
   });
 });
 

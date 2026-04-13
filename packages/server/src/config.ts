@@ -2,14 +2,11 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 /**
- * Maps "org/project/repo" → local filesystem path.
- * Maps task names → documentation URLs.
+ * App configuration.
  *
  * Example apv.config.json:
  * {
- *   "localRepos": {
- *     "microsoft/WDATP/Wcd.Infra.ConfigurationGeneration": "D:/git/configen"
- *   },
+ *   "cacheDir": ".cache/ado-file-cache",
  *   "customTaskDocs": {
  *     "OneBranch.Pipeline.Build@1": "https://onebranch.dev/docs/build",
  *     "OneBranch.Pipeline.Signing": "https://onebranch.dev/docs/signing"
@@ -17,8 +14,9 @@ import { resolve } from 'node:path';
  * }
  */
 export interface AppConfig {
-  localRepos: Record<string, string>;
-  customTaskDocs: Record<string, string>;
+  cacheDir?: string;
+  localRepos?: Record<string, string>;
+  customTaskDocs?: Record<string, string>;
 }
 
 const CONFIG_FILENAME = 'apv.config.json';
@@ -40,7 +38,12 @@ export function getConfig(): AppConfig {
     if (existsSync(configPath)) {
       try {
         const raw = readFileSync(configPath, 'utf-8');
-        _config = JSON.parse(raw) as AppConfig;
+        const parsed = JSON.parse(raw) as AppConfig;
+        _config = {
+          cacheDir: parsed.cacheDir,
+          localRepos: parsed.localRepos ?? {},
+          customTaskDocs: parsed.customTaskDocs ?? {},
+        };
         console.log(`Loaded config from ${configPath}`);
         logLocalMappings(_config);
         return _config;
