@@ -1,7 +1,6 @@
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
-import { join, normalize, resolve } from 'node:path';
-import { dirname } from 'node:path';
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
+import { dirname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getAzureDevOpsToken } from '../auth.js';
 import { getConfig } from '../config.js';
@@ -56,9 +55,7 @@ export async function downloadRepoZip(
 
   if (!resp.ok) {
     const text = await resp.text();
-    throw new Error(
-      `Failed to download repo ZIP (${resp.status}): ${text}`,
-    );
+    throw new Error(`Failed to download repo ZIP (${resp.status}): ${text}`);
   }
 
   return Buffer.from(await resp.arrayBuffer());
@@ -181,16 +178,11 @@ async function extractZipToCache(
 async function findExtractedRoot(destDir: string): Promise<string> {
   const entries = await readdir(destDir, { withFileTypes: true });
   const dirs = entries.filter(
-    (e) =>
-      e.isDirectory() &&
-      e.name !== '__MACOSX' &&
-      !e.name.startsWith('.'),
+    (e) => e.isDirectory() && e.name !== '__MACOSX' && !e.name.startsWith('.'),
   );
   const files = entries.filter(
     (e) =>
-      e.isFile() &&
-      e.name !== '__repo.zip' &&
-      e.name !== '.zip-cache-complete',
+      e.isFile() && e.name !== '__repo.zip' && e.name !== '.zip-cache-complete',
   );
 
   // If there's exactly one directory and no other files, that's the root
@@ -242,7 +234,15 @@ export async function ensureRepoCached(
     commitSha,
   );
 
-  if (isRepoCached(cacheRoot, options.org, options.project, options.repoId, commitSha)) {
+  if (
+    isRepoCached(
+      cacheRoot,
+      options.org,
+      options.project,
+      options.repoId,
+      commitSha,
+    )
+  ) {
     const repoDir = await readCachedRoot(destDir);
     return { repoDir, commitSha, cache: 'hit' };
   }
@@ -281,9 +281,7 @@ export async function fetchFileFromZipCache(
   }
 
   if (!existsSync(fullPath)) {
-    throw new Error(
-      `File not found in cached repo: ${cleanPath}`,
-    );
+    throw new Error(`File not found in cached repo: ${cleanPath}`);
   }
 
   const content = await readFile(fullPath, 'utf-8');

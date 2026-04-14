@@ -48,9 +48,7 @@ describe('isRepoCached', () => {
     const dir = getRepoCachePath(cacheRoot, 'org', 'proj', 'repo', 'abc123');
     mkdirSync(dir, { recursive: true });
     writeFileSync(join(dir, '.zip-cache-complete'), '', 'utf-8');
-    expect(isRepoCached(cacheRoot, 'org', 'proj', 'repo', 'abc123')).toBe(
-      true,
-    );
+    expect(isRepoCached(cacheRoot, 'org', 'proj', 'repo', 'abc123')).toBe(true);
   });
 });
 
