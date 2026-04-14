@@ -11,8 +11,8 @@
     },
     "cacheDir": {
       "type": "string",
-      "description": "Directory for the on-disk file cache. Relative paths are resolved from the project root. Defaults to '.cache/ado-file-cache'.",
-      "examples": [".cache/ado-file-cache", "/tmp/apv-cache"]
+      "description": "Directory for the on-disk file cache. Relative paths are resolved from the working directory. Defaults to '~/.apv/cache/ado-file-cache'.",
+      "examples": ["~/.apv/cache/ado-file-cache", "/tmp/apv-cache"]
     },
     "localRepos": {
       "type": "object",
