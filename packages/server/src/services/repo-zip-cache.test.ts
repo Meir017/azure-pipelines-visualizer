@@ -176,8 +176,6 @@ describe('ensureRepoCached', () => {
   test('downloads and extracts zip on cache miss', async () => {
     let downloadCalls = 0;
 
-    // Create a fake zip that will be "extracted" - we simulate the extraction
-    // by a mock that seeds the cache directory instead
     const result = await ensureRepoCached({
       org: 'microsoft',
       project: 'WDATP',
@@ -187,14 +185,13 @@ describe('ensureRepoCached', () => {
       resolveCommitShaFn: async () => 'deadbeef',
       downloadZipFn: async () => {
         downloadCalls += 1;
-        // Create a minimal valid ZIP (empty archive)
-        // PK\x05\x06 followed by 18 zero bytes = empty zip directory
-        const emptyZip = Buffer.alloc(22);
-        emptyZip[0] = 0x50; // P
-        emptyZip[1] = 0x4b; // K
-        emptyZip[2] = 0x05;
-        emptyZip[3] = 0x06;
-        return emptyZip;
+        return Buffer.from('fake-zip');
+      },
+      extractZipFn: async (_buf, destDir) => {
+        // Simulate extraction by writing a marker + a file
+        mkdirSync(destDir, { recursive: true });
+        writeFileSync(join(destDir, '.zip-cache-complete'), '', 'utf-8');
+        writeFileSync(join(destDir, 'file.yml'), 'content', 'utf-8');
       },
     });
 
@@ -245,13 +242,12 @@ describe('ensureRepoCached', () => {
       resolveCommitShaFn: async () => 'newcommit',
       downloadZipFn: async () => {
         downloadCalls += 1;
-        // Empty valid zip
-        const emptyZip = Buffer.alloc(22);
-        emptyZip[0] = 0x50;
-        emptyZip[1] = 0x4b;
-        emptyZip[2] = 0x05;
-        emptyZip[3] = 0x06;
-        return emptyZip;
+        return Buffer.from('fake-zip');
+      },
+      extractZipFn: async (_buf, destDir) => {
+        mkdirSync(destDir, { recursive: true });
+        writeFileSync(join(destDir, '.zip-cache-complete'), '', 'utf-8');
+        writeFileSync(join(destDir, 'file.yml'), 'new content', 'utf-8');
       },
     });
 

@@ -20,6 +20,7 @@ export interface RepoZipCacheOptions {
   cacheRoot?: string;
   resolveCommitShaFn?: typeof resolveCommitSha;
   downloadZipFn?: typeof downloadRepoZip;
+  extractZipFn?: (zipBuffer: Buffer, destDir: string) => Promise<void>;
 }
 
 export interface RepoZipCacheResult {
@@ -254,7 +255,8 @@ export async function ensureRepoCached(
     normalizedRef,
   );
 
-  await extractZipToCache(zipBuffer, destDir);
+  const extractFn = options.extractZipFn ?? extractZipToCache;
+  await extractFn(zipBuffer, destDir);
   const repoDir = await findExtractedRoot(destDir);
 
   // Persist the discovered root so cache hits don't need the heuristic
