@@ -202,10 +202,44 @@ async function readCachedRoot(destDir: string): Promise<string> {
   return findExtractedRoot(destDir);
 }
 
+// In-flight deduplication for concurrent ensureRepoCached calls.
+// Keyed by org/project/repoId/ref (lowercased) so multiple requests
+// for the same repo share a single ZIP download.
+const inflightRepoCaches = new Map<
+  string,
+  Promise<{ repoDir: string; commitSha: string; cache: 'hit' | 'miss' }>
+>();
+
 /**
  * Ensure a repo is downloaded and cached. Returns the local extraction path.
+ * Concurrent calls for the same repo+ref share a single download.
  */
 export async function ensureRepoCached(
+  options: RepoZipCacheOptions,
+): Promise<{ repoDir: string; commitSha: string; cache: 'hit' | 'miss' }> {
+  const normalizedRef = normalizeGitRef(options.ref);
+  const dedupeKey =
+    `${options.org}/${options.project}/${options.repoId}/${normalizedRef}`.toLowerCase();
+
+  const existing = inflightRepoCaches.get(dedupeKey);
+  if (existing) return existing;
+
+  const promise = ensureRepoCachedImpl(options).then(
+    (result) => {
+      inflightRepoCaches.delete(dedupeKey);
+      return result;
+    },
+    (err) => {
+      inflightRepoCaches.delete(dedupeKey);
+      throw err;
+    },
+  );
+
+  inflightRepoCaches.set(dedupeKey, promise);
+  return promise;
+}
+
+async function ensureRepoCachedImpl(
   options: RepoZipCacheOptions,
 ): Promise<{ repoDir: string; commitSha: string; cache: 'hit' | 'miss' }> {
   const cacheRoot = getZipCacheRoot(options.cacheRoot);

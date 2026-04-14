@@ -255,4 +255,39 @@ describe('ensureRepoCached', () => {
     expect(result.cache).toBe('miss');
     expect(result.commitSha).toBe('newcommit');
   });
+
+  test('deduplicates concurrent calls for the same repo+ref', async () => {
+    let downloadCalls = 0;
+
+    const options: Parameters<typeof ensureRepoCached>[0] = {
+      org: 'microsoft',
+      project: 'WDATP',
+      repoId: 'repo-1',
+      ref: 'refs/heads/main',
+      cacheRoot,
+      resolveCommitShaFn: async () => 'deadbeef',
+      downloadZipFn: async () => {
+        downloadCalls += 1;
+        // Simulate a slow download
+        await new Promise((r) => setTimeout(r, 50));
+        return Buffer.from('fake-zip');
+      },
+      extractZipFn: async (_buf, destDir) => {
+        mkdirSync(destDir, { recursive: true });
+        writeFileSync(join(destDir, '.zip-cache-complete'), '', 'utf-8');
+        writeFileSync(join(destDir, 'file.yml'), 'content', 'utf-8');
+      },
+    };
+
+    // Launch two concurrent calls
+    const [r1, r2] = await Promise.all([
+      ensureRepoCached(options),
+      ensureRepoCached(options),
+    ]);
+
+    // Only one download should have happened
+    expect(downloadCalls).toBe(1);
+    expect(r1.commitSha).toBe('deadbeef');
+    expect(r2.commitSha).toBe('deadbeef');
+  });
 });
