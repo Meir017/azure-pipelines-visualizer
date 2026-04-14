@@ -20,8 +20,8 @@ describe('CLI Node.js integration', () => {
       `Bundle not found at ${ENTRY}. Run "bun run build:cli" first.`,
     );
 
-    server = spawn('node', [ENTRY], {
-      env: { ...process.env, PORT: String(PORT) },
+    server = spawn('node', [ENTRY, '--port', String(PORT)], {
+      env: { ...process.env },
       stdio: 'pipe',
     });
 

@@ -1,4 +1,4 @@
-import { cpSync, existsSync } from 'node:fs';
+import { cpSync, existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
@@ -8,6 +8,9 @@ const ROOT = resolve(__dirname, '..', '..', '..');
 const CLI_DIR = resolve(__dirname, '..');
 const WEB_DIST = resolve(ROOT, 'packages', 'web', 'dist');
 const OUT_WEB = resolve(CLI_DIR, 'dist', 'web');
+
+// Read version from package.json
+const pkg = JSON.parse(readFileSync(resolve(CLI_DIR, 'package.json'), 'utf-8'));
 
 // Copy web dist into cli/dist/web/
 if (!existsSync(WEB_DIST)) {
@@ -31,6 +34,9 @@ await build({
   outfile: resolve(CLI_DIR, 'dist', 'index.min.js'),
   banner: { js: '#!/usr/bin/env node' },
   external: ['@azure/identity'],
+  define: {
+    __APV_VERSION__: JSON.stringify(pkg.version),
+  },
 });
 
 console.log('Bundled dist/index.min.js');
