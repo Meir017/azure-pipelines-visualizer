@@ -1,6 +1,7 @@
 # Azure Pipelines Visualizer
 
 [![CI](https://github.com/Meir017/azure-pipelines-visualizer/actions/workflows/ci.yml/badge.svg)](https://github.com/Meir017/azure-pipelines-visualizer/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/@meirblachman/azure-pipelines-visualizer)](https://www.npmjs.com/package/@meirblachman/azure-pipelines-visualizer)
 
 An interactive visualizer for Azure DevOps pipelines. Paste a pipeline URL and explore its template hierarchy as an expandable diagram with YAML preview and task documentation links.
 
