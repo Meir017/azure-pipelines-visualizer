@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { homedir } from 'node:os';
+import { resolve } from 'node:path';
 import { collapsePath } from '@apv/core';
 import { getConfig } from '../config.js';
 import {
@@ -65,14 +65,7 @@ export function getRepoFileCacheRoot(cacheRoot?: string): string {
     return resolve(configured);
   }
 
-  return resolve(
-    dirname(fileURLToPath(import.meta.url)),
-    '..',
-    '..',
-    '..',
-    '.cache',
-    'ado-file-cache',
-  );
+  return resolve(homedir(), '.apv', 'cache', 'ado-file-cache');
 }
 
 export function buildRepoFileCacheKey(

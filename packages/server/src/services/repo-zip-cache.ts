@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, join, normalize, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { homedir } from 'node:os';
+import { join, normalize, resolve } from 'node:path';
 import { getAzureDevOpsToken } from '../auth.js';
 import { getConfig } from '../config.js';
 import {
@@ -68,16 +68,9 @@ export function getZipCacheRoot(cacheRoot?: string): string {
   }
   const configured = getConfig().cacheDir;
   if (configured) {
-    return resolve(configured, '..', 'ado-zip-cache');
+    return resolve(configured, 'ado-zip-cache');
   }
-  return resolve(
-    dirname(fileURLToPath(import.meta.url)),
-    '..',
-    '..',
-    '..',
-    '.cache',
-    'ado-zip-cache',
-  );
+  return resolve(homedir(), '.apv', 'cache', 'ado-zip-cache');
 }
 
 /**
