@@ -4,6 +4,8 @@
 
 An interactivevisualizer for Azure DevOps pipelines. Paste a pipeline URL and explore its template hierarchy as an expandable diagram with YAML preview and task documentation links.
 
+![Demo](demo-video/demo.gif)
+
 ## Prerequisites
 
 - [Bun](https://bun.sh/) v1.0+
