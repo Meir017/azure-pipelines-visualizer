@@ -36,6 +36,10 @@ export interface FileNodeData {
   totalParameterCount?: number;
   /** All parameter names declared by the template file */
   declaredParameterNames?: string[];
+  /** Whether the template path contains expression placeholders (e.g. ${{ variables.x }}) */
+  dynamicPath?: boolean;
+  /** Whether all expressions in the path have been fully resolved */
+  expressionResolved?: boolean;
 }
 
 function FileNode({ data }: NodeProps) {

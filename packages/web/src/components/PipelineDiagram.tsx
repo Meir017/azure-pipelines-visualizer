@@ -226,10 +226,12 @@ export default function PipelineDiagram() {
 
       // Skip conditional template refs whose condition evaluated to false.
       // When the condition couldn't be fully resolved (unknown params/vars),
-      // _conditionResult is undefined — we skip those too (conservative).
+      // _conditionResult is 'unknown' — still attempt expansion when autoExpandAll
+      // is enabled (user explicitly requested full expansion), but skip otherwise.
       const condResult = (d as unknown as Record<string, unknown>)
         ._conditionResult;
-      if (condResult === false || condResult === 'unknown') return false;
+      if (condResult === false) return false;
+      if (condResult === 'unknown' && !autoExpandAll) return false;
 
       return true;
     });
@@ -1042,6 +1044,9 @@ function buildTemplateNodesAndEdges(
           adoUrl,
           repoInfo,
           templateLocation: ref.location,
+          // Dynamic path info for auto-expand to skip unresolved expression paths
+          dynamicPath: isDynamic || undefined,
+          expressionResolved: isDynamic ? isFullyResolved : undefined,
           // Stash the resolved ref for expansion (with resolved repo alias + params)
           _ref: resolvedRef,
           // Stash fallback path for fetch retry (repo-root-relative)
@@ -1053,7 +1058,7 @@ function buildTemplateNodesAndEdges(
           // Stash accumulated variables for expression resolution in descendants
           _accumulatedVariables: variableContext,
           // Condition evaluation result for conditional refs
-          // true = expand, false = skip, 'unknown' = skip (conservative)
+          // true = expand, false = skip, 'unknown' = expand when autoExpandAll
           _conditionResult: conditionResult,
         },
       });

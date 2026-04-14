@@ -1,7 +1,6 @@
 import { createServer } from 'node:http';
 import { resolve } from 'node:path';
 import { getRequestListener } from '@hono/node-server';
-import react from '@vitejs/plugin-react';
 import { createServer as createViteServer } from 'vite';
 import { app } from './app.js';
 
@@ -11,7 +10,6 @@ const vite = await createViteServer({
   root: webRoot,
   appType: 'spa',
   server: { middlewareMode: true },
-  plugins: [react()],
 });
 
 const honoListener = getRequestListener(app.fetch);
