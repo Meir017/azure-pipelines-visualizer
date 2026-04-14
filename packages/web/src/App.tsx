@@ -66,13 +66,11 @@ export default function App() {
     <div className="app">
       <header className="app__header">
         <h1>🔧 Azure Pipelines Visualizer</h1>
+        <ErrorBoundary>
+          <PipelineSelector />
+        </ErrorBoundary>
       </header>
       <main className="app__main">
-        <aside className="app__sidebar">
-          <ErrorBoundary>
-            <PipelineSelector />
-          </ErrorBoundary>
-        </aside>
         <section className="app__content">
           <ErrorBoundary>
             <PipelineDiagram />

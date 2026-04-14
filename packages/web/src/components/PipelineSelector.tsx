@@ -2,22 +2,13 @@ import { parseAdoUrl } from '@apv/core';
 import { useEffect, useRef, useState } from 'react';
 import {
   fetchFileByRepoName,
-  fetchPipelines,
   fetchPipelineYaml,
 } from '../services/api-client.js';
 import { usePipelineStore } from '../store/pipeline-store.js';
 
 export default function PipelineSelector() {
   const {
-    org,
-    project,
     setConnection,
-    pipelines,
-    pipelinesLoading,
-    pipelinesError,
-    setPipelines,
-    setPipelinesLoading,
-    setPipelinesError,
     setSelectedPipeline,
     setSelectedPipelineLoading,
     setSelectedPipelineError,
@@ -25,10 +16,6 @@ export default function PipelineSelector() {
 
   const [urlInput, setUrlInput] = useState('');
   const [urlError, setUrlError] = useState<string | null>(null);
-  const [orgInput, setOrgInput] = useState(org);
-  const [projectInput, setProjectInput] = useState(project);
-  const [mode, setMode] = useState<'url' | 'browse'>('url');
-
   const [urlLoading, setUrlLoading] = useState(false);
   const autoLoaded = useRef(false);
 
@@ -47,16 +34,13 @@ export default function PipelineSelector() {
     const paramPipelineId = params.get('pipelineId');
 
     if (adoUrl) {
-      // Mode 1: full ADO URL passed as ?url=...
       setUrlInput(adoUrl);
       loadFromAdoUrl(adoUrl);
     } else if (paramOrg && paramProject && paramRepo && paramPath) {
-      // Mode 2: individual params ?org=&project=&repo=&path=&branch=
       const fullUrl = `https://dev.azure.com/${paramOrg}/${paramProject}/_git/${paramRepo}?path=${paramPath}${paramBranch ? `&version=GB${paramBranch}` : ''}`;
       setUrlInput(fullUrl);
       loadFromAdoUrl(fullUrl);
     } else if (paramOrg && paramProject && paramPipelineId) {
-      // Mode 3: pipeline ID ?org=&project=&pipelineId=
       loadFromPipelineId(paramOrg, paramProject, Number(paramPipelineId));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -130,111 +114,31 @@ export default function PipelineSelector() {
     await loadFromAdoUrl(urlInput.trim());
   };
 
-  const handleLoadPipelines = async () => {
-    if (!orgInput || !projectInput) return;
-    setConnection(orgInput, projectInput);
-    setPipelinesLoading(true);
-    setPipelinesError(null);
-    try {
-      const data = await fetchPipelines(orgInput, projectInput);
-      setPipelines(data);
-    } catch (err) {
-      setPipelinesError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setPipelinesLoading(false);
-    }
-  };
-
-  const handleSelectPipeline = async (pipelineId: number) => {
-    setSelectedPipelineLoading(true);
-    setSelectedPipelineError(null);
-    try {
-      const data = await fetchPipelineYaml(org, project, pipelineId);
-      setSelectedPipeline(data);
-    } catch (err) {
-      setSelectedPipelineError(
-        err instanceof Error ? err.message : String(err),
-      );
-    } finally {
-      setSelectedPipelineLoading(false);
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleLoadFromUrl();
     }
   };
 
   return (
-    <div className="pipeline-selector">
-      <div className="mode-tabs">
-        <button
-          className={`mode-tab ${mode === 'url' ? 'mode-tab--active' : ''}`}
-          onClick={() => setMode('url')}
-        >
-          Paste URL
-        </button>
-        <button
-          className={`mode-tab ${mode === 'browse' ? 'mode-tab--active' : ''}`}
-          onClick={() => setMode('browse')}
-        >
-          Browse
-        </button>
-      </div>
-
-      {mode === 'url' && (
-        <div className="connection-form">
-          <label className="form-label">Azure DevOps file URL</label>
-          <textarea
-            placeholder="https://dev.azure.com/{org}/{project}/_git/{repo}?path=/{pipeline}.yml"
-            value={urlInput}
-            onChange={(e) => setUrlInput(e.target.value)}
-            rows={3}
-          />
-          <button
-            onClick={handleLoadFromUrl}
-            disabled={!urlInput.trim() || urlLoading}
-          >
-            {urlLoading ? '⏳ Loading...' : 'Load Pipeline'}
-          </button>
-          {urlError && <div className="error">{urlError}</div>}
-        </div>
-      )}
-
-      {mode === 'browse' && (
-        <>
-          <div className="connection-form">
-            <input
-              type="text"
-              placeholder="Organization"
-              value={orgInput}
-              onChange={(e) => setOrgInput(e.target.value)}
-            />
-            <input
-              type="text"
-              placeholder="Project"
-              value={projectInput}
-              onChange={(e) => setProjectInput(e.target.value)}
-            />
-            <button onClick={handleLoadPipelines} disabled={pipelinesLoading}>
-              {pipelinesLoading ? 'Loading...' : 'Load Pipelines'}
-            </button>
-          </div>
-
-          {pipelinesError && <div className="error">{pipelinesError}</div>}
-
-          {pipelines.length > 0 && (
-            <div className="pipeline-list">
-              <h3>Pipelines</h3>
-              <ul>
-                {pipelines.map((p) => (
-                  <li key={p.id}>
-                    <button onClick={() => handleSelectPipeline(p.id)}>
-                      {p.folder !== '\\' ? `${p.folder}\\` : ''}
-                      {p.name}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </>
-      )}
+    <div className="pipeline-url-bar">
+      <input
+        type="text"
+        className="pipeline-url-bar__input"
+        placeholder="https://dev.azure.com/{org}/{project}/_git/{repo}?path=/{pipeline}.yml"
+        value={urlInput}
+        onChange={(e) => setUrlInput(e.target.value)}
+        onKeyDown={handleKeyDown}
+      />
+      <button
+        className="pipeline-url-bar__btn"
+        onClick={handleLoadFromUrl}
+        disabled={!urlInput.trim() || urlLoading}
+      >
+        {urlLoading ? '⏳ Loading...' : 'Load'}
+      </button>
+      {urlError && <div className="pipeline-url-bar__error">{urlError}</div>}
     </div>
   );
 }

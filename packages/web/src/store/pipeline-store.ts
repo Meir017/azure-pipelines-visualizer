@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import type {
-  PipelineInfo,
   PipelineYamlResponse,
   TaskSchemaEntry,
 } from '../services/api-client.js';
@@ -18,14 +17,6 @@ export interface PipelineStore {
   org: string;
   project: string;
   setConnection: (org: string, project: string) => void;
-
-  // Pipeline list
-  pipelines: PipelineInfo[];
-  pipelinesLoading: boolean;
-  pipelinesError: string | null;
-  setPipelines: (pipelines: PipelineInfo[]) => void;
-  setPipelinesLoading: (loading: boolean) => void;
-  setPipelinesError: (error: string | null) => void;
 
   // Selected pipeline
   selectedPipeline: PipelineYamlResponse | null;
@@ -60,13 +51,6 @@ export const usePipelineStore = create<PipelineStore>((set) => ({
   org: '',
   project: '',
   setConnection: (org, project) => set({ org, project }),
-
-  pipelines: [],
-  pipelinesLoading: false,
-  pipelinesError: null,
-  setPipelines: (pipelines) => set({ pipelines, pipelinesError: null }),
-  setPipelinesLoading: (pipelinesLoading) => set({ pipelinesLoading }),
-  setPipelinesError: (pipelinesError) => set({ pipelinesError }),
 
   selectedPipeline: null,
   selectedPipelineLoading: false,
