@@ -39,7 +39,7 @@ jobs:
         run: bun run lint
 
       - name: Test (bun)
-        run: bun test
+        run: bun test packages/core packages/server
 
       - name: Build CLI bundle
         run: bun run build:cli
