@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 /**
  * App configuration.
@@ -31,7 +32,13 @@ export function getConfig(): AppConfig {
   const candidates = [
     envPath,
     resolve(process.cwd(), CONFIG_FILENAME),
-    resolve(import.meta.dir, '..', '..', '..', CONFIG_FILENAME),
+    resolve(
+      dirname(fileURLToPath(import.meta.url)),
+      '..',
+      '..',
+      '..',
+      CONFIG_FILENAME,
+    ),
   ].filter(Boolean) as string[];
 
   for (const configPath of candidates) {

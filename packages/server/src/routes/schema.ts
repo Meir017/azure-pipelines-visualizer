@@ -6,6 +6,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Hono } from 'hono';
 import { getAzureDevOpsToken } from '../auth.js';
 
@@ -22,7 +23,13 @@ const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 function getCachePath(org: string): string {
   // Cache relative to the repo root
-  const repoRoot = resolve(import.meta.dir, '..', '..', '..', '..');
+  const repoRoot = resolve(
+    dirname(fileURLToPath(import.meta.url)),
+    '..',
+    '..',
+    '..',
+    '..',
+  );
   return resolve(repoRoot, '.cache', `task-schema-${org.toLowerCase()}.json`);
 }
 

@@ -1,0 +1,31 @@
+{
+  "name": "@meirblachman/azure-pipelines-visualizer",
+  "version": "0.1.1",
+  "description": "Visualize Azure Pipelines template trees as interactive diagrams",
+  "type": "module",
+  "bin": {
+    "apv": "dist/index.min.js"
+  },
+  "files": [
+    "dist/"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Meir017/azure-pipelines-visualizer.git"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "bundle": "node scripts/bundle.mjs",
+    "prepublishOnly": "npm run bundle",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "@azure/identity": "^4.0.0"
+  }
+}
