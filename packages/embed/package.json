@@ -1,0 +1,30 @@
+{
+  "name": "@apv/embed",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "test": "bun test",
+    "build": "bun build src/index.ts --outdir dist --target browser --format esm --outfile dist/apv-embed.js"
+  },
+  "dependencies": {
+    "@apv/core": "workspace:*",
+    "@apv/web": "workspace:*",
+    "@dagrejs/dagre": "^2.0.4",
+    "@xyflow/react": "^12.10.1",
+    "fflate": "^0.8.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "zustand": "^4.5.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "happy-dom": "^20.9.0"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}
