@@ -76,3 +76,9 @@ jobs:
           git commit -m "chore: bump cli version to ${VERSION} [skip ci]"
           git pull --rebase
           git push
+
+      - name: Create and push version tag
+        run: |
+          VERSION=$(node -p "require('./packages/cli/package.json').version")
+          git tag "v${VERSION}"
+          git push origin "v${VERSION}"

@@ -7,7 +7,8 @@
     "apv": "dist/index.min.js"
   },
   "files": [
-    "dist/"
+    "dist/",
+    "README.md"
   ],
   "repository": {
     "type": "git",
