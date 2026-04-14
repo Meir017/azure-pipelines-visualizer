@@ -78,6 +78,55 @@ describe('MemoryTTLCache', () => {
     expect(cache.get('a')).toBeUndefined();
   });
 
+  test('getOrFetch deduplicates concurrent calls for the same key', async () => {
+    const cache = new MemoryTTLCache<string>(60);
+
+    let fetchCalls = 0;
+    let resolveFirst!: (v: string) => void;
+    const blocker = new Promise<string>((r) => {
+      resolveFirst = r;
+    });
+
+    const fetcher = async () => {
+      fetchCalls++;
+      return blocker;
+    };
+
+    // Launch two concurrent fetches for the same key
+    const p1 = cache.getOrFetch('key', fetcher);
+    const p2 = cache.getOrFetch('key', fetcher);
+
+    // Only one fetcher should have been called
+    expect(fetchCalls).toBe(1);
+
+    resolveFirst('shared-value');
+
+    const [r1, r2] = await Promise.all([p1, p2]);
+    expect(r1).toBe('shared-value');
+    expect(r2).toBe('shared-value');
+  });
+
+  test('getOrFetch clears inflight on error so retry works', async () => {
+    const cache = new MemoryTTLCache<string>(60);
+
+    let calls = 0;
+    const failFetcher = async () => {
+      calls++;
+      throw new Error('boom');
+    };
+
+    await expect(cache.getOrFetch('key', failFetcher)).rejects.toThrow('boom');
+    expect(calls).toBe(1);
+
+    // After failure, a new fetch should be attempted (not stuck on old promise)
+    const result = await cache.getOrFetch('key', async () => {
+      calls++;
+      return 'recovered';
+    });
+    expect(result).toBe('recovered');
+    expect(calls).toBe(2);
+  });
+
   test('keys are case-sensitive by default (callers lowercase for case-insensitive behavior)', () => {
     const cache = new MemoryTTLCache<string>(60);
     cache.set('Microsoft/WDATP/Repo', 'upper');

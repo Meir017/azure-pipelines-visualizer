@@ -12,6 +12,7 @@ interface CacheEntry<T> {
 
 export class MemoryTTLCache<T> {
   private store = new Map<string, CacheEntry<T>>();
+  private inflight = new Map<string, Promise<T>>();
   private readonly ttlMs: number;
   private readonly maxSize: number;
 
@@ -53,14 +54,29 @@ export class MemoryTTLCache<T> {
 
   /**
    * Get a value from cache, or compute and cache it if missing/expired.
+   * Concurrent calls for the same key share a single in-flight fetch.
    */
   async getOrFetch(key: string, fetcher: () => Promise<T>): Promise<T> {
     const cached = this.get(key);
     if (cached !== undefined) return cached;
 
-    const value = await fetcher();
-    this.set(key, value);
-    return value;
+    const existing = this.inflight.get(key);
+    if (existing) return existing;
+
+    const promise = fetcher().then(
+      (value) => {
+        this.set(key, value);
+        this.inflight.delete(key);
+        return value;
+      },
+      (err) => {
+        this.inflight.delete(key);
+        throw err;
+      },
+    );
+
+    this.inflight.set(key, promise);
+    return promise;
   }
 
   /** Number of entries currently in the cache. */
@@ -71,5 +87,6 @@ export class MemoryTTLCache<T> {
   /** Remove all entries. */
   clear(): void {
     this.store.clear();
+    this.inflight.clear();
   }
 }
