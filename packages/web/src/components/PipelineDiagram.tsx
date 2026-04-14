@@ -32,7 +32,8 @@ import {
   resolveTemplateSource,
   type TemplateReference,
 } from '@apv/core';
-import { fetchFileByRepoName } from '../services/api-client.js';
+import type { FetchFileByRepoNameFn } from '../services/file-fetch-context.js';
+import { useFileFetch } from '../services/file-fetch-context.js';
 import { usePipelineStore } from '../store/pipeline-store.js';
 import { getLayoutedElements } from './diagram-layout.js';
 import FileNode, { type FileNodeData, type RepoInfo } from './FileNode.js';
@@ -58,6 +59,8 @@ export default function PipelineDiagram() {
     setExpandedTemplate,
     setSelectedNodeDetail,
   } = usePipelineStore();
+
+  const fetchFileByRepoName = useFileFetch();
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -276,6 +279,7 @@ export default function PipelineDiagram() {
             rootResources,
             expandedTemplates,
             setExpandedTemplate,
+            fetchFileByRepoName,
           );
 
           const parsed = (parseYaml(content) ?? {}) as Record<string, unknown>;
@@ -517,6 +521,7 @@ export default function PipelineDiagram() {
     setNodes,
     setEdges,
     autoExpandAll,
+    fetchFileByRepoName,
   ]);
 
   // Handle clicking a node:
@@ -576,6 +581,7 @@ export default function PipelineDiagram() {
             rootResources,
             expandedTemplates,
             setExpandedTemplate,
+            fetchFileByRepoName,
           );
           setSelectedNodeDetail({
             nodeId: node.id,
@@ -612,6 +618,7 @@ export default function PipelineDiagram() {
           rootResources,
           expandedTemplates,
           setExpandedTemplate,
+          fetchFileByRepoName,
         );
 
         const parsed = (parseYaml(content) ?? {}) as Record<string, unknown>;
@@ -836,6 +843,7 @@ export default function PipelineDiagram() {
       loadingNodes,
       setNodes,
       setEdges,
+      fetchFileByRepoName,
     ],
   );
 
@@ -1297,6 +1305,7 @@ async function fetchTemplateContent(
   repositories: ResourceRepository[],
   cache: Map<string, string>,
   setCache: (key: string, content: string) => void,
+  fetchFileByRepoName: FetchFileByRepoNameFn,
 ): Promise<{ content: string; actualPath: string }> {
   // Retrieve the stashed ref from node data
   const ref = (nodeData as unknown as Record<string, unknown>)._ref as

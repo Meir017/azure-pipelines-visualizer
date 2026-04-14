@@ -3,7 +3,12 @@ import DetailPanel from './components/DetailPanel.js';
 import ErrorBoundary from './components/ErrorBoundary.js';
 import PipelineDiagram from './components/PipelineDiagram.js';
 import PipelineSelector from './components/PipelineSelector.js';
-import { fetchTaskDocsConfig, fetchTaskSchema } from './services/api-client.js';
+import {
+  fetchFileByRepoName,
+  fetchTaskDocsConfig,
+  fetchTaskSchema,
+} from './services/api-client.js';
+import { FileFetchProvider } from './services/file-fetch-context.js';
 import { usePipelineStore } from './store/pipeline-store.js';
 import './App.css';
 
@@ -63,34 +68,36 @@ export default function App() {
   );
 
   return (
-    <div className="app">
-      <header className="app__header">
-        <h1>🔧 Azure Pipelines Visualizer</h1>
-        <ErrorBoundary>
-          <PipelineSelector />
-        </ErrorBoundary>
-      </header>
-      <main className="app__main">
-        <section className="app__content">
+    <FileFetchProvider value={fetchFileByRepoName}>
+      <div className="app">
+        <header className="app__header">
+          <h1>🔧 Azure Pipelines Visualizer</h1>
           <ErrorBoundary>
-            <PipelineDiagram />
+            <PipelineSelector />
           </ErrorBoundary>
-        </section>
-        {selectedNodeDetail && (
-          <>
-            <div
-              className="app__detail-resize-handle"
-              onMouseDown={onResizeStart}
-              title="Drag to resize"
-            />
-            <aside className="app__detail" style={{ width: detailWidth }}>
-              <ErrorBoundary>
-                <DetailPanel />
-              </ErrorBoundary>
-            </aside>
-          </>
-        )}
-      </main>
-    </div>
+        </header>
+        <main className="app__main">
+          <section className="app__content">
+            <ErrorBoundary>
+              <PipelineDiagram />
+            </ErrorBoundary>
+          </section>
+          {selectedNodeDetail && (
+            <>
+              <div
+                className="app__detail-resize-handle"
+                onMouseDown={onResizeStart}
+                title="Drag to resize"
+              />
+              <aside className="app__detail" style={{ width: detailWidth }}>
+                <ErrorBoundary>
+                  <DetailPanel />
+                </ErrorBoundary>
+              </aside>
+            </>
+          )}
+        </main>
+      </div>
+    </FileFetchProvider>
   );
 }

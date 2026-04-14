@@ -5,7 +5,7 @@
     "packages/*"
   ],
   "scripts": {
-    "test": "bun test packages/core packages/server",
+    "test": "bun test packages/core packages/server packages/embed",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
