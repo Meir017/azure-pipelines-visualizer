@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { getLocalRepoPath, resetConfig } from './config.js';
+import { getConfig, resetConfig } from './config.js';
 
 const tmpDir = resolve(import.meta.dir, '__config_test__');
 const configPath = resolve(tmpDir, 'apv.config.json');
@@ -19,36 +19,19 @@ afterEach(() => {
   rmSync(tmpDir, { recursive: true, force: true });
 });
 
-describe('getLocalRepoPath', () => {
-  test('returns path for exact match', () => {
+describe('getConfig', () => {
+  test('loads customTaskDocs from config', () => {
     writeConfig({
-      localRepos: { 'microsoft/WDATP/MyRepo': '/local/MyRepo' },
+      customTaskDocs: { 'MyTask@1': 'https://example.com' },
     });
-    expect(getLocalRepoPath('microsoft', 'WDATP', 'MyRepo')).toBe(
-      '/local/MyRepo',
-    );
+    const config = getConfig();
+    expect(config.customTaskDocs).toEqual({
+      'MyTask@1': 'https://example.com',
+    });
   });
 
-  test('returns path for case-insensitive match', () => {
-    writeConfig({
-      localRepos: {
-        'microsoft/WDATP/wdatp.infra.system.tools': '/local/tools',
-      },
-    });
-    expect(
-      getLocalRepoPath('Microsoft', 'WDATP', 'WDATP.Infra.System.Tools'),
-    ).toBe('/local/tools');
-  });
-
-  test('returns undefined when no match', () => {
-    writeConfig({
-      localRepos: { 'microsoft/WDATP/MyRepo': '/local/MyRepo' },
-    });
-    expect(getLocalRepoPath('microsoft', 'WDATP', 'OtherRepo')).toBeUndefined();
-  });
-
-  test('returns undefined when no localRepos configured', () => {
-    writeConfig({});
-    expect(getLocalRepoPath('microsoft', 'WDATP', 'MyRepo')).toBeUndefined();
+  test('returns empty defaults when no config', () => {
+    const config = getConfig();
+    expect(config.customTaskDocs).toEqual({});
   });
 });

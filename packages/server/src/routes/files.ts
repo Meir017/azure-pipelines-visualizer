@@ -1,7 +1,5 @@
 import { Hono } from 'hono';
-import { getLocalRepoPath } from '../config.js';
 import { getRepository, listRepositories } from '../services/azure-devops.js';
-import { getLocalFileContent } from '../services/local-files.js';
 import { fetchRepoFileWithCache } from '../services/repo-file-cache.js';
 import {
   ensureRepoCached,
@@ -84,25 +82,6 @@ files.get('/:org/:project/file-by-repo-name', async (c) => {
       { error: 'repo and path query parameters are required' },
       400,
     );
-  }
-
-  // Try local repo first — avoids ADO API round-trip entirely
-  const localPath = getLocalRepoPath(org, project, repoName);
-  if (localPath) {
-    try {
-      const content = await getLocalFileContent(localPath, path);
-      return c.json({
-        content,
-        path,
-        repoId: repoName,
-        repoName,
-        branch: branch || 'local',
-        commitSha: 'local',
-        cache: 'local',
-      });
-    } catch {
-      // Fall through to remote fetch if local read fails
-    }
   }
 
   const repo = await getRepository(org, project, repoName);
