@@ -2,9 +2,24 @@
 
 [![CI](https://github.com/Meir017/azure-pipelines-visualizer/actions/workflows/ci.yml/badge.svg)](https://github.com/Meir017/azure-pipelines-visualizer/actions/workflows/ci.yml)
 
-An interactivevisualizer for Azure DevOps pipelines. Paste a pipeline URL and explore its template hierarchy as an expandable diagram with YAML preview and task documentation links.
+An interactive visualizer for Azure DevOps pipelines. Paste a pipeline URL and explore its template hierarchy as an expandable diagram with YAML preview and task documentation links.
 
-![Demo](demo-video/demo.gif)
+### Paste a URL and load the pipeline
+
+![Load pipeline](assets/image-2.png)
+
+### Expand templates to explore the full hierarchy
+
+![Expanded diagram](assets/image-1.png)
+
+### Drill into cross-repo template trees
+
+![Cross-repo templates](assets/image-3.png)
+
+### View YAML and task documentation in the detail panel
+
+![Detail panel](assets/image-4.png)
+
 
 ## Prerequisites
 
