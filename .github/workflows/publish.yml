@@ -9,6 +9,7 @@ on:
       - 'packages/web/src/**'
       - 'packages/cli/**'
       - 'package.json'
+      - '.github/workflows/publish.yml'
 
 concurrency:
   group: publish
