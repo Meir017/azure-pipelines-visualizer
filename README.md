@@ -6,19 +6,19 @@ An interactive visualizer for Azure DevOps pipelines. Paste a pipeline URL and e
 
 ### Paste a URL and load the pipeline
 
-![Load pipeline](assets/image-2.png)
+![Load pipeline](assets/load-pipeline.png)
 
 ### Expand templates to explore the full hierarchy
 
-![Expanded diagram](assets/image-1.png)
+![Expanded diagram](assets/expanded-diagram.png)
 
 ### Drill into cross-repo template trees
 
-![Cross-repo templates](assets/image-3.png)
+![Cross-repo templates](assets/cross-repo-templates.png)
 
 ### View YAML and task documentation in the detail panel
 
-![Detail panel](assets/image-4.png)
+![Detail panel](assets/detail-panel.png)
 
 
 ## Prerequisites
