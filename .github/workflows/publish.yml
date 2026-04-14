@@ -138,6 +138,8 @@ jobs:
   github-release:
     needs: [publish, release]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Download all artifacts
