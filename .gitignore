@@ -11,3 +11,8 @@ apv.config.json
 *.jpeg
 .cache/
 plan.md
+
+# Standalone binary build artifacts
+apv
+apv.exe
+packages/server/src/_web-assets.ts

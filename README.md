@@ -4,6 +4,8 @@
 
 An interactivevisualizer for Azure DevOps pipelines. Paste a pipeline URL and explore its template hierarchy as an expandable diagram with YAML preview and task documentation links.
 
+![Demo](demo-video/demo.gif)
+
 ## Prerequisites
 
 - [Bun](https://bun.sh/) v1.0+
@@ -60,6 +62,39 @@ You can optionally override the cache location in `apv.config.json`:
 | `bun test` | Run all tests |
 | `bun run lint` | Lint with Biome |
 | `bun run lint:fix` | Lint and auto-fix |
+| `bun run build:standalone` | Build a self-contained executable |
+
+## Standalone Binary
+
+Pre-built binaries for Linux, macOS, and Windows are available on the [Releases](https://github.com/Meir017/azure-pipelines-visualizer/releases) page.
+
+### Download and run
+
+```bash
+# Download the binary for your platform from the latest release, then:
+chmod +x apv-linux-x64   # Linux/macOS only
+./apv-linux-x64
+```
+
+Open http://localhost:3001. The binary bundles both the API server and web UI.
+
+### Configuration
+
+Pass a config file via the `APV_CONFIG` environment variable:
+
+```bash
+APV_CONFIG=./apv.config.json ./apv-linux-x64
+```
+
+See [`apv.config.example.json`](apv.config.example.json) for available options.
+
+### Build from source
+
+```bash
+bun install
+bun run build:standalone    # produces ./apv (or apv.exe on Windows)
+./apv
+```
 
 ## Project Structure
 
