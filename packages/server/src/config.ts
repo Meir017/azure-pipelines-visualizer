@@ -23,13 +23,23 @@ export interface AppConfig {
 const CONFIG_FILENAME = 'apv.config.json';
 
 let _config: AppConfig | null = null;
+let _explicitConfigPath: string | undefined;
+
+/**
+ * Set an explicit config file path (e.g. from CLI --config flag).
+ * Must be called before the first getConfig() call.
+ */
+export function setConfigPath(configPath: string): void {
+  _explicitConfigPath = configPath;
+}
 
 export function getConfig(): AppConfig {
   if (_config) return _config;
 
-  // Search: env var, then cwd, then repo root
+  // Search: explicit path, env var, then cwd, then repo root
   const envPath = process.env.APV_CONFIG;
   const candidates = [
+    _explicitConfigPath,
     envPath,
     resolve(process.cwd(), CONFIG_FILENAME),
     resolve(
@@ -101,4 +111,5 @@ function logLocalMappings(config: AppConfig) {
 /** Reset cached config (for testing). */
 export function resetConfig(): void {
   _config = null;
+  _explicitConfigPath = undefined;
 }

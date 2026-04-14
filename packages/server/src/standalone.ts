@@ -2,14 +2,52 @@
  * Standalone entrypoint for `bun build --compile`.
  * Extends the base server with embedded web frontend assets.
  */
+import { parseArgs } from 'node:util';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { webAssets } from './_web-assets.js';
-import { getConfig } from './config.js';
+import { getConfig, setConfigPath } from './config.js';
 import { files } from './routes/files.js';
 import { pipelines } from './routes/pipelines.js';
 import { schema } from './routes/schema.js';
+
+// --- CLI argument parsing ---------------------------------------------------
+
+const { values: args } = parseArgs({
+  options: {
+    config: { type: 'string', short: 'c' },
+    port: { type: 'string', short: 'p' },
+    help: { type: 'boolean', short: 'h' },
+    version: { type: 'boolean', short: 'v' },
+  },
+  strict: true,
+  allowPositionals: false,
+});
+
+if (args.help) {
+  console.log(
+    `
+Azure Pipelines Visualizer
+
+Usage: apv [options]
+
+Options:
+  -c, --config <path>  Path to apv.config.json
+  -p, --port <number>  Port to listen on (default: 3001)
+  -h, --help           Show this help message
+  -v, --version        Show version number
+`.trim(),
+  );
+  process.exit(0);
+}
+
+if (args.version) {
+  console.log('standalone');
+  process.exit(0);
+}
+
+// ---------------------------------------------------------------------------
 
 const MIME_TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -28,7 +66,10 @@ function getMimeType(path: string): string {
   return MIME_TYPES[ext] ?? 'application/octet-stream';
 }
 
-// Load config on startup
+// Load config on startup (with optional explicit path)
+if (args.config) {
+  setConfigPath(args.config);
+}
 getConfig();
 
 const app = new Hono();
@@ -74,8 +115,10 @@ app.get('*', async (c) => {
   });
 });
 
+const port = Number(args.port) || Number(process.env.PORT) || 3001;
+
 export default {
-  port: 3001,
+  port,
   fetch: app.fetch,
   idleTimeout: 120,
 };

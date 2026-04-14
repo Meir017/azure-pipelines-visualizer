@@ -34,6 +34,30 @@ npx @meirblachman/azure-pipelines-visualizer
 
 Open http://localhost:3001. The command bundles both the API server and web UI.
 
+### CLI Options
+
+```
+Usage: apv [options]
+
+Options:
+  -c, --config <path>  Path to apv.config.json
+  -p, --port <number>  Port to listen on (default: 3001)
+  -h, --help           Show this help message
+  -v, --version        Show version number
+```
+
+Examples:
+
+```bash
+# Use a custom config file and port
+npx @meirblachman/azure-pipelines-visualizer --config ./my-config.json --port 8080
+
+# Short flags work too
+npx @meirblachman/azure-pipelines-visualizer -c ./my-config.json -p 8080
+```
+
+The `PORT` environment variable is still supported as a fallback when `--port` is not specified.
+
 ## Development Setup
 
 ### Prerequisites
@@ -120,7 +144,13 @@ Open http://localhost:3001. The binary bundles both the API server and web UI.
 
 ### Configuration
 
-Pass a config file via the `APV_CONFIG` environment variable:
+Pass options via CLI flags (same flags as the npm package):
+
+```bash
+./apv-linux-x64 --config ./apv.config.json --port 8080
+```
+
+The `APV_CONFIG` environment variable is also supported as a fallback:
 
 ```bash
 APV_CONFIG=./apv.config.json ./apv-linux-x64
