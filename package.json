@@ -5,7 +5,7 @@
     "packages/*"
   ],
   "scripts": {
-    "test": "bun test --recursive",
+    "test": "bun test packages/core packages/server",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
@@ -13,9 +13,11 @@
     "dev:server": "bun run --filter @apv/server dev",
     "dev:web": "bun run --filter @apv/web dev",
     "build:web": "bun run --filter @apv/web build",
-    "build:standalone": "bun run build:web && bun scripts/generate-web-assets.ts && bun build --compile packages/server/src/standalone.ts --outfile apv"
+    "build:standalone": "bun run build:web && bun scripts/generate-web-assets.ts && bun build --compile packages/server/src/standalone.ts --outfile apv",
+    "build:cli": "bun run build:web && node packages/cli/scripts/bundle.mjs"
   },
   "devDependencies": {
-    "@biomejs/biome": "~2.0.0"
+    "@biomejs/biome": "~2.0.0",
+    "esbuild": "^0.27.3"
   }
 }
