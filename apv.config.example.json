@@ -1,9 +1,6 @@
 {
   "$schema": "./apv.config.schema.json",
   "cacheDir": ".cache/ado-file-cache",
-  "localRepos": {
-    "myorg/myproject/MyRepo": "/path/to/local/clone"
-  },
   "customTaskDocs": {
     "MyCustomTask@1": "https://example.com/docs/my-task"
   }

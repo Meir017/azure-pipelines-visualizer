@@ -16,7 +16,6 @@ import { fileURLToPath } from 'node:url';
  */
 export interface AppConfig {
   cacheDir?: string;
-  localRepos?: Record<string, string>;
   customTaskDocs?: Record<string, string>;
 }
 
@@ -58,11 +57,9 @@ export function getConfig(): AppConfig {
         const parsed = JSON.parse(raw) as AppConfig;
         _config = {
           cacheDir: parsed.cacheDir,
-          localRepos: parsed.localRepos ?? {},
           customTaskDocs: parsed.customTaskDocs ?? {},
         };
         console.log(`Loaded config from ${configPath}`);
-        logLocalMappings(_config);
         return _config;
       } catch (err) {
         console.warn(`Failed to parse ${configPath}:`, err);
@@ -71,41 +68,8 @@ export function getConfig(): AppConfig {
   }
 
   // No config found — empty defaults
-  _config = { localRepos: {}, customTaskDocs: {} };
+  _config = { customTaskDocs: {} };
   return _config;
-}
-
-/**
- * Look up a local path for a given org/project/repo.
- * Returns the local directory path or undefined if not mapped.
- */
-export function getLocalRepoPath(
-  org: string,
-  project: string,
-  repoName: string,
-): string | undefined {
-  const config = getConfig();
-  // Try exact match first, then case-insensitive
-  const key = `${org}/${project}/${repoName}`;
-  if (config.localRepos[key]) return config.localRepos[key];
-
-  const lower = key.toLowerCase();
-  for (const [k, v] of Object.entries(config.localRepos)) {
-    if (k.toLowerCase() === lower) return v;
-  }
-  return undefined;
-}
-
-function logLocalMappings(config: AppConfig) {
-  const entries = Object.entries(config.localRepos);
-  if (entries.length === 0) {
-    console.log('  No local repo mappings configured');
-    return;
-  }
-  console.log(`  ${entries.length} local repo mapping(s):`);
-  for (const [key, path] of entries) {
-    console.log(`    ${key} → ${path}`);
-  }
 }
 
 /** Reset cached config (for testing). */

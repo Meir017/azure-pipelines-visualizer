@@ -14,20 +14,6 @@
       "description": "Directory for the on-disk file cache. Relative paths are resolved from the working directory. Defaults to '~/.apv/cache/ado-file-cache'.",
       "examples": ["~/.apv/cache/ado-file-cache", "/tmp/apv-cache"]
     },
-    "localRepos": {
-      "type": "object",
-      "description": "Map Azure DevOps repositories to local directory paths. Keys use the format 'org/project/repoName' (case-insensitive matching). When a mapped repo is requested, files are served from the local directory instead of calling the ADO API.",
-      "additionalProperties": {
-        "type": "string",
-        "description": "Absolute local filesystem path to the repository root."
-      },
-      "examples": [
-        {
-          "microsoft/WDATP/MyRepo": "D:/git/MyRepo",
-          "microsoft/OneBranch.Pipelines/GovernedTemplates": "D:/git/GovernedTemplates"
-        }
-      ]
-    },
     "customTaskDocs": {
       "type": "object",
       "description": "Map Azure Pipelines task names to custom documentation URLs. Keys can include a version suffix (e.g. 'TaskName@1') or omit it to match all versions.",
