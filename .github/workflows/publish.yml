@@ -56,7 +56,14 @@ jobs:
 
       - name: Bump patch version
         working-directory: packages/cli
-        run: npm version patch --no-git-tag-version
+        run: |
+          node -e "
+            const pkg = JSON.parse(require('fs').readFileSync('package.json','utf8'));
+            const [major,minor,patch] = pkg.version.split('.').map(Number);
+            pkg.version = major+'.'+minor+'.'+(patch+1);
+            require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+            console.log('v' + pkg.version);
+          "
 
       - name: Publish to npm
         working-directory: packages/cli
