@@ -1,6 +1,6 @@
 {
   "name": "@meirblachman/azure-pipelines-visualizer",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Visualize Azure Pipelines template trees as interactive diagrams",
   "type": "module",
   "bin": {
