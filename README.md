@@ -1,6 +1,7 @@
 # Azure Pipelines Visualizer
 
 [![CI](https://github.com/Meir017/azure-pipelines-visualizer/actions/workflows/ci.yml/badge.svg)](https://github.com/Meir017/azure-pipelines-visualizer/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/@meirblachman/azure-pipelines-visualizer)](https://www.npmjs.com/package/@meirblachman/azure-pipelines-visualizer)
 
 An interactive visualizer for Azure DevOps pipelines. Paste a pipeline URL and explore its template hierarchy as an expandable diagram with YAML preview and task documentation links.
 
@@ -21,12 +22,26 @@ An interactive visualizer for Azure DevOps pipelines. Paste a pipeline URL and e
 ![Detail panel](assets/detail-panel.png)
 
 
-## Prerequisites
+## Quick Start with npx
+
+The fastest way to run the visualizer — no installation required:
+
+```bash
+npx @meirblachman/azure-pipelines-visualizer
+```
+
+> Requires Node.js ≥ 24 and Azure CLI logged in (`az login`).
+
+Open http://localhost:3001. The command bundles both the API server and web UI.
+
+## Development Setup
+
+### Prerequisites
 
 - [Bun](https://bun.sh/) v1.0+
 - Azure CLI logged in (`az login`) — required for fetching files from Azure DevOps
 
-## Quick Start
+### Quick Start
 
 ```bash
 bun install
