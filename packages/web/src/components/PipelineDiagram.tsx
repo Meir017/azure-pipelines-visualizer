@@ -22,6 +22,7 @@ import {
   extractParameterDefaults,
   extractVariableValues,
   getEffectiveRepoAlias,
+  parseTemplatePath,
   parseYaml,
   pathHasExpressions,
   type ResourceRepository,
@@ -237,8 +238,24 @@ export default function PipelineDiagram() {
     });
     if (collapsedNodes.length === 0) return;
 
-    // Mark as attempted so we don't retry
+    // Prioritize variable template nodes — their variables may be needed by siblings
+    collapsedNodes.sort((a, b) => {
+      const aIsVar =
+        (a.data as unknown as FileNodeData).templateLocation === 'variables'
+          ? 0
+          : 1;
+      const bIsVar =
+        (b.data as unknown as FileNodeData).templateLocation === 'variables'
+          ? 0
+          : 1;
+      return aIsVar - bIsVar;
+    });
+
+    // Mark as attempted so we don't retry — but defer unresolved dynamic-path
+    // nodes so they can be retried after variable templates provide new values
     for (const n of collapsedNodes) {
+      const nd = n.data as unknown as FileNodeData;
+      if (nd.dynamicPath && !nd.expressionResolved) continue;
       autoExpandAttempted.current.add(n.id);
     }
 
@@ -274,25 +291,106 @@ export default function PipelineDiagram() {
 
           if (nestedRefs.length === 0) {
             // Leaf node — mark as expanded with no children
+            // If this is a variable template, propagate its variables to sibling nodes
+            const isVarTemplate = d.templateLocation === 'variables';
+            const varTemplateVars = isVarTemplate
+              ? extractVariableValues(parsed)
+              : undefined;
+            const shouldPropagate =
+              varTemplateVars && Object.keys(varTemplateVars).length > 0;
+
+            // Pre-compute which sibling nodes will be updated so we can also update edges
+            const updatedNodeIds = new Set<string>();
+            const crossRepoNodeIds = new Set<string>();
+            const resolvedNodePaths = new Map<string, string>();
+            if (shouldPropagate) {
+              for (const n of nodes) {
+                const nd = n.data as unknown as FileNodeData;
+                if (nd.dynamicPath && !nd.expressionResolved) {
+                  const updated = updateNodeWithNewVariables(
+                    n,
+                    varTemplateVars,
+                    org,
+                    project,
+                    defaultRepoName,
+                    rootResources,
+                  );
+                  if (updated !== n) {
+                    updatedNodeIds.add(n.id);
+                    const updatedData = updated.data as unknown as FileNodeData;
+                    if (updatedData.repoAlias) crossRepoNodeIds.add(n.id);
+                    resolvedNodePaths.set(n.id, updatedData.filePath);
+                  }
+                }
+              }
+            }
+
             setNodes((nds) =>
-              nds.map((n) =>
-                n.id === node.id
-                  ? {
-                      ...n,
-                      data: {
-                        ...n.data,
-                        status: 'expanded',
-                        templateCount: 0,
-                        totalParameterCount:
-                          declaredParamNames.length || undefined,
-                        declaredParameterNames: declaredParamNames.length
-                          ? declaredParamNames
-                          : undefined,
-                      },
-                    }
-                  : n,
-              ),
+              nds.map((n) => {
+                if (n.id === node.id) {
+                  return {
+                    ...n,
+                    data: {
+                      ...n.data,
+                      status: 'expanded',
+                      templateCount: 0,
+                      totalParameterCount:
+                        declaredParamNames.length || undefined,
+                      declaredParameterNames: declaredParamNames.length
+                        ? declaredParamNames
+                        : undefined,
+                    },
+                  };
+                }
+                if (shouldPropagate && updatedNodeIds.has(n.id)) {
+                  return updateNodeWithNewVariables(
+                    n,
+                    varTemplateVars,
+                    org,
+                    project,
+                    defaultRepoName,
+                    rootResources,
+                  );
+                }
+                return n;
+              }),
             );
+
+            // Update edges targeting nodes whose paths were just resolved
+            if (updatedNodeIds.size > 0) {
+              setEdges((eds) =>
+                eds.map((e) => {
+                  if (!updatedNodeIds.has(e.target)) return e;
+                  const ed = e.data as TemplateEdgeData | undefined;
+                  if (!ed?.dynamicPath) return e;
+                  const isCrossRepo = crossRepoNodeIds.has(e.target);
+                  return {
+                    ...e,
+                    data: {
+                      ...ed,
+                      expressionResolved: true,
+                      isExternal: isCrossRepo || ed.isExternal || undefined,
+                      resolvedPath:
+                        resolvedNodePaths.get(e.target) ?? ed.resolvedPath,
+                      unresolvedExpressions: undefined,
+                    },
+                    style: isCrossRepo
+                      ? {
+                          stroke: 'var(--badge-resources)',
+                          strokeWidth: 2,
+                          strokeDasharray: '6 3',
+                        }
+                      : e.style,
+                    markerEnd: isCrossRepo
+                      ? {
+                          type: MarkerType.ArrowClosed,
+                          color: 'var(--badge-resources)',
+                        }
+                      : e.markerEnd,
+                  };
+                }),
+              );
+            }
           } else if (autoExpandAll) {
             // Non-leaf with auto-expand enabled — fully expand
             const fileDefaults = extractParameterDefaults(parsed);
@@ -577,26 +675,67 @@ export default function PipelineDiagram() {
         );
 
         // Atomic update: add new nodes with layout, then add new edges
+        const manualUpdatedNodeIds = new Set<string>();
+        const manualCrossRepoNodeIds = new Set<string>();
+        const manualResolvedPaths = new Map<string, string>();
+        const shouldPropagateVars =
+          d.templateLocation === 'variables' &&
+          Object.keys(templateVariables).length > 0;
+
+        // Pre-compute which nodes will be updated
+        if (shouldPropagateVars) {
+          for (const n of nodes) {
+            const nd = n.data as unknown as FileNodeData;
+            if (nd.dynamicPath && !nd.expressionResolved) {
+              const updated = updateNodeWithNewVariables(
+                n,
+                templateVariables,
+                org,
+                project,
+                defaultRepoName,
+                rootResources,
+              );
+              if (updated !== n) {
+                manualUpdatedNodeIds.add(n.id);
+                const updatedData = updated.data as unknown as FileNodeData;
+                if (updatedData.repoAlias) manualCrossRepoNodeIds.add(n.id);
+                manualResolvedPaths.set(n.id, updatedData.filePath);
+              }
+            }
+          }
+        }
+
         setNodes((currentNodes) => {
           const currentIds = new Set(currentNodes.map((n) => n.id));
           const newNodes = templateNodes.filter((n) => !currentIds.has(n.id));
 
-          const updated = currentNodes.map((n) =>
-            n.id === node.id
-              ? {
-                  ...n,
-                  data: {
-                    ...n.data,
-                    status: 'expanded',
-                    templateCount: nestedRefs.length,
-                    totalParameterCount: declaredParamNames.length || undefined,
-                    declaredParameterNames: declaredParamNames.length
-                      ? declaredParamNames
-                      : undefined,
-                  },
-                }
-              : n,
-          );
+          const updated = currentNodes.map((n) => {
+            if (n.id === node.id) {
+              return {
+                ...n,
+                data: {
+                  ...n.data,
+                  status: 'expanded',
+                  templateCount: nestedRefs.length,
+                  totalParameterCount: declaredParamNames.length || undefined,
+                  declaredParameterNames: declaredParamNames.length
+                    ? declaredParamNames
+                    : undefined,
+                },
+              };
+            }
+            if (shouldPropagateVars && manualUpdatedNodeIds.has(n.id)) {
+              return updateNodeWithNewVariables(
+                n,
+                templateVariables,
+                org,
+                project,
+                defaultRepoName,
+                rootResources,
+              );
+            }
+            return n;
+          });
           const allNodes = [...updated, ...newNodes];
 
           // Propagate declared param info to edges targeting this node
@@ -612,13 +751,48 @@ export default function PipelineDiagram() {
         });
 
         setEdges((currentEdges) => {
-          const updated = declaredParamNames.length
+          let updated = declaredParamNames.length
             ? updateEdgesWithDeclaredParams(
                 currentEdges,
                 node.id,
                 declaredParamNames,
               )
             : currentEdges;
+
+          // Update edges targeting nodes whose variable expressions were just resolved
+          if (manualUpdatedNodeIds.size > 0) {
+            updated = updated.map((e) => {
+              if (!manualUpdatedNodeIds.has(e.target)) return e;
+              const ed = e.data as TemplateEdgeData | undefined;
+              if (!ed?.dynamicPath) return e;
+              const isCrossRepo = manualCrossRepoNodeIds.has(e.target);
+              return {
+                ...e,
+                data: {
+                  ...ed,
+                  expressionResolved: true,
+                  isExternal: isCrossRepo || ed.isExternal || undefined,
+                  resolvedPath:
+                    manualResolvedPaths.get(e.target) ?? ed.resolvedPath,
+                  unresolvedExpressions: undefined,
+                },
+                style: isCrossRepo
+                  ? {
+                      stroke: 'var(--badge-resources)',
+                      strokeWidth: 2,
+                      strokeDasharray: '6 3',
+                    }
+                  : e.style,
+                markerEnd: isCrossRepo
+                  ? {
+                      type: MarkerType.ArrowClosed,
+                      color: 'var(--badge-resources)',
+                    }
+                  : e.markerEnd,
+              };
+            });
+          }
+
           return [...updated, ...templateEdges];
         });
 
@@ -1260,4 +1434,126 @@ function resolveNodeMetadata(
       : undefined;
 
   return { repoInfo, adoUrl };
+}
+
+/**
+ * Update a node with newly discovered variables from an expanded variable template.
+ * Re-resolves expression paths and repo aliases using the merged variable context.
+ */
+function updateNodeWithNewVariables(
+  node: Node,
+  newVariables: Record<string, string>,
+  org?: string,
+  project?: string,
+  defaultRepoName?: string,
+  repositories?: ResourceRepository[],
+): Node {
+  const d = node.data as unknown as Record<string, unknown>;
+  const existingVars = (d._accumulatedVariables ?? {}) as Record<
+    string,
+    string
+  >;
+  const mergedVars = { ...existingVars, ...newVariables };
+
+  const ref = d._ref as TemplateReference | undefined;
+  if (!ref) return node;
+
+  const paramContext = d._parentParamContext as
+    | Record<string, unknown>
+    | undefined;
+
+  // Re-resolve the template path with new variables
+  let newFilePath = ref.normalizedPath;
+  let isDynamic = false;
+  let isFullyResolved = true;
+  let resolvedRepoAlias = getEffectiveRepoAlias(ref);
+
+  if (pathHasExpressions(ref.normalizedPath)) {
+    isDynamic = true;
+    const resolution = resolveExpressionPath(
+      ref.normalizedPath,
+      paramContext,
+      undefined,
+      mergedVars,
+    );
+    newFilePath = resolution.resolvedPath;
+    isFullyResolved = resolution.isFullyResolved;
+
+    // After expression resolution, the path may contain @RepoAlias
+    // (e.g. "path/to/file.yml@VstsTemplates") — split it out
+    if (isFullyResolved && !pathHasExpressions(newFilePath)) {
+      const parsed = parseTemplatePath(newFilePath);
+      newFilePath = parsed.normalizedPath;
+      if (parsed.repoAlias) {
+        resolvedRepoAlias = parsed.repoAlias;
+      }
+    }
+  }
+
+  // Re-resolve repo alias expressions
+  if (resolvedRepoAlias && pathHasExpressions(resolvedRepoAlias)) {
+    isDynamic = true;
+    const aliasRes = resolveExpressionPath(
+      resolvedRepoAlias,
+      paramContext,
+      undefined,
+      mergedVars,
+    );
+    if (aliasRes.isFullyResolved) {
+      resolvedRepoAlias = aliasRes.resolvedPath;
+    } else {
+      isFullyResolved = false;
+    }
+  }
+
+  // Update the ref with the resolved repo alias for proper fetching
+  const updatedRef: TemplateReference = {
+    ...ref,
+    normalizedPath: newFilePath,
+    repoAlias: resolvedRepoAlias || ref.repoAlias,
+    contextRepoAlias: resolvedRepoAlias || ref.contextRepoAlias,
+  };
+
+  const { primary: resolvedPath, fallback: fallbackPath } =
+    resolveTemplateRefPaths({
+      ...updatedRef,
+      normalizedPath: newFilePath,
+      repoAlias: updatedRef.repoAlias,
+      sourcePath: ref.sourcePath,
+    });
+
+  const label =
+    newFilePath.length > 40 ? `...${newFilePath.slice(-37)}` : newFilePath;
+
+  // Resolve ADO URL and repo info for the updated path
+  const { repoInfo, adoUrl } =
+    org && project && defaultRepoName && repositories
+      ? resolveNodeMetadata(
+          updatedRef,
+          resolvedRepoAlias,
+          resolvedPath,
+          org,
+          project,
+          defaultRepoName,
+          repositories,
+        )
+      : { repoInfo: undefined, adoUrl: undefined };
+
+  return {
+    ...node,
+    data: {
+      ...node.data,
+      label,
+      filePath: resolvedPath,
+      repoAlias: resolvedRepoAlias,
+      baseDir: dirOf(resolvedPath),
+      dynamicPath: isDynamic || undefined,
+      expressionResolved: isDynamic ? isFullyResolved : undefined,
+      adoUrl: adoUrl || (node.data as unknown as FileNodeData).adoUrl,
+      repoInfo: repoInfo || (node.data as unknown as FileNodeData).repoInfo,
+      _ref: updatedRef,
+      _accumulatedVariables: mergedVars,
+      _fallbackPath: fallbackPath,
+    },
+  };
 }
