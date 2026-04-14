@@ -7,10 +7,7 @@ dist
 bun.lock
 apv.config.json
 .playwright-mcp/
-*.png
-*.jpeg
 .cache/
-plan.md
 
 # Standalone binary build artifacts
 apv
