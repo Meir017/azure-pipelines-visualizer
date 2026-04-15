@@ -17,51 +17,43 @@ export function closeModal(): void {
   }
 }
 
-const TREE_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M1 5.5C1 3.5 2.5 2 4 2h1l.5 1H4c-1 0-2 .8-2 2.5S3 8 4 8h1.5l-.5 1H4C2.5 9 1 7.5 1 5.5z"/><rect x="5.5" y="4.5" width="2" height="2" rx=".4"/><path d="M7.5 5.5H9.5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/><path d="M9.5 2.5V11.5" stroke="currentColor" stroke-width=".8"/><path d="M9.5 2.5H11M9.5 5.5H11M9.5 8.5H11M9.5 11.5H11" stroke="currentColor" stroke-width=".8"/><rect x="11" y="1.75" width="4" height="1.5" rx=".5"/><rect x="11" y="4.75" width="4" height="1.5" rx=".5"/><rect x="11" y="7.75" width="4" height="1.5" rx=".5"/><rect x="11" y="10.75" width="4" height="1.5" rx=".5"/></svg>`;
-
 export async function showDependencyModal(
   org: string,
   project: string,
   buildId: number,
 ): Promise<void> {
   closeModal();
-  // Wait for any closing animation
   await new Promise((r) => setTimeout(r, 50));
 
   const panel = document.createElement('div');
   panel.className = 'apv-panel';
   activePanel = panel;
 
-  // Header — ADO panel style with icon, title, close button
+  // Header — plain text title + close button (ADO panel pattern)
   const header = document.createElement('div');
   header.className = 'apv-panel__header';
   header.innerHTML = `
-    <div class="apv-panel__header-left">
-      <span class="apv-panel__icon">${TREE_ICON}</span>
-      <h2 class="apv-panel__title">Pipeline Dependencies</h2>
-    </div>
+    <h2 class="apv-panel__title">Pipeline Dependencies</h2>
     <button class="apv-panel__close" title="Close" aria-label="Close">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-        <path d="M8.06 7l4.72-4.72a.75.75 0 0 0-1.06-1.06L7 5.94 2.28 1.22a.75.75 0 0 0-1.06 1.06L5.94 7l-4.72 4.72a.75.75 0 1 0 1.06 1.06L7 8.06l4.72 4.72a.75.75 0 0 0 1.06-1.06L8.06 7z"/>
+      <svg viewBox="0 0 12 12" fill="currentColor">
+        <path d="M6.85 6l4.08-4.08a.6.6 0 0 0-.85-.85L6 5.15 1.92 1.07a.6.6 0 0 0-.85.85L5.15 6l-4.08 4.08a.6.6 0 0 0 .85.85L6 6.85l4.08 4.08a.6.6 0 0 0 .85-.85L6.85 6z"/>
       </svg>
     </button>
   `;
   panel.appendChild(header);
 
-  // Body with loading state
+  // Body
   const body = document.createElement('div');
   body.className = 'apv-panel__body';
   body.innerHTML = `
     <div class="apv-panel__loading">
       <div class="apv-spinner"></div>
-      <span>Loading pipeline dependencies…</span>
+      <span>Loading…</span>
     </div>
   `;
   panel.appendChild(body);
 
   document.body.appendChild(panel);
-
-  // Trigger slide-in animation
   requestAnimationFrame(() => panel.classList.add('apv-panel--open'));
 
   // Close handlers
@@ -88,26 +80,21 @@ export async function showDependencyModal(
     title.textContent = rootBuild.definition.name;
 
     const allBuilds: BuildInfo[] = [];
-    const treeContainer = document.createElement('div');
-    treeContainer.className = 'apv-panel__tree';
+    const listContainer = document.createElement('div');
 
-    // Progressive rendering — status bar
+    // Summary line + list
     body.innerHTML = '';
-    const statusBar = document.createElement('div');
-    statusBar.className = 'apv-panel__status-bar';
-    statusBar.innerHTML = `
-      <div class="apv-spinner apv-spinner--small"></div>
-      <span>Discovering triggered pipelines…</span>
-    `;
-    body.appendChild(statusBar);
-    body.appendChild(treeContainer);
+    const summary = document.createElement('div');
+    summary.className = 'apv-panel__summary';
+    summary.textContent = 'Discovering triggered pipelines…';
+    body.appendChild(summary);
+    body.appendChild(listContainer);
 
     await buildTriggerChain(
       org,
       project,
       rootBuild,
       (batch) => {
-        // batch may be empty (status update for a build that completed)
         for (const b of batch) {
           const existing = allBuilds.findIndex((x) => x.id === b.id);
           if (existing >= 0) {
@@ -116,46 +103,29 @@ export async function showDependencyModal(
             allBuilds.push(b);
           }
         }
-        renderTree(treeContainer, allBuilds);
+        renderTree(listContainer, allBuilds);
         const count = allBuilds.length;
         const inProgressCount = allBuilds.filter(
           (b) => b.status !== 'completed',
         ).length;
-        const spinner = statusBar.querySelector('.apv-spinner');
-        const span = statusBar.querySelector('span')!;
         if (inProgressCount > 0) {
-          if (!spinner) {
-            statusBar.insertAdjacentHTML(
-              'afterbegin',
-              '<div class="apv-spinner apv-spinner--small"></div>',
-            );
-          }
-          span.textContent = `${count} pipeline${count !== 1 ? 's' : ''} found, ${inProgressCount} still running…`;
+          summary.textContent = `${count} pipeline${count !== 1 ? 's' : ''} found, ${inProgressCount} still running…`;
         } else {
-          span.textContent = `${count} pipeline${count !== 1 ? 's' : ''} found…`;
+          summary.textContent = `${count} pipeline${count !== 1 ? 's' : ''} in dependency chain`;
         }
       },
       signal,
     );
 
-    // Done — replace spinner with summary pill
+    // Final summary
     const count = allBuilds.length;
-    statusBar.className = 'apv-panel__status-bar apv-panel__status-bar--done';
-    statusBar.innerHTML = `
-      <span class="apv-badge apv-badge--info">${count} pipeline${count !== 1 ? 's' : ''}</span>
-      <span>in dependency chain</span>
-    `;
+    summary.textContent = `${count} pipeline${count !== 1 ? 's' : ''} in dependency chain`;
   } catch (err) {
-    if (signal.aborted) return; // Panel was closed
+    if (signal.aborted) return;
     body.innerHTML = `
       <div class="apv-panel__error">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: var(--palette-error, #a4262c)">
-          <path d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm-.75 4.5h1.5v5h-1.5v-5zm.75 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
-        </svg>
-        <div>
-          <div class="apv-panel__error-title">Failed to load dependencies</div>
-          <div class="apv-panel__error-detail">${err instanceof Error ? err.message : String(err)}</div>
-        </div>
+        <div class="apv-panel__error-title">Failed to load dependencies</div>
+        <div class="apv-panel__error-detail">${err instanceof Error ? err.message : String(err)}</div>
       </div>
     `;
   }

@@ -1,29 +1,30 @@
 import type { BuildInfo } from './build-types.js';
 
-/** ADO-style status indicator: colored circle with optional icon */
+/** Small status icon matching ADO's build status circles. */
 function statusIndicator(status: string, result: string | null): string {
+  const cls = statusClass(status, result);
   if (status === 'inProgress')
-    return '<span class="apv-status apv-status--running" title="In progress"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="11 33" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 8 8" to="360 8 8" dur="1s" repeatCount="indefinite"/></svg></span>';
+    return `<span class="apv-row__status apv-row__status--running"><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="8 24" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 6 6" to="360 6 6" dur="1s" repeatCount="indefinite"/></circle></svg></span>`;
   if (status === 'notStarted')
-    return '<span class="apv-status apv-status--queued" title="Queued"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="2"/></svg></span>';
+    return `<span class="apv-row__status apv-row__status--queued"><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span>`;
   if (result === 'succeeded')
-    return '<span class="apv-status apv-status--succeeded" title="Succeeded"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="currentColor"/><path d="M6.5 10.5L4.5 8.5l-.7.7 2.7 2.7 5-5-.7-.7z" fill="#fff"/></svg></span>';
+    return `<span class="apv-row__status ${cls}"><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="5.5" fill="currentColor"/><path d="M4.8 7.8L3.3 6.3l-.5.5 2 2 3.7-3.7-.5-.5z" fill="#fff"/></svg></span>`;
   if (result === 'partiallySucceeded')
-    return '<span class="apv-status apv-status--partial" title="Partially succeeded"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="currentColor"/><path d="M7.25 4.5h1.5v4h-1.5zm0 5.5h1.5v1.5h-1.5z" fill="#fff"/></svg></span>';
+    return `<span class="apv-row__status ${cls}"><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="5.5" fill="currentColor"/><path d="M5.4 3.5h1.2v3h-1.2zm0 4h1.2v1.2H5.4z" fill="#fff"/></svg></span>`;
   if (result === 'failed')
-    return '<span class="apv-status apv-status--failed" title="Failed"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="currentColor"/><path d="M5.17 5.17l5.66 5.66m0-5.66L5.17 10.83" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg></span>';
+    return `<span class="apv-row__status ${cls}"><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="5.5" fill="currentColor"/><path d="M4 4l4 4M8 4l-4 4" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/></svg></span>`;
   if (result === 'canceled')
-    return '<span class="apv-status apv-status--canceled" title="Canceled"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="currentColor"/><rect x="5" y="6.5" width="6" height="3" rx="0.5" fill="#fff"/></svg></span>';
-  return '<span class="apv-status apv-status--unknown" title="Unknown"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="2"/></svg></span>';
+    return `<span class="apv-row__status ${cls}"><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="5.5" fill="currentColor"/><rect x="3.5" y="5" width="5" height="2" rx=".5" fill="#fff"/></svg></span>`;
+  return `<span class="apv-row__status apv-row__status--unknown"><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span>`;
 }
 
-function resultClass(status: string, result: string | null): string {
-  if (status === 'inProgress') return 'apv-node--running';
-  if (result === 'succeeded') return 'apv-node--succeeded';
-  if (result === 'partiallySucceeded') return 'apv-node--partial';
-  if (result === 'failed') return 'apv-node--failed';
-  if (result === 'canceled') return 'apv-node--canceled';
-  return '';
+function statusClass(status: string, result: string | null): string {
+  if (status === 'inProgress') return 'apv-row__status--running';
+  if (result === 'succeeded') return 'apv-row__status--succeeded';
+  if (result === 'partiallySucceeded') return 'apv-row__status--partial';
+  if (result === 'failed') return 'apv-row__status--failed';
+  if (result === 'canceled') return 'apv-row__status--canceled';
+  return 'apv-row__status--unknown';
 }
 
 function formatTime(iso: string | null): string {
@@ -34,7 +35,6 @@ function formatTime(iso: string | null): string {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit',
   });
 }
 
@@ -52,43 +52,42 @@ function formatDuration(start: string | null, end: string | null): string {
   return `${hrs}h ${remMins}m`;
 }
 
-function createBuildCard(build: BuildInfo): HTMLElement {
-  const card = document.createElement('div');
-  card.className = `apv-node ${resultClass(build.status, build.result)}`;
+function createRow(build: BuildInfo, depth: number): HTMLElement {
+  const row = document.createElement('div');
+  row.className = `apv-row${depth > 0 ? ` apv-row--depth-${Math.min(depth, 4)}` : ''}`;
 
   const link = build._links?.web?.href ?? '#';
   const duration = formatDuration(build.startTime, build.finishTime);
-  const branch = build.sourceBranch.replace('refs/heads/', '');
 
-  card.innerHTML = `
-    <div class="apv-node__header">
-      ${statusIndicator(build.status, build.result)}
-      <a class="apv-node__name" href="${link}" target="_blank" title="${build.definition.name}">${build.definition.name}</a>
-    </div>
-    <div class="apv-node__meta">
-      <span class="apv-node__number">${build.buildNumber}</span>
-      ${duration ? `<span class="apv-node__duration">${duration}</span>` : ''}
-    </div>
-    <div class="apv-node__details">
-      <span class="apv-node__time">${formatTime(build.startTime)}</span>
-      <span class="apv-node__branch" title="${build.sourceBranch}">${branch}</span>
+  let meta = `<span>${build.buildNumber}</span>`;
+  if (build.startTime) {
+    meta += `<span class="apv-row__meta-sep"></span><span>${formatTime(build.startTime)}</span>`;
+  }
+  if (duration) {
+    meta += `<span class="apv-row__meta-sep"></span><span>${duration}</span>`;
+  }
+
+  row.innerHTML = `
+    ${statusIndicator(build.status, build.result)}
+    <div class="apv-row__content">
+      <a class="apv-row__name" href="${link}" title="${build.definition.name}">${build.definition.name}</a>
+      <div class="apv-row__meta">${meta}</div>
     </div>
   `;
 
-  return card;
+  return row;
 }
 
-/** Render the trigger chain as a left-to-right tree. */
+/** Render the trigger chain as a flat indented list. */
 export function renderTree(container: HTMLElement, builds: BuildInfo[]): void {
   container.innerHTML = '';
 
   if (builds.length === 0) {
     container.innerHTML =
-      '<div class="apv-tree__empty">No triggered pipelines found.</div>';
+      '<div class="apv-list__empty">No triggered pipelines found.</div>';
     return;
   }
 
-  // Build adjacency: parent -> children
   const buildMap = new Map<number, BuildInfo>();
   for (const b of builds) buildMap.set(b.id, b);
 
@@ -109,33 +108,24 @@ export function renderTree(container: HTMLElement, builds: BuildInfo[]): void {
     (a.startTime ?? '').localeCompare(b.startTime ?? '');
   roots.sort(byTime);
 
-  const tree = document.createElement('div');
-  tree.className = 'apv-tree';
+  const list = document.createElement('div');
+  list.className = 'apv-list';
 
-  function buildSubtree(build: BuildInfo): HTMLElement {
-    const row = document.createElement('div');
-    row.className = 'apv-tree__row';
-
-    const card = createBuildCard(build);
-    row.appendChild(card);
+  function appendSubtree(build: BuildInfo, depth: number): void {
+    list.appendChild(createRow(build, depth));
 
     const kids = children.get(build.id);
     if (kids && kids.length > 0) {
       kids.sort(byTime);
-      const childrenContainer = document.createElement('div');
-      childrenContainer.className = 'apv-tree__children';
       for (const child of kids) {
-        childrenContainer.appendChild(buildSubtree(child));
+        appendSubtree(child, depth + 1);
       }
-      row.appendChild(childrenContainer);
     }
-
-    return row;
   }
 
   for (const root of roots) {
-    tree.appendChild(buildSubtree(root));
+    appendSubtree(root, 0);
   }
 
-  container.appendChild(tree);
+  container.appendChild(list);
 }

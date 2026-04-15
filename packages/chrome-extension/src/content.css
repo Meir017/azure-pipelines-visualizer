@@ -1,5 +1,6 @@
 /* ============================================================
    Azure Pipelines Dependency Viewer — Content Script Styles
+   Designed to be indistinguishable from native ADO UI.
    Uses ADO Bolt design-system CSS custom properties so colors
    automatically follow the user's light / dark theme.
    ============================================================ */
@@ -10,52 +11,57 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   margin-left: 4px;
-  padding: 2px;
-  border: 1px solid transparent;
-  border-radius: 3px;
+  padding: 0;
+  border: none;
+  border-radius: 2px;
   background: transparent;
   color: var(--text-secondary-color, #605e5c);
   cursor: pointer;
   vertical-align: middle;
-  transition: all 0.1s ease;
+  opacity: 0.6;
+  transition: opacity 0.1s ease;
 }
 
 .apv-deps-btn:hover {
-  color: var(--communication-foreground, #0078d4);
-  background: var(--palette-neutral-4, #edebe9);
-  border-color: var(--palette-neutral-8, #c8c6c4);
+  opacity: 1;
+  color: var(--text-primary-color, #323130);
 }
 
-.apv-deps-btn:active {
-  background: var(--palette-neutral-6, #e1dfdd);
+.apv-deps-btn:focus-visible {
+  outline: 1px solid var(--communication-foreground, #0078d4);
+  outline-offset: -1px;
+  opacity: 1;
 }
 
 .apv-deps-btn svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
-/* --- Right-side Panel (ADO pattern) --- */
+/* --- Right-side Panel --- */
 
 .apv-panel {
   position: fixed;
   top: 0;
   right: 0;
-  width: 520px;
+  width: 480px;
   max-width: 90vw;
   height: 100vh;
   z-index: 2000000;
   display: flex;
   flex-direction: column;
   background: var(--callout-background-color, var(--background-color, #ffffff));
-  box-shadow: var(--callout-shadow, -3px 0 15px rgba(0, 0, 0, 0.15));
+  box-shadow: var(
+    --callout-shadow,
+    0 6.4px 14.4px rgba(0, 0, 0, 0.13),
+    0 1.2px 3.6px rgba(0, 0, 0, 0.1)
+  );
   font-family:
-    "Segoe UI", "Segoe UI Web (West European)", -apple-system,
-    BlinkMacSystemFont, Roboto, "Helvetica Neue", Helvetica, Ubuntu, Arial,
-    sans-serif;
+    "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue",
+    Helvetica, Ubuntu, Arial, sans-serif;
   font-size: 14px;
   color: var(--text-primary-color, #323130);
   transform: translateX(100%);
@@ -71,37 +77,17 @@
   transition: transform 0.2s ease-in;
 }
 
-/* --- Panel Header (ADO panel header pattern) --- */
+/* --- Panel Header --- */
 
 .apv-panel__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 48px;
-  padding: 0 16px;
+  height: 48px;
+  padding: 0 16px 0 20px;
   border-bottom: 1px solid
-    var(--separator-color, var(--palette-neutral-8, #edebe9));
-  background: var(--callout-background-color, var(--background-color, #ffffff));
+    var(--separator-color, var(--palette-neutral-8, #eaeaea));
   flex-shrink: 0;
-}
-
-.apv-panel__header-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.apv-panel__icon {
-  display: flex;
-  align-items: center;
-  color: var(--communication-foreground, #0078d4);
-  flex-shrink: 0;
-}
-
-.apv-panel__icon svg {
-  width: 16px;
-  height: 16px;
 }
 
 .apv-panel__title {
@@ -118,61 +104,55 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border: none;
-  border-radius: 3px;
+  border-radius: 2px;
   background: transparent;
   color: var(--text-secondary-color, #605e5c);
   cursor: pointer;
   flex-shrink: 0;
-  transition: background-color 0.1s;
 }
 
 .apv-panel__close:hover {
-  background: var(--palette-neutral-4, #edebe9);
+  background: var(--palette-neutral-4, #f3f2f1);
   color: var(--text-primary-color, #323130);
 }
 
+.apv-panel__close:focus-visible {
+  outline: 1px solid var(--communication-foreground, #0078d4);
+  outline-offset: -1px;
+}
+
 .apv-panel__close svg {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
 }
 
 /* --- Panel Body --- */
 
 .apv-panel__body {
   flex: 1;
-  overflow: auto;
-  padding: 12px 16px 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 0;
 }
 
-/* --- Status Bar --- */
+/* --- Summary text (above list) --- */
 
-.apv-panel__status-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  margin-bottom: 12px;
-  border-radius: 3px;
-  background: var(--palette-neutral-2, #f3f2f1);
-  font-size: 13px;
+.apv-panel__summary {
+  padding: 0 20px 8px;
+  font-size: 12px;
   color: var(--text-secondary-color, #605e5c);
-}
-
-.apv-panel__status-bar--done {
-  background: var(--palette-neutral-2, #f3f2f1);
 }
 
 /* --- Loading State --- */
 
 .apv-panel__loading {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 16px;
-  padding: 48px 0;
+  gap: 8px;
+  padding: 16px 20px;
   font-size: 14px;
   color: var(--text-secondary-color, #605e5c);
 }
@@ -180,19 +160,9 @@
 /* --- Error State --- */
 
 .apv-panel__error {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 16px;
-  margin: 12px 0;
-  border-radius: 3px;
-  background: var(--status-error-background, rgba(164, 38, 44, 0.1));
-  border-left: 3px solid var(--palette-error, #a4262c);
-}
-
-.apv-panel__error svg {
-  flex-shrink: 0;
-  margin-top: 2px;
+  padding: 12px 20px;
+  font-size: 13px;
+  color: var(--text-secondary-color, #605e5c);
 }
 
 .apv-panel__error-title {
@@ -208,38 +178,17 @@
   word-break: break-word;
 }
 
-/* --- Badge (ADO pill style) --- */
-
-.apv-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 1px 8px;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 18px;
-}
-
-.apv-badge--info {
-  background: var(--communication-foreground, #0078d4);
-  color: var(--communication-foreground-text, #ffffff);
-}
-
-/* --- Spinner (ADO-style) --- */
+/* --- Spinner (matches ADO's inline spinner) --- */
 
 .apv-spinner {
-  width: 28px;
-  height: 28px;
-  border: 3px solid var(--palette-neutral-8, #edebe9);
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--palette-neutral-8, #c8c6c4);
   border-top-color: var(--communication-foreground, #0078d4);
   border-radius: 50%;
   animation: apv-spin 0.8s linear infinite;
-}
-
-.apv-spinner--small {
-  width: 16px;
-  height: 16px;
-  border-width: 2px;
+  flex-shrink: 0;
 }
 
 @keyframes apv-spin {
@@ -248,200 +197,123 @@
   }
 }
 
-/* --- Tree Layout (vertical, indented) --- */
+/* --- Pipeline List (flat rows, ADO sidebar pattern) --- */
 
-.apv-tree {
+.apv-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
 }
 
-.apv-tree__empty {
-  padding: 32px 16px;
+.apv-list__empty {
+  padding: 24px 20px;
   text-align: center;
   font-size: 14px;
   color: var(--text-secondary-color, #605e5c);
 }
 
-.apv-tree__row {
+/* --- Pipeline Row --- */
+
+.apv-row {
   display: flex;
-  flex-direction: column;
-}
-
-.apv-tree__children {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-left: 16px;
-  padding-left: 12px;
-  position: relative;
-}
-
-/* Vertical connector line */
-.apv-tree__children::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 12px;
-  width: 1px;
-  background: var(--palette-neutral-8, #c8c6c4);
-}
-
-/* Horizontal connector to each child node */
-.apv-tree__children > .apv-tree__row > .apv-node {
-  position: relative;
-}
-
-.apv-tree__children > .apv-tree__row > .apv-node::before {
-  content: "";
-  position: absolute;
-  left: -12px;
-  top: 16px;
-  width: 10px;
-  height: 1px;
-  background: var(--palette-neutral-8, #c8c6c4);
-}
-
-/* Arrow head on connector */
-.apv-tree__children > .apv-tree__row > .apv-node::after {
-  content: "";
-  position: absolute;
-  left: -4px;
-  top: 13px;
-  width: 0;
-  height: 0;
-  border-top: 3px solid transparent;
-  border-bottom: 3px solid transparent;
-  border-left: 4px solid var(--palette-neutral-8, #c8c6c4);
-}
-
-/* --- Build Node Card (ADO pipeline row style) --- */
-
-.apv-node {
-  padding: 8px 12px;
-  border-radius: 3px;
-  border: 1px solid var(--palette-neutral-8, #edebe9);
-  border-left: 3px solid var(--palette-neutral-8, #c8c6c4);
-  background: var(--callout-background-color, var(--background-color, #ffffff));
-  font-size: 12px;
-  line-height: 1.4;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 20px;
   cursor: default;
-  transition:
-    border-color 0.15s,
-    box-shadow 0.15s;
+  text-decoration: none;
+  color: inherit;
+  border-left: 2px solid transparent;
 }
 
-.apv-node:hover {
-  border-color: var(--palette-neutral-20, #a19f9d);
-  box-shadow:
-    0 1.6px 3.6px var(--card-shadow-color, rgba(0, 0, 0, 0.1)),
-    0 0.3px 0.9px var(--card-shadow-color, rgba(0, 0, 0, 0.08));
+.apv-row:hover {
+  background: var(--palette-neutral-2, var(--palette-neutral-4, #f3f2f1));
 }
 
-.apv-node--succeeded {
-  border-left-color: var(--palette-success, #107c10);
+.apv-row--depth-1 {
+  padding-left: 40px;
 }
-.apv-node--failed {
-  border-left-color: var(--palette-error, #a4262c);
+.apv-row--depth-2 {
+  padding-left: 60px;
 }
-.apv-node--running {
-  border-left-color: var(--communication-foreground, #0078d4);
+.apv-row--depth-3 {
+  padding-left: 80px;
 }
-.apv-node--partial {
-  border-left-color: var(--palette-warning, #ffaa44);
-}
-.apv-node--canceled {
-  border-left-color: var(--palette-neutral-60, #8a8886);
+.apv-row--depth-4 {
+  padding-left: 100px;
 }
 
-.apv-node__header {
+/* --- Status Icon (small circle, ADO build status pattern) --- */
+
+.apv-row__status {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.apv-row__status svg {
+  width: 12px;
+  height: 12px;
+}
+
+.apv-row__status--succeeded {
+  color: var(--palette-success, #107c10);
+}
+.apv-row__status--failed {
+  color: var(--palette-error, #a4262c);
+}
+.apv-row__status--running {
+  color: var(--communication-foreground, #0078d4);
+}
+.apv-row__status--partial {
+  color: var(--palette-warning, #ffaa44);
+}
+.apv-row__status--canceled {
+  color: var(--palette-neutral-60, #8a8886);
+}
+.apv-row__status--queued {
+  color: var(--palette-neutral-60, #8a8886);
+}
+.apv-row__status--unknown {
+  color: var(--palette-neutral-60, #8a8886);
+}
+
+/* --- Row Content --- */
+
+.apv-row__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.apv-row__name {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--communication-foreground, #0078d4);
+  text-decoration: none;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 20px;
+}
+
+.apv-row__name:hover {
+  text-decoration: underline;
+}
+
+.apv-row__name:focus-visible {
+  outline: 1px solid var(--communication-foreground, #0078d4);
+  outline-offset: 1px;
+}
+
+.apv-row__meta {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 4px;
-}
-
-.apv-node__name {
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--communication-foreground, #0078d4);
-  text-decoration: none;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.apv-node__name:hover {
-  text-decoration: underline;
-  color: var(--communication-foreground-hover, #106ebe);
-}
-
-.apv-node__meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 3px;
-}
-
-.apv-node__number {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-secondary-color, #605e5c);
+  line-height: 18px;
 }
 
-.apv-node__duration {
-  font-size: 11px;
-  color: var(--text-secondary-color, #605e5c);
-  padding: 0 4px;
-  border-radius: 2px;
-  background: var(--palette-neutral-4, #f3f2f1);
-}
-
-.apv-node__details {
-  display: flex;
-  gap: 8px;
-  font-size: 11px;
-  color: var(--text-secondary-color, #a19f9d);
-}
-
-.apv-node__branch {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 120px;
-}
-
-/* --- Status Indicator (ADO-style colored circles) --- */
-
-.apv-status {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.apv-status svg {
-  width: 14px;
-  height: 14px;
-}
-
-.apv-status--succeeded {
-  color: var(--palette-success, #107c10);
-}
-.apv-status--failed {
-  color: var(--palette-error, #a4262c);
-}
-.apv-status--running {
-  color: var(--communication-foreground, #0078d4);
-}
-.apv-status--partial {
-  color: var(--palette-warning, #ffaa44);
-}
-.apv-status--canceled {
-  color: var(--palette-neutral-60, #8a8886);
-}
-.apv-status--queued {
-  color: var(--palette-neutral-60, #8a8886);
-}
-.apv-status--unknown {
-  color: var(--palette-neutral-60, #8a8886);
+.apv-row__meta-sep::before {
+  content: "\00b7";
 }

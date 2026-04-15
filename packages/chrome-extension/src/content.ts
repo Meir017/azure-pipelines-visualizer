@@ -59,8 +59,8 @@ function injectButtons(container: Element): void {
     const btn = document.createElement('button');
     btn.className = 'apv-deps-btn';
     btn.title = 'View pipeline dependencies';
-    // Azure Pipelines rocket + dependency tree icon
-    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M1 5.5C1 3.5 2.5 2 4 2h1l.5 1H4c-1 0-2 .8-2 2.5S3 8 4 8h1.5l-.5 1H4C2.5 9 1 7.5 1 5.5z"/><rect x="5.5" y="4.5" width="2" height="2" rx=".4"/><path d="M7.5 5.5H9.5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/><path d="M9.5 2.5V5.5V8.5V11.5" stroke="currentColor" stroke-width=".8"/><path d="M9.5 2.5H11M9.5 5.5H11M9.5 8.5H11M9.5 11.5H11" stroke="currentColor" stroke-width=".8"/><rect x="11" y="1.75" width="4" height="1.5" rx=".5"/><rect x="11" y="4.75" width="4" height="1.5" rx=".5"/><rect x="11" y="7.75" width="4" height="1.5" rx=".5"/><rect x="11" y="10.75" width="4" height="1.5" rx=".5"/></svg>`;
+    // Simple hierarchy/tree icon — neutral ADO-style
+    btn.innerHTML = `<svg viewBox="0 0 14 14" fill="currentColor"><path d="M2 2.5a1 1 0 1 1 2 0 1 1 0 0 1-2 0zm3 .25h4.5a.5.5 0 0 1 0 1H5v-.5a.5.5 0 0 1 0-.5zM2 7a1 1 0 1 1 2 0 1 1 0 0 1-2 0zm3 .25h4.5a.5.5 0 0 1 0 1H5V7.5a.5.5 0 0 1 0-.25zM2 11.5a1 1 0 1 1 2 0 1 1 0 0 1-2 0zm3 .25h4.5a.5.5 0 0 1 0 1H5v-.5a.5.5 0 0 1 0-.5z"/></svg>`;
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       e.preventDefault();
