@@ -1,323 +1,131 @@
 /* ============================================================
    Azure Pipelines Dependency Viewer — Content Script Styles
-   Designed to be indistinguishable from native ADO UI.
-   Uses ADO Bolt design-system CSS custom properties so colors
-   automatically follow the user's light / dark theme.
+   Injects into ADO's existing Pipelines sidebar.
+   Uses ADO's own CSS custom properties for seamless theming.
    ============================================================ */
 
-/* --- Dependency Button (injected into sidebar rows) --- */
+/* --- "Show triggered pipelines" toggle — looks like ADO secondary link --- */
 
-.apv-deps-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  margin-left: 4px;
+.apv-deps-toggle {
+  display: inline-block;
+  margin-top: 4px;
   padding: 0;
   border: none;
-  border-radius: 2px;
-  background: transparent;
-  color: var(--text-secondary-color, #605e5c);
-  cursor: pointer;
-  vertical-align: middle;
-  opacity: 0.6;
-  transition: opacity 0.1s ease;
-}
-
-.apv-deps-btn:hover {
-  opacity: 1;
-  color: var(--text-primary-color, #323130);
-}
-
-.apv-deps-btn:focus-visible {
-  outline: 1px solid var(--communication-foreground, #0078d4);
-  outline-offset: -1px;
-  opacity: 1;
-}
-
-.apv-deps-btn svg {
-  width: 14px;
-  height: 14px;
-}
-
-/* --- Right-side Panel --- */
-
-.apv-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 480px;
-  max-width: 90vw;
-  height: 100vh;
-  z-index: 2000000;
-  display: flex;
-  flex-direction: column;
-  background: var(--callout-background-color, var(--background-color, #ffffff));
-  box-shadow: var(
-    --callout-shadow,
-    0 6.4px 14.4px rgba(0, 0, 0, 0.13),
-    0 1.2px 3.6px rgba(0, 0, 0, 0.1)
-  );
-  font-family:
-    "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue",
-    Helvetica, Ubuntu, Arial, sans-serif;
-  font-size: 14px;
-  color: var(--text-primary-color, #323130);
-  transform: translateX(100%);
-  transition: transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
-}
-
-.apv-panel--open {
-  transform: translateX(0);
-}
-
-.apv-panel--closing {
-  transform: translateX(100%);
-  transition: transform 0.2s ease-in;
-}
-
-/* --- Panel Header --- */
-
-.apv-panel__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 48px;
-  padding: 0 16px 0 20px;
-  border-bottom: 1px solid
-    var(--separator-color, var(--palette-neutral-8, #eaeaea));
-  flex-shrink: 0;
-}
-
-.apv-panel__title {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary-color, #323130);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.apv-panel__close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: none;
-  border-radius: 2px;
-  background: transparent;
-  color: var(--text-secondary-color, #605e5c);
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.apv-panel__close:hover {
-  background: var(--palette-neutral-4, #f3f2f1);
-  color: var(--text-primary-color, #323130);
-}
-
-.apv-panel__close:focus-visible {
-  outline: 1px solid var(--communication-foreground, #0078d4);
-  outline-offset: -1px;
-}
-
-.apv-panel__close svg {
-  width: 12px;
-  height: 12px;
-}
-
-/* --- Panel Body --- */
-
-.apv-panel__body {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 12px 0;
-}
-
-/* --- Summary text (above list) --- */
-
-.apv-panel__summary {
-  padding: 0 20px 8px;
+  background: none;
+  font-family: inherit;
   font-size: 12px;
-  color: var(--text-secondary-color, #605e5c);
+  color: var(--communication-foreground, rgba(0, 120, 212, 1));
+  cursor: pointer;
+  text-decoration: none;
 }
 
-/* --- Loading State --- */
-
-.apv-panel__loading {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 16px 20px;
-  font-size: 14px;
-  color: var(--text-secondary-color, #605e5c);
+.apv-deps-toggle:hover {
+  text-decoration: underline;
 }
 
-/* --- Error State --- */
-
-.apv-panel__error {
-  padding: 12px 20px;
-  font-size: 13px;
-  color: var(--text-secondary-color, #605e5c);
+.apv-deps-toggle:focus-visible {
+  outline: 1px solid var(--communication-foreground, rgba(0, 120, 212, 1));
+  outline-offset: 1px;
 }
 
-.apv-panel__error-title {
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--palette-error, #a4262c);
-  margin-bottom: 4px;
+/* --- Container for triggered pipeline list --- */
+
+.apv-deps-container {
+  margin-top: 6px;
+  border-top: 1px solid
+    var(--separator-color, var(--palette-neutral-8, rgba(234, 234, 234, 1)));
+  padding-top: 4px;
 }
 
-.apv-panel__error-detail {
-  font-size: 13px;
-  color: var(--text-secondary-color, #605e5c);
-  word-break: break-word;
+/* --- Loading / empty / error states --- */
+
+.apv-deps-loading,
+.apv-deps-empty {
+  font-size: 12px;
+  color: var(--text-secondary-color, rgba(96, 94, 92, 1));
+  padding: 4px 0;
 }
 
-/* --- Spinner (matches ADO's inline spinner) --- */
-
-.apv-spinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--palette-neutral-8, #c8c6c4);
-  border-top-color: var(--communication-foreground, #0078d4);
-  border-radius: 50%;
-  animation: apv-spin 0.8s linear infinite;
-  flex-shrink: 0;
+.apv-deps-error {
+  font-size: 12px;
+  color: var(--component-status-error, rgba(205, 74, 69, 1));
+  padding: 4px 0;
 }
 
-@keyframes apv-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
+/* --- Triggered pipeline row --- */
 
-/* --- Pipeline List (flat rows, ADO sidebar pattern) --- */
-
-.apv-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.apv-list__empty {
-  padding: 24px 20px;
-  text-align: center;
-  font-size: 14px;
-  color: var(--text-secondary-color, #605e5c);
-}
-
-/* --- Pipeline Row --- */
-
-.apv-row {
+.apv-dep {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  padding: 6px 20px;
-  cursor: default;
-  text-decoration: none;
-  color: inherit;
-  border-left: 2px solid transparent;
+  gap: 6px;
+  padding: 4px 0;
 }
 
-.apv-row:hover {
-  background: var(--palette-neutral-2, var(--palette-neutral-4, #f3f2f1));
-}
-
-.apv-row--depth-1 {
-  padding-left: 40px;
-}
-.apv-row--depth-2 {
-  padding-left: 60px;
-}
-.apv-row--depth-3 {
-  padding-left: 80px;
-}
-.apv-row--depth-4 {
-  padding-left: 100px;
-}
-
-/* --- Status Icon (small circle, ADO build status pattern) --- */
-
-.apv-row__status {
-  display: flex;
-  align-items: center;
+.apv-dep > svg {
   flex-shrink: 0;
-  margin-top: 3px;
-}
-
-.apv-row__status svg {
-  width: 16px;
-  height: 16px;
+  margin-top: 2px;
   fill: currentColor;
 }
 
-.apv-row__status--succeeded {
-  color: var(--component-status-success, rgba(85, 163, 98, 1));
-}
-.apv-row__status--failed {
-  color: var(--component-status-error, rgba(205, 74, 69, 1));
-}
-.apv-row__status--running {
-  color: var(--component-status-info, rgba(0, 120, 212, 1));
-}
-.apv-row__status--running svg {
-  animation: apv-spin 8s linear infinite;
-}
-.apv-row__status--partial {
-  color: var(--component-status-warning, rgba(214, 127, 60, 1));
-}
-.apv-row__status--canceled {
-  color: var(--component-status-neutral, rgba(102, 102, 102, 1));
-}
-.apv-row__status--queued {
-  color: var(--component-status-neutral, rgba(102, 102, 102, 1));
-}
-.apv-row__status--unknown {
-  color: var(--component-status-neutral, rgba(102, 102, 102, 1));
-}
-
-/* --- Row Content --- */
-
-.apv-row__content {
+.apv-dep__content {
   flex: 1;
   min-width: 0;
 }
 
-.apv-row__name {
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--communication-foreground, #0078d4);
-  text-decoration: none;
+.apv-dep__name {
   display: block;
+  font-size: 12px;
+  color: var(--communication-foreground, rgba(0, 120, 212, 1));
+  text-decoration: none;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  line-height: 20px;
-}
-
-.apv-row__name:hover {
-  text-decoration: underline;
-}
-
-.apv-row__name:focus-visible {
-  outline: 1px solid var(--communication-foreground, #0078d4);
-  outline-offset: 1px;
-}
-
-.apv-row__meta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--text-secondary-color, #605e5c);
   line-height: 18px;
 }
 
-.apv-row__meta-sep::before {
-  content: "\00b7";
+.apv-dep__name:hover {
+  text-decoration: underline;
+}
+
+.apv-dep__meta {
+  display: block;
+  font-size: 11px;
+  color: var(--text-secondary-color, rgba(96, 94, 92, 1));
+  line-height: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- Status icon colors (exact ADO bolt-status tokens) --- */
+
+.apv-icon--succeeded {
+  color: var(--component-status-success, rgba(85, 163, 98, 1));
+}
+
+.apv-icon--failed {
+  color: var(--component-status-error, rgba(205, 74, 69, 1));
+}
+
+.apv-icon--running {
+  color: var(--component-status-info, rgba(0, 120, 212, 1));
+  animation: apv-spin 8s linear infinite;
+}
+
+.apv-icon--partial {
+  color: var(--component-status-warning, rgba(214, 127, 60, 1));
+}
+
+.apv-icon--canceled {
+  color: var(--component-status-neutral, rgba(102, 102, 102, 1));
+}
+
+.apv-icon--queued {
+  color: var(--component-status-neutral, rgba(102, 102, 102, 1));
+}
+
+@keyframes apv-spin {
+  100% {
+    transform: rotate(360deg);
+  }
 }

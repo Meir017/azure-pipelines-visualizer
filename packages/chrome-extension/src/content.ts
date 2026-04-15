@@ -1,97 +1,193 @@
-import { showDependencyModal } from './modal.js';
+import { buildTriggerChain } from './ado-api.js';
+import type { BuildInfo } from './build-types.js';
+import { renderDeps } from './tree-renderer.js';
 
-const BUTTON_MARKER = 'data-apv-injected';
+const MARKER = 'data-apv-injected';
+
+/** Per-buildId cache: avoids re-fetching when ADO rerenders sidebar rows. */
+const cache = new Map<
+  number,
+  { builds: BuildInfo[]; expanded: boolean; abort?: AbortController }
+>();
 
 /** Extract org and project from the current ADO URL. */
 function parseAdoContext(): { org: string; project: string } | null {
-  const match = window.location.href.match(
-    /https:\/\/dev\.azure\.com\/([^/]+)\/([^/]+)/,
-  );
-  if (match) return { org: match[1], project: match[2] };
-
-  // visualstudio.com format: https://org.visualstudio.com/project/...
-  const vsMatch = window.location.href.match(
-    /https:\/\/([^.]+)\.visualstudio\.com\/([^/]+)/,
-  );
-  if (vsMatch) return { org: vsMatch[1], project: vsMatch[2] };
-
-  return null;
+  const m =
+    window.location.href.match(/https:\/\/dev\.azure\.com\/([^/]+)\/([^/]+)/) ??
+    window.location.href.match(/https:\/\/([^.]+)\.visualstudio\.com\/([^/]+)/);
+  return m ? { org: m[1], project: m[2] } : null;
 }
 
-/** Extract build ID from an ADO build link href. */
 function extractBuildId(href: string): number | null {
-  // Pattern: _build/results?buildId=12345
-  const match = href.match(/buildId=(\d+)/);
-  return match ? Number(match[1]) : null;
+  const m = href.match(/buildId=(\d+)/);
+  return m ? Number(m[1]) : null;
 }
 
-/**
- * Find pipeline rows in the build status sidebar and inject dependency buttons.
- * ADO's sidebar uses different DOM structures; we look for build links.
- */
-function injectButtons(container: Element): void {
-  // Don't inject into our own panel
-  if (container.closest('.apv-panel')) return;
+// ── Expand / collapse triggered pipelines inside a sidebar row ──────
 
-  // Find all links to build results that we haven't already processed
-  const buildLinks = container.querySelectorAll<HTMLAnchorElement>(
-    'a[href*="_build/results"]',
-  );
+async function toggleExpand(
+  buildId: number,
+  rootBuild: BuildInfo,
+  container: HTMLElement,
+  org: string,
+  project: string,
+): Promise<void> {
+  let entry = cache.get(buildId);
 
-  for (const link of buildLinks) {
-    // Find the row/container for this build link
-    const row =
-      link.closest('.ci-status-item') ??
-      link.closest('.repos-ci-status-item') ??
-      link.closest('[role="listitem"]') ??
-      link.closest('[class*="status-item"]') ??
-      link.parentElement;
+  // Collapse
+  if (entry?.expanded) {
+    entry.expanded = false;
+    entry.abort?.abort();
+    container.innerHTML = '';
+    container.style.display = 'none';
+    return;
+  }
 
-    if (!row || row.hasAttribute(BUTTON_MARKER)) continue;
-    row.setAttribute(BUTTON_MARKER, 'true');
+  // Expand
+  if (!entry) {
+    entry = { builds: [], expanded: true };
+    cache.set(buildId, entry);
+  }
+  entry.expanded = true;
+  container.style.display = '';
+
+  // Already cached?
+  if (entry.builds.length > 0) {
+    renderDeps(container, entry.builds, buildId);
+    return;
+  }
+
+  // Loading state
+  const loading = document.createElement('div');
+  loading.className = 'apv-deps-loading';
+  loading.textContent = 'Loading triggered pipelines\u2026';
+  container.appendChild(loading);
+
+  const abort = new AbortController();
+  entry.abort = abort;
+
+  try {
+    await buildTriggerChain(
+      org,
+      project,
+      rootBuild,
+      (batch) => {
+        for (const b of batch) {
+          const idx = entry!.builds.findIndex((x) => x.id === b.id);
+          if (idx >= 0) entry!.builds[idx] = b;
+          else entry!.builds.push(b);
+        }
+        if (entry!.expanded) {
+          renderDeps(container, entry!.builds, buildId);
+        }
+      },
+      abort.signal,
+    );
+  } catch (err) {
+    if (abort.signal.aborted) return;
+    container.innerHTML = '';
+    const errEl = document.createElement('div');
+    errEl.className = 'apv-deps-error';
+    errEl.textContent = err instanceof Error ? err.message : 'Failed to load';
+    container.appendChild(errEl);
+  }
+}
+
+// ── Inject into the Pipelines sidebar ───────────────────────────────
+
+function injectIntoSidebar(dialog: Element): void {
+  const ctx = parseAdoContext();
+  if (!ctx) return;
+
+  const rows = dialog.querySelectorAll('.repos-pipeline-status-item');
+
+  for (const row of rows) {
+    if (row.hasAttribute(MARKER)) continue;
+    row.setAttribute(MARKER, 'true');
+
+    const link = row.querySelector<HTMLAnchorElement>(
+      'a[href*="_build/results"]',
+    );
+    if (!link) continue;
 
     const buildId = extractBuildId(link.href);
     if (!buildId) continue;
 
-    const ctx = parseAdoContext();
-    if (!ctx) continue;
+    // Find the flex-column container that holds the link + secondary text
+    const col =
+      row.querySelector<HTMLElement>('.flex-column') ?? link.parentElement;
+    if (!col) continue;
 
-    const btn = document.createElement('button');
-    btn.className = 'apv-deps-btn';
-    btn.title = 'View pipeline dependencies';
-    // Simple hierarchy/tree icon — neutral ADO-style
-    btn.innerHTML = `<svg viewBox="0 0 14 14" fill="currentColor"><path d="M2 2.5a1 1 0 1 1 2 0 1 1 0 0 1-2 0zm3 .25h4.5a.5.5 0 0 1 0 1H5v-.5a.5.5 0 0 1 0-.5zM2 7a1 1 0 1 1 2 0 1 1 0 0 1-2 0zm3 .25h4.5a.5.5 0 0 1 0 1H5V7.5a.5.5 0 0 1 0-.25zM2 11.5a1 1 0 1 1 2 0 1 1 0 0 1-2 0zm3 .25h4.5a.5.5 0 0 1 0 1H5v-.5a.5.5 0 0 1 0-.5z"/></svg>`;
-    btn.addEventListener('click', (e) => {
+    // "Show dependencies" toggle link — looks like secondary text
+    const toggle = document.createElement('button');
+    toggle.className = 'apv-deps-toggle';
+    toggle.textContent = 'Show triggered pipelines';
+
+    // Container for the dependency tree (hidden initially)
+    const depsContainer = document.createElement('div');
+    depsContainer.className = 'apv-deps-container';
+    depsContainer.style.display = 'none';
+
+    toggle.addEventListener('click', async (e) => {
       e.stopPropagation();
       e.preventDefault();
-      showDependencyModal(ctx.org, ctx.project, buildId);
+      const entry = cache.get(buildId);
+      const isExpanded = entry?.expanded ?? false;
+      toggle.textContent = isExpanded
+        ? 'Show triggered pipelines'
+        : 'Hide triggered pipelines';
+
+      // We need the root build info — fetch it
+      const { fetchBuild } = await import('./ado-api.js');
+      const rootBuild = await fetchBuild(ctx.org, ctx.project, buildId);
+      await toggleExpand(
+        buildId,
+        rootBuild,
+        depsContainer,
+        ctx.org,
+        ctx.project,
+      );
+
+      // Update toggle text based on final state
+      const finalEntry = cache.get(buildId);
+      toggle.textContent = finalEntry?.expanded
+        ? 'Hide triggered pipelines'
+        : 'Show triggered pipelines';
     });
 
-    // Insert button after the link or at the end of the row
-    const insertTarget = link.parentElement ?? row;
-    insertTarget.appendChild(btn);
+    col.appendChild(toggle);
+    col.appendChild(depsContainer);
   }
 }
 
-/** Observe the DOM for build status sidebar appearing. */
+// ── Observer ────────────────────────────────────────────────────────
+
 function startObserver(): void {
-  // Initial scan in case the sidebar is already open
-  injectButtons(document.body);
+  // Scan for any already-open sidebar
+  const existing = document.querySelector('[role="dialog"]');
+  if (existing) injectIntoSidebar(existing);
 
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
-      // Skip mutations inside our own panel
-      if ((mutation.target as Element).closest?.('.apv-panel')) continue;
+      if ((mutation.target as Element).closest?.('.apv-deps-container'))
+        continue;
       for (const node of mutation.addedNodes) {
-        if (node instanceof HTMLElement) {
-          // Check if this is or contains build links
-          if (
-            node.querySelector?.('a[href*="_build/results"]') ||
-            (node instanceof HTMLAnchorElement &&
-              node.href?.includes('_build/results'))
-          ) {
-            injectButtons(node.parentElement ?? node);
-          }
+        if (!(node instanceof HTMLElement)) continue;
+        // Sidebar dialog appeared or content was added to it
+        const dialog = node.matches?.('[role="dialog"]')
+          ? node
+          : node.querySelector?.('[role="dialog"]');
+        if (dialog) {
+          injectIntoSidebar(dialog);
+          continue;
+        }
+        // Content added inside an existing dialog (ADO lazy-loads rows)
+        const parentDialog = node.closest?.('[role="dialog"]');
+        if (
+          parentDialog &&
+          node.querySelector?.('.repos-pipeline-status-item')
+        ) {
+          injectIntoSidebar(parentDialog);
         }
       }
     }
@@ -100,7 +196,6 @@ function startObserver(): void {
   observer.observe(document.body, { childList: true, subtree: true });
 }
 
-// Initialize when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', startObserver);
 } else {
