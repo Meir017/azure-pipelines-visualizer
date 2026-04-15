@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import {
   buildAdoFileUrl,
+  parseAdoCommitUrl,
   parseAdoUrl,
 } from '../../src/parser/ado-url-parser.js';
 
@@ -237,5 +238,62 @@ describe('buildAdoFileUrl', () => {
       filePath: '/ci.yml',
     });
     expect(url).not.toContain('version=');
+  });
+});
+
+describe('parseAdoCommitUrl', () => {
+  test('parses standard ADO commit URL', () => {
+    const result = parseAdoCommitUrl(
+      'https://dev.azure.com/microsoft/DefenderCommon/_git/Infra.K8s.Clusters/commit/28f1384e1d320f2c0b8d0a8cf52eabc398a39960',
+    );
+    expect(result).not.toBeNull();
+    expect(result!.org).toBe('microsoft');
+    expect(result!.project).toBe('DefenderCommon');
+    expect(result!.repoName).toBe('Infra.K8s.Clusters');
+    expect(result!.commitSha).toBe('28f1384e1d320f2c0b8d0a8cf52eabc398a39960');
+  });
+
+  test('parses short commit SHA', () => {
+    const result = parseAdoCommitUrl(
+      'https://dev.azure.com/org/proj/_git/repo/commit/abc1234',
+    );
+    expect(result).not.toBeNull();
+    expect(result!.commitSha).toBe('abc1234');
+  });
+
+  test('returns null for non-ADO URL', () => {
+    expect(
+      parseAdoCommitUrl('https://github.com/org/repo/commit/abc1234'),
+    ).toBeNull();
+  });
+
+  test('returns null for file URL (no commit segment)', () => {
+    expect(
+      parseAdoCommitUrl(
+        'https://dev.azure.com/org/proj/_git/repo?path=/file.yml',
+      ),
+    ).toBeNull();
+  });
+
+  test('returns null for invalid commit SHA', () => {
+    expect(
+      parseAdoCommitUrl(
+        'https://dev.azure.com/org/proj/_git/repo/commit/not-a-sha!',
+      ),
+    ).toBeNull();
+  });
+
+  test('returns null for malformed URL', () => {
+    expect(parseAdoCommitUrl('not a url')).toBeNull();
+  });
+
+  test('handles URL-encoded segments', () => {
+    const result = parseAdoCommitUrl(
+      'https://dev.azure.com/my%20org/my%20project/_git/my%20repo/commit/abcdef1234567890abcdef1234567890abcdef12',
+    );
+    expect(result).not.toBeNull();
+    expect(result!.org).toBe('my org');
+    expect(result!.project).toBe('my project');
+    expect(result!.repoName).toBe('my repo');
   });
 });

@@ -11,6 +11,38 @@ const repoCache = new MemoryTTLCache<RepositoryInfo>(600);
 // Branch→commit resolution — cache for 2 minutes (balances freshness vs speed).
 const commitShaCache = new MemoryTTLCache<string>(120);
 
+export interface BuildDefinitionRef {
+  id: number;
+  name: string;
+}
+
+export interface BuildInfo {
+  id: number;
+  buildNumber: string;
+  definition: BuildDefinitionRef;
+  status: string;
+  result: string | null;
+  reason: string;
+  startTime: string | null;
+  finishTime: string | null;
+  queueTime: string;
+  sourceBranch: string;
+  sourceVersion: string;
+  project: { id: string; name: string };
+  requestedFor: { displayName: string; uniqueName: string } | null;
+  triggerInfo: Record<string, string>;
+  triggeredByBuild: {
+    id: number;
+    buildNumber: string;
+    definition: BuildDefinitionRef;
+  } | null;
+  /** Normalized upstream build ID: from triggeredByBuild.id or triggerInfo.pipelineId */
+  upstreamBuildId: number | null;
+  tags: string[];
+  url: string;
+  _links: { web: { href: string } } | null;
+}
+
 export interface PipelineInfo {
   id: number;
   name: string;
@@ -44,19 +76,28 @@ interface VersionDescriptor {
 
 const COMMIT_SHA_RE = /^[0-9a-f]{7,40}$/i;
 
-async function adoFetch(url: string): Promise<Response> {
+async function adoFetch(url: string, retries = 2): Promise<Response> {
   const token = await getAzureDevOpsToken();
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Azure DevOps API error (${response.status}): ${text}`);
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    if (response.status === 429 || response.status >= 500) {
+      if (attempt < retries) {
+        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+        continue;
+      }
+    }
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Azure DevOps API error (${response.status}): ${text}`);
+    }
+    return response;
   }
-  return response;
+  throw new Error('Azure DevOps API: max retries exceeded');
 }
 
 function baseUrl(org: string, project: string): string {
@@ -200,6 +241,224 @@ export async function getFileContent(
   }
   const resp = await adoFetch(url);
   return resp.text();
+}
+
+function toBuildInfo(data: Record<string, unknown>): BuildInfo {
+  const def = data.definition as Record<string, unknown> | undefined;
+  const reqFor = data.requestedFor as Record<string, unknown> | undefined;
+  const triggered = data.triggeredByBuild as
+    | Record<string, unknown>
+    | undefined;
+  const triggeredDef = triggered?.definition as
+    | Record<string, unknown>
+    | undefined;
+  const links = data._links as Record<string, unknown> | undefined;
+  const web = links?.web as Record<string, unknown> | undefined;
+  const proj = data.project as Record<string, unknown> | undefined;
+  const triggerInfo = (data.triggerInfo as Record<string, string>) ?? {};
+
+  const triggeredById = triggered ? (triggered.id as number) : null;
+  const pipelineIdStr = triggerInfo.pipelineId;
+  const upstreamBuildId =
+    triggeredById ?? (pipelineIdStr ? Number(pipelineIdStr) : null);
+
+  return {
+    id: data.id as number,
+    buildNumber: data.buildNumber as string,
+    definition: {
+      id: (def?.id as number) ?? 0,
+      name: (def?.name as string) ?? '',
+    },
+    status: data.status as string,
+    result: (data.result as string) ?? null,
+    reason: (data.reason as string) ?? '',
+    startTime: (data.startTime as string) ?? null,
+    finishTime: (data.finishTime as string) ?? null,
+    queueTime: data.queueTime as string,
+    sourceBranch: data.sourceBranch as string,
+    sourceVersion: data.sourceVersion as string,
+    project: {
+      id: (proj?.id as string) ?? '',
+      name: (proj?.name as string) ?? '',
+    },
+    requestedFor: reqFor
+      ? {
+          displayName: reqFor.displayName as string,
+          uniqueName: reqFor.uniqueName as string,
+        }
+      : null,
+    triggerInfo,
+    triggeredByBuild: triggered
+      ? {
+          id: triggered.id as number,
+          buildNumber: triggered.buildNumber as string,
+          definition: {
+            id: (triggeredDef?.id as number) ?? 0,
+            name: (triggeredDef?.name as string) ?? '',
+          },
+        }
+      : null,
+    upstreamBuildId,
+    tags: (data.tags as string[]) ?? [],
+    url: data.url as string,
+    _links: web ? { web: { href: web.href as string } } : null,
+  };
+}
+
+export async function listBuildsForCommit(
+  org: string,
+  project: string,
+  repositoryId: string,
+  commitSha: string,
+): Promise<BuildInfo[]> {
+  // ADO API does NOT support sourceVersion as a query filter —
+  // we must fetch builds for the repo and filter client-side.
+  const params = new URLSearchParams({
+    'api-version': API_VERSION,
+    repositoryId,
+    repositoryType: 'TfsGit',
+    queryOrder: 'queueTimeDescending',
+    $top: '500',
+  });
+
+  const url = `${baseUrl(org, project)}/build/builds?${params}`;
+  const resp = await adoFetch(url);
+  const data = await resp.json();
+  const all = ((data.value ?? []) as Record<string, unknown>[]).map(
+    toBuildInfo,
+  );
+  return all.filter((b) => b.sourceVersion === commitSha);
+}
+
+/** Find builds triggered (directly or via pipeline completion) by a specific build. */
+export async function listBuildsTriggeredBy(
+  org: string,
+  project: string,
+  parentBuildId: number,
+  parentFinishTime: string | null,
+  parentQueueTime: string,
+): Promise<BuildInfo[]> {
+  // Use finishTime if available, otherwise fall back to queueTime
+  const refTime = parentFinishTime ?? parentQueueTime;
+  const refMs = new Date(refTime).getTime();
+  const results: BuildInfo[] = [];
+
+  // Query for buildCompletion and resourceTrigger reasons separately
+  for (const reason of ['buildCompletion', 'resourceTrigger']) {
+    const params = new URLSearchParams({
+      'api-version': API_VERSION,
+      reasonFilter: reason,
+      queryOrder: 'queueTimeAscending',
+      $top: '200',
+      // Triggered builds usually queue within minutes of the parent finishing
+      minTime: new Date(refMs - 10 * 60 * 1000).toISOString(),
+      maxTime: new Date(refMs + 60 * 60 * 1000).toISOString(),
+    });
+
+    const url = `${baseUrl(org, project)}/build/builds?${params}`;
+    const resp = await adoFetch(url);
+    const data = await resp.json();
+    const builds = ((data.value ?? []) as Record<string, unknown>[]).map(
+      toBuildInfo,
+    );
+    // Filter to builds whose upstream is the parent
+    for (const b of builds) {
+      if (b.upstreamBuildId === parentBuildId) {
+        results.push(b);
+      }
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Build the full commit flow graph: root builds + recursively triggered builds.
+ * Yields builds progressively as they are discovered (BFS).
+ */
+export async function* streamCommitFlowGraph(
+  org: string,
+  project: string,
+  repositoryId: string,
+  commitSha: string,
+): AsyncGenerator<BuildInfo[]> {
+  const rootBuilds = await listBuildsForCommit(
+    org,
+    project,
+    repositoryId,
+    commitSha,
+  );
+  const visited = new Map<number, BuildInfo>();
+  for (const b of rootBuilds) visited.set(b.id, b);
+
+  if (rootBuilds.length > 0) {
+    yield rootBuilds;
+  }
+
+  // BFS to find downstream triggered builds (max depth 5)
+  let frontier = [...rootBuilds];
+  for (let depth = 0; depth < 5 && frontier.length > 0; depth++) {
+    const nextFrontier: BuildInfo[] = [];
+    // Parallelize queries for all parents in the frontier
+    const childResults = await Promise.all(
+      frontier.map((parent) =>
+        listBuildsTriggeredBy(
+          org,
+          project,
+          parent.id,
+          parent.finishTime,
+          parent.queueTime,
+        ),
+      ),
+    );
+    const newBuilds: BuildInfo[] = [];
+    for (const children of childResults) {
+      for (const child of children) {
+        if (!visited.has(child.id)) {
+          visited.set(child.id, child);
+          nextFrontier.push(child);
+          newBuilds.push(child);
+        }
+      }
+    }
+    if (newBuilds.length > 0) {
+      yield newBuilds;
+    }
+    frontier = nextFrontier;
+  }
+}
+
+/**
+ * Build the full commit flow graph (non-streaming).
+ * Returns a flat array of all builds in the trigger chain.
+ */
+export async function getCommitFlowGraph(
+  org: string,
+  project: string,
+  repositoryId: string,
+  commitSha: string,
+): Promise<BuildInfo[]> {
+  const all: BuildInfo[] = [];
+  for await (const batch of streamCommitFlowGraph(
+    org,
+    project,
+    repositoryId,
+    commitSha,
+  )) {
+    all.push(...batch);
+  }
+  return all;
+}
+
+export async function getBuild(
+  org: string,
+  project: string,
+  buildId: number,
+): Promise<BuildInfo> {
+  const url = `${baseUrl(org, project)}/build/builds/${buildId}?api-version=${API_VERSION}`;
+  const resp = await adoFetch(url);
+  const data = await resp.json();
+  return toBuildInfo(data);
 }
 
 /**

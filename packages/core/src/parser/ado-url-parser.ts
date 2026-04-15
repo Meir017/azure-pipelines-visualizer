@@ -17,6 +17,19 @@ export interface AdoUrlParts {
   ref?: string;
 }
 
+/**
+ * Parsed components of an Azure DevOps commit URL.
+ *
+ * Supported format:
+ * - https://dev.azure.com/{org}/{project}/_git/{repo}/commit/{commitSha}
+ */
+export interface AdoCommitUrlParts {
+  org: string;
+  project: string;
+  repoName: string;
+  commitSha: string;
+}
+
 export function parseAdoUrl(url: string): AdoUrlParts | null {
   try {
     const parsed = new URL(url);
@@ -73,4 +86,38 @@ export function buildAdoFileUrl(parts: AdoUrlParts): string {
   }
 
   return `${base}?${params}`;
+}
+
+/**
+ * Parses an Azure DevOps commit URL into its components.
+ *
+ * Supported format:
+ * - https://dev.azure.com/{org}/{project}/_git/{repo}/commit/{commitSha}
+ */
+export function parseAdoCommitUrl(url: string): AdoCommitUrlParts | null {
+  try {
+    const parsed = new URL(url);
+
+    if (!parsed.hostname.endsWith('dev.azure.com')) return null;
+
+    // pathname: /{org}/{project}/_git/{repo}/commit/{sha}
+    const segments = parsed.pathname.split('/').filter(Boolean);
+    if (
+      segments.length < 6 ||
+      segments[2] !== '_git' ||
+      segments[4] !== 'commit'
+    )
+      return null;
+
+    const org = decodeURIComponent(segments[0]);
+    const project = decodeURIComponent(segments[1]);
+    const repoName = decodeURIComponent(segments[3]);
+    const commitSha = decodeURIComponent(segments[5]);
+
+    if (!/^[0-9a-f]{7,40}$/i.test(commitSha)) return null;
+
+    return { org, project, repoName, commitSha };
+  } catch {
+    return null;
+  }
 }

@@ -1,6 +1,8 @@
 export {
+  type AdoCommitUrlParts,
   type AdoUrlParts,
   buildAdoFileUrl,
+  parseAdoCommitUrl,
   parseAdoUrl,
 } from './ado-url-parser.js';
 export {

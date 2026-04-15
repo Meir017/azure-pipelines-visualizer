@@ -49,6 +49,10 @@ mock.module('./services/api-client.js', () => ({
   ),
   fetchTaskDocsConfig: mock(() => Promise.resolve({ customTaskDocs: {} })),
   fetchTaskSchema: mock(() => Promise.resolve({ tasks: [] })),
+  fetchBuildsForCommit: mock(() => Promise.resolve([])),
+  fetchCommitFlowGraph: mock(() => Promise.resolve([])),
+  streamCommitFlowGraph: mock(() => new AbortController()),
+  fetchBuild: mock(() => Promise.resolve({})),
 }));
 
 async function getMountFn() {
