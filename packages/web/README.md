@@ -18,7 +18,7 @@ These must be installed alongside the package:
 npm install react react-dom @xyflow/react
 ```
 
-## Usage — bundle with your app
+## Quick start
 
 Import the `App` component and its stylesheet into your React application:
 
@@ -32,9 +32,53 @@ export default function MyPage() {
 }
 ```
 
-> **Note:** The `App` component expects API calls to be proxied to the `@meirblachman/azure-pipelines-visualizer` server at `/api`. Configure your dev server or reverse proxy accordingly.
+The `App` component renders a full-featured visualizer: a URL input bar, an interactive template-tree diagram, and a YAML detail panel.
 
-### Using individual components
+## Specifying a pipeline
+
+The component reads the pipeline to display from the page's **URL query parameters**. There are three ways to point it at a pipeline:
+
+### 1. Full Azure DevOps file URL
+
+Pass the `url` parameter with a direct link to the YAML file in your repo:
+
+```
+https://your-app.com/?url=https://dev.azure.com/{org}/{project}/_git/{repo}?path=/.pipelines/main.yml
+```
+
+### 2. Separate org / project / repo / path parameters
+
+Break the URL into individual query parameters:
+
+```
+https://your-app.com/?org=myorg&project=myproject&repo=myrepo&path=/.pipelines/main.yml&branch=main
+```
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `org` | ✅ | Azure DevOps organization |
+| `project` | ✅ | Azure DevOps project |
+| `repo` | ✅ | Repository name |
+| `path` | ✅ | Path to the YAML file in the repo |
+| `branch` | ❌ | Git branch (defaults to the repo's default branch) |
+
+### 3. Pipeline definition ID
+
+Reference a pipeline by its build definition ID:
+
+```
+https://your-app.com/?org=myorg&project=myproject&pipelineId=42
+```
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `org` | ✅ | Azure DevOps organization |
+| `project` | ✅ | Azure DevOps project |
+| `pipelineId` | ✅ | Numeric pipeline/build definition ID |
+
+If no query parameters are present, the component shows an empty URL input bar where users can paste an Azure DevOps file URL manually.
+
+## Using individual components
 
 You can also import specific components for more control:
 
@@ -56,7 +100,7 @@ import '@xyflow/react/dist/style.css';
 |---|---|
 | `App` | Full application shell with selector, diagram, and detail panel |
 | `PipelineDiagram` | Core diagram component — renders the template tree with ReactFlow |
-| `PipelineSelector` | URL input + pipeline picker |
+| `PipelineSelector` | URL input bar with auto-load from query parameters |
 | `DetailPanel` | YAML preview and task docs for the selected node |
 | `FileNode` | Custom ReactFlow node for pipeline files |
 | `TemplateEdge` | Custom ReactFlow edge with template metadata |
@@ -65,9 +109,9 @@ import '@xyflow/react/dist/style.css';
 | `getLayoutedElements` | Dagre-based layout utility for nodes and edges |
 | `fetchPipelines`, `fetchPipelineYaml`, ... | API client functions |
 
-## Usage — script tag (CDN)
+## Usage via CDN (script tag)
 
-You can load the library directly from a CDN using [unpkg](https://unpkg.com) or [jsDelivr](https://www.jsdelivr.com). This approach requires React and ReactDOM to be available as globals.
+Load the library directly from [unpkg](https://unpkg.com) or [jsDelivr](https://www.jsdelivr.com):
 
 ```html
 <!DOCTYPE html>
@@ -92,17 +136,17 @@ You can load the library directly from a CDN using [unpkg](https://unpkg.com) or
 </html>
 ```
 
-> **Important:** The components call `/api/*` endpoints for fetching pipeline data. You need the [`@meirblachman/azure-pipelines-visualizer`](https://www.npmjs.com/package/@meirblachman/azure-pipelines-visualizer) server running and accessible at the same origin, or configure a reverse proxy.
+## API server requirement
 
-## API server
+The web components call `/api/*` endpoints to fetch pipeline data from Azure DevOps. You need the companion server running and accessible at the same origin (or configure a reverse proxy).
 
-The web components are designed to work with the companion server package. The easiest way to get started:
+The easiest way to get started:
 
 ```bash
 npx @meirblachman/azure-pipelines-visualizer
 ```
 
-This starts the API server (port 3001) with the built-in web UI. See the [main repository](https://github.com/Meir017/azure-pipelines-visualizer) for configuration options.
+This starts the API server on port 3001 with the built-in web UI. See the [main repository](https://github.com/Meir017/azure-pipelines-visualizer) for configuration options.
 
 ## License
 
