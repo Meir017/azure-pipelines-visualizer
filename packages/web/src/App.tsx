@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import DetailPanel from './components/DetailPanel.js';
 import ErrorBoundary from './components/ErrorBoundary.js';
 import PipelineDiagram from './components/PipelineDiagram.js';
-import PipelineSelector from './components/PipelineSelector.js';
+import PipelineSelector, {
+  type PipelineSelectorProps,
+} from './components/PipelineSelector.js';
 import {
   fetchFileByRepoName,
   fetchTaskDocsConfig,
@@ -12,11 +14,13 @@ import { FileFetchProvider } from './services/file-fetch-context.js';
 import { usePipelineStore } from './store/pipeline-store.js';
 import './App.css';
 
+export type AppProps = PipelineSelectorProps;
+
 const DETAIL_MIN_WIDTH = 280;
 const DETAIL_MAX_WIDTH = 900;
 const DETAIL_DEFAULT_WIDTH = 420;
 
-export default function App() {
+export default function App(props: AppProps) {
   const { setCustomTaskDocs, setTaskSchema, selectedNodeDetail, org } =
     usePipelineStore();
   const [detailWidth, setDetailWidth] = useState(DETAIL_DEFAULT_WIDTH);
@@ -73,7 +77,7 @@ export default function App() {
         <header className="app__header">
           <h1>🔧 Azure Pipelines Visualizer</h1>
           <ErrorBoundary>
-            <PipelineSelector />
+            <PipelineSelector {...props} />
           </ErrorBoundary>
         </header>
         <main className="app__main">

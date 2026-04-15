@@ -6,7 +6,24 @@ import {
 } from '../services/api-client.js';
 import { usePipelineStore } from '../store/pipeline-store.js';
 
-export default function PipelineSelector() {
+export interface PipelineSelectorProps {
+  /** Full Azure DevOps file URL to load on mount */
+  fileUrl?: string;
+  /** Pipeline definition ID (requires org + project) */
+  pipelineId?: number;
+  /** Azure DevOps organization (used with pipelineId or repo/path) */
+  org?: string;
+  /** Azure DevOps project (used with pipelineId or repo/path) */
+  project?: string;
+  /** Repository name (used with org + project + path) */
+  repo?: string;
+  /** File path in the repo (used with org + project + repo) */
+  path?: string;
+  /** Git branch (optional, defaults to repo's default branch) */
+  branch?: string;
+}
+
+export default function PipelineSelector(props: PipelineSelectorProps) {
   const {
     setConnection,
     setSelectedPipeline,
@@ -19,19 +36,22 @@ export default function PipelineSelector() {
   const [urlLoading, setUrlLoading] = useState(false);
   const autoLoaded = useRef(false);
 
-  // Auto-load pipeline from URL search params on mount
+  // Auto-load pipeline from props (preferred) or URL search params on mount
   useEffect(() => {
     if (autoLoaded.current) return;
     autoLoaded.current = true;
 
+    // Prefer props over URL search params
     const params = new URLSearchParams(window.location.search);
-    const adoUrl = params.get('url');
-    const paramOrg = params.get('org');
-    const paramProject = params.get('project');
-    const paramRepo = params.get('repo');
-    const paramPath = params.get('path');
-    const paramBranch = params.get('branch') ?? undefined;
-    const paramPipelineId = params.get('pipelineId');
+    const adoUrl = props.fileUrl || params.get('url');
+    const paramOrg = props.org || params.get('org');
+    const paramProject = props.project || params.get('project');
+    const paramRepo = props.repo || params.get('repo');
+    const paramPath = props.path || params.get('path');
+    const paramBranch = props.branch || params.get('branch') || undefined;
+    const paramPipelineId =
+      props.pipelineId ??
+      (params.get('pipelineId') ? Number(params.get('pipelineId')) : null);
 
     if (adoUrl) {
       setUrlInput(adoUrl);
@@ -40,8 +60,8 @@ export default function PipelineSelector() {
       const fullUrl = `https://dev.azure.com/${paramOrg}/${paramProject}/_git/${paramRepo}?path=${paramPath}${paramBranch ? `&version=GB${paramBranch}` : ''}`;
       setUrlInput(fullUrl);
       loadFromAdoUrl(fullUrl);
-    } else if (paramOrg && paramProject && paramPipelineId) {
-      loadFromPipelineId(paramOrg, paramProject, Number(paramPipelineId));
+    } else if (paramOrg && paramProject && paramPipelineId != null) {
+      loadFromPipelineId(paramOrg, paramProject, paramPipelineId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -27,6 +27,7 @@ import { App } from '@meirblachman/azure-pipelines-visualizer-web';
 import '@meirblachman/azure-pipelines-visualizer-web/dist/lib/style.css';
 import '@xyflow/react/dist/style.css';
 
+// Empty — shows a URL input bar where users can paste a pipeline link
 export default function MyPage() {
   return <App />;
 }
@@ -36,103 +37,57 @@ The `App` component renders a full-featured visualizer: a URL input bar, an inte
 
 ## Specifying a pipeline
 
-The component reads the pipeline to display from the page's **URL query parameters**. There are three ways to point it at a pipeline:
+Pass props to `<App>` to load a pipeline automatically. There are three ways:
 
 ### 1. Full Azure DevOps file URL
 
-Pass the `url` query parameter with a direct link to the YAML file in your repo:
-
 ```tsx
-// Navigate to: https://your-app.com/?url=https://dev.azure.com/myorg/myproject/_git/myrepo?path=/.pipelines/main.yml
-
-import { App } from '@meirblachman/azure-pipelines-visualizer-web';
-import '@meirblachman/azure-pipelines-visualizer-web/dist/lib/style.css';
-import '@xyflow/react/dist/style.css';
-
-// App reads ?url= from the current page URL and auto-loads the pipeline
-export default function MyPage() {
-  return <App />;
-}
-```
-
-Or link to it from elsewhere in your app:
-
-```tsx
-<a href="/visualizer?url=https://dev.azure.com/myorg/myproject/_git/myrepo?path=/.pipelines/main.yml">
-  View pipeline
-</a>
-```
-
-### 2. Separate org / project / repo / path parameters
-
-Break the URL into individual query parameters for more control:
-
-```tsx
-// Navigate to: https://your-app.com/?org=myorg&project=myproject&repo=myrepo&path=/.pipelines/main.yml&branch=main
-
 import { App } from '@meirblachman/azure-pipelines-visualizer-web';
 import '@meirblachman/azure-pipelines-visualizer-web/dist/lib/style.css';
 import '@xyflow/react/dist/style.css';
 
 export default function MyPage() {
-  return <App />;
+  return (
+    <App fileUrl="https://dev.azure.com/myorg/myproject/_git/myrepo?path=/.pipelines/main.yml" />
+  );
 }
 ```
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
+### 2. Org / project / repo / path
+
+```tsx
+<App
+  org="myorg"
+  project="myproject"
+  repo="myrepo"
+  path="/.pipelines/main.yml"
+  branch="main"  // optional
+/>
+```
+
+| Prop | Required | Description |
+|------|----------|-------------|
 | `org` | ✅ | Azure DevOps organization |
 | `project` | ✅ | Azure DevOps project |
 | `repo` | ✅ | Repository name |
 | `path` | ✅ | Path to the YAML file in the repo |
 | `branch` | ❌ | Git branch (defaults to the repo's default branch) |
 
-Build links dynamically:
-
-```tsx
-function pipelineLink(org: string, project: string, repo: string, path: string, branch?: string) {
-  const params = new URLSearchParams({ org, project, repo, path });
-  if (branch) params.set('branch', branch);
-  return `/visualizer?${params}`;
-}
-
-// Usage
-<a href={pipelineLink('myorg', 'myproject', 'myrepo', '/.pipelines/main.yml', 'main')}>
-  View pipeline
-</a>
-```
-
 ### 3. Pipeline definition ID
 
-Reference a pipeline by its numeric build definition ID:
-
 ```tsx
-// Navigate to: https://your-app.com/?org=myorg&project=myproject&pipelineId=42
-
-import { App } from '@meirblachman/azure-pipelines-visualizer-web';
-import '@meirblachman/azure-pipelines-visualizer-web/dist/lib/style.css';
-import '@xyflow/react/dist/style.css';
-
-export default function MyPage() {
-  return <App />;
-}
+<App org="myorg" project="myproject" pipelineId={42} />
 ```
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
+| Prop | Required | Description |
+|------|----------|-------------|
 | `org` | ✅ | Azure DevOps organization |
 | `project` | ✅ | Azure DevOps project |
 | `pipelineId` | ✅ | Numeric pipeline/build definition ID |
 
-Build links dynamically:
+### Fallback: URL query parameters
 
-```tsx
-<a href={`/visualizer?org=myorg&project=myproject&pipelineId=${pipeline.id}`}>
-  View pipeline #{pipeline.id}
-</a>
-```
-
-If no query parameters are present, the component shows an empty URL input bar where users can paste an Azure DevOps file URL manually.
+When no props are provided, the component also reads from the page's URL query parameters (`?url=`, `?org=&project=&pipelineId=`, etc.). This is useful when embedding the visualizer as a standalone page. Props take precedence over query parameters when both are present.
 
 ## Embedding without React (Chrome extension, vanilla JS)
 
