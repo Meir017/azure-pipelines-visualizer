@@ -56,7 +56,7 @@ function injectButtons(container: Element): void {
     const btn = document.createElement('button');
     btn.className = 'apv-deps-btn';
     btn.title = 'View pipeline dependencies';
-    btn.textContent = '🔗';
+    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm3-1h4v1H5V2zm6 0h3v1h-3V2zM2 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm3-1h4v1H5V7zm6 0h3v1h-3V7zM2 13a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm3-1h4v1H5v-1zm6 0h3v1h-3v-1zM4 2.5h1v5H4v-5zm7 0h1v5h-1v-5zm-7 5h1v5H4v-5z"/></svg>`;
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       e.preventDefault();

@@ -1,6 +1,7 @@
 /* ============================================================
    Azure Pipelines Dependency Viewer — Content Script Styles
-   Designed to blend natively with Azure DevOps UI.
+   Matches ADO's Bolt design system: right-side panel, Segoe UI,
+   ADO color tokens with light-mode fallbacks, status circles.
    ============================================================ */
 
 /* --- Dependency Button (injected into sidebar rows) --- */
@@ -12,93 +13,107 @@
   width: 24px;
   height: 24px;
   margin-left: 4px;
-  padding: 0;
-  border: none;
+  padding: 2px;
+  border: 1px solid transparent;
   border-radius: 3px;
   background: transparent;
+  color: var(--text-secondary-color, #605e5c);
   cursor: pointer;
-  font-size: 14px;
-  line-height: 1;
   vertical-align: middle;
-  opacity: 0.6;
-  transition:
-    opacity 0.15s,
-    background-color 0.15s;
+  transition: all 0.1s ease;
 }
 
 .apv-deps-btn:hover {
-  opacity: 1;
-  background-color: rgba(0, 120, 212, 0.1);
+  color: var(--communication-foreground, #0078d4);
+  background: var(--palette-neutral-4, #edebe9);
+  border-color: var(--palette-neutral-8, #c8c6c4);
 }
 
-/* --- Overlay --- */
+.apv-deps-btn:active {
+  background: var(--palette-neutral-6, #e1dfdd);
+}
 
-.apv-overlay {
+.apv-deps-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* --- Right-side Panel (ADO pattern) --- */
+
+.apv-panel {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  width: 520px;
+  max-width: 90vw;
+  height: 100vh;
   z-index: 100000;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.45);
-  animation: apv-fade-in 0.15s ease-out;
-}
-
-@keyframes apv-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* --- Modal --- */
-
-.apv-modal {
-  position: relative;
-  width: 90vw;
-  max-width: 1100px;
-  max-height: 85vh;
-  display: flex;
   flex-direction: column;
-  background: var(--communication-background, #fff);
-  border-radius: 4px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  background: var(--communication-background, #ffffff);
+  box-shadow: -3px 0 15px rgba(0, 0, 0, 0.15);
   font-family:
-    "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue",
-    Helvetica, Ubuntu, Arial, sans-serif;
+    "Segoe UI", "Segoe UI Web (West European)", -apple-system,
+    BlinkMacSystemFont, Roboto, "Helvetica Neue", Helvetica, Ubuntu, Arial,
+    sans-serif;
+  font-size: 14px;
   color: var(--text-primary-color, #323130);
-  animation: apv-slide-in 0.2s ease-out;
+  transform: translateX(100%);
+  transition: transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
 }
 
-@keyframes apv-slide-in {
-  from {
-    transform: translateY(10px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+.apv-panel--open {
+  transform: translateX(0);
 }
 
-.apv-modal__header {
+.apv-panel--closing {
+  transform: translateX(100%);
+  transition: transform 0.2s ease-in;
+}
+
+/* --- Panel Header (ADO panel header pattern) --- */
+
+.apv-panel__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px 12px;
-  border-bottom: 1px solid var(--palette-neutral-10, #eaeaea);
+  min-height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--palette-neutral-8, #edebe9);
+  background: var(--communication-background, #ffffff);
+  flex-shrink: 0;
 }
 
-.apv-modal__title {
+.apv-panel__header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.apv-panel__icon {
+  display: flex;
+  align-items: center;
+  color: var(--communication-foreground, #0078d4);
+  flex-shrink: 0;
+}
+
+.apv-panel__icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.apv-panel__title {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-primary-color, #323130);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.apv-modal__close {
+.apv-panel__close {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -107,59 +122,114 @@
   border: none;
   border-radius: 3px;
   background: transparent;
-  font-size: 16px;
   color: var(--text-secondary-color, #605e5c);
   cursor: pointer;
-  transition: background-color 0.15s;
+  flex-shrink: 0;
+  transition: background-color 0.1s;
 }
 
-.apv-modal__close:hover {
-  background-color: var(--palette-neutral-8, #f3f2f1);
+.apv-panel__close:hover {
+  background: var(--palette-neutral-4, #edebe9);
+  color: var(--text-primary-color, #323130);
 }
 
-.apv-modal__body {
+.apv-panel__close svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* --- Panel Body --- */
+
+.apv-panel__body {
   flex: 1;
   overflow: auto;
-  padding: 16px 20px 20px;
+  padding: 12px 16px 16px;
 }
 
-.apv-modal__status {
+/* --- Status Bar --- */
+
+.apv-panel__status-bar {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 0 12px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border-radius: 3px;
+  background: var(--palette-neutral-2, #f3f2f1);
   font-size: 13px;
   color: var(--text-secondary-color, #605e5c);
 }
 
-.apv-modal__loading {
+.apv-panel__status-bar--done {
+  background: var(--palette-neutral-2, #f3f2f1);
+}
+
+/* --- Loading State --- */
+
+.apv-panel__loading {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 40px 0;
-  justify-content: center;
+  gap: 16px;
+  padding: 48px 0;
   font-size: 14px;
   color: var(--text-secondary-color, #605e5c);
 }
 
-.apv-modal__error {
-  padding: 20px;
-  text-align: center;
-  color: var(--status-error-text, #a4262c);
+/* --- Error State --- */
+
+.apv-panel__error {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  margin: 12px 0;
+  border-radius: 3px;
+  background: #fde7e9;
+  border-left: 3px solid #a4262c;
 }
 
-.apv-modal__error p {
-  margin-top: 8px;
+.apv-panel__error svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.apv-panel__error-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: #a4262c;
+  margin-bottom: 4px;
+}
+
+.apv-panel__error-detail {
   font-size: 13px;
   color: var(--text-secondary-color, #605e5c);
+  word-break: break-word;
 }
 
-/* --- Spinner --- */
+/* --- Badge (ADO pill style) --- */
+
+.apv-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.apv-badge--info {
+  background: var(--communication-foreground, #0078d4);
+  color: #ffffff;
+}
+
+/* --- Spinner (ADO-style) --- */
 
 .apv-spinner {
   width: 28px;
   height: 28px;
-  border: 3px solid var(--palette-neutral-10, #eaeaea);
+  border: 3px solid var(--palette-neutral-8, #edebe9);
   border-top-color: var(--communication-foreground, #0078d4);
   border-radius: 50%;
   animation: apv-spin 0.8s linear infinite;
@@ -182,11 +252,11 @@
 .apv-tree {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .apv-tree__empty {
-  padding: 24px;
+  padding: 32px 16px;
   text-align: center;
   font-size: 14px;
   color: var(--text-secondary-color, #605e5c);
@@ -195,29 +265,29 @@
 .apv-tree__row {
   display: flex;
   align-items: flex-start;
-  gap: 0;
 }
 
 .apv-tree__children {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-left: 8px;
-  padding-left: 16px;
-  border-left: 2px solid var(--palette-neutral-10, #c8c6c4);
+  gap: 4px;
+  margin-left: 4px;
+  padding-left: 20px;
   position: relative;
 }
 
+/* Vertical connector line */
 .apv-tree__children::before {
   content: "";
   position: absolute;
-  left: -2px;
+  left: 8px;
   top: 0;
   bottom: 0;
-  width: 2px;
-  background: var(--palette-neutral-10, #c8c6c4);
+  width: 1px;
+  background: var(--palette-neutral-8, #c8c6c4);
 }
 
+/* Horizontal connector to each child */
 .apv-tree__children > .apv-tree__row {
   position: relative;
 }
@@ -225,61 +295,66 @@
 .apv-tree__children > .apv-tree__row::before {
   content: "";
   position: absolute;
-  left: -16px;
-  top: 20px;
-  width: 14px;
-  height: 2px;
-  background: var(--palette-neutral-10, #c8c6c4);
+  left: -12px;
+  top: 18px;
+  width: 10px;
+  height: 1px;
+  background: var(--palette-neutral-8, #c8c6c4);
 }
 
-/* --- Build Node Card --- */
+/* Arrow head on connector */
+.apv-tree__children > .apv-tree__row::after {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: 15px;
+  width: 0;
+  height: 0;
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  border-left: 4px solid var(--palette-neutral-8, #c8c6c4);
+}
+
+/* --- Build Node Card (ADO pipeline row style) --- */
 
 .apv-node {
-  min-width: 240px;
-  max-width: 300px;
-  padding: 10px 14px;
-  border-radius: 4px;
-  border-left: 4px solid var(--palette-neutral-10, #c8c6c4);
-  background: var(--palette-neutral-2, #faf9f8);
+  min-width: 220px;
+  max-width: 280px;
+  padding: 8px 12px;
+  border-radius: 3px;
+  border: 1px solid var(--palette-neutral-8, #edebe9);
+  border-left: 3px solid var(--palette-neutral-8, #c8c6c4);
+  background: var(--communication-background, #ffffff);
   font-size: 12px;
   line-height: 1.4;
   flex-shrink: 0;
-  transition: box-shadow 0.15s;
+  cursor: default;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 .apv-node:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  border-color: var(--palette-neutral-20, #a19f9d);
+  box-shadow:
+    0 1.6px 3.6px rgba(0, 0, 0, 0.1),
+    0 0.3px 0.9px rgba(0, 0, 0, 0.08);
 }
 
 .apv-node--succeeded {
   border-left-color: #107c10;
 }
-
 .apv-node--failed {
   border-left-color: #a4262c;
 }
-
-.apv-node--in-progress {
+.apv-node--running {
   border-left-color: #0078d4;
-  animation: apv-pulse 2s ease-in-out infinite;
 }
-
 .apv-node--partial {
   border-left-color: #ffaa44;
 }
-
 .apv-node--canceled {
   border-left-color: #8a8886;
-}
-
-@keyframes apv-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
 }
 
 .apv-node__header {
@@ -287,11 +362,6 @@
   align-items: center;
   gap: 6px;
   margin-bottom: 4px;
-}
-
-.apv-node__status {
-  font-size: 14px;
-  flex-shrink: 0;
 }
 
 .apv-node__name {
@@ -306,31 +376,74 @@
 
 .apv-node__name:hover {
   text-decoration: underline;
+  color: var(--communication-foreground-hover, #106ebe);
+}
+
+.apv-node__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
 }
 
 .apv-node__number {
-  color: var(--text-secondary-color, #605e5c);
   font-size: 11px;
-  margin-bottom: 4px;
+  color: var(--text-secondary-color, #605e5c);
 }
 
-.apv-node__times {
-  display: flex;
-  gap: 10px;
-  color: var(--text-secondary-color, #605e5c);
+.apv-node__duration {
   font-size: 11px;
-  margin-bottom: 2px;
+  color: var(--text-secondary-color, #605e5c);
+  padding: 0 4px;
+  border-radius: 2px;
+  background: var(--palette-neutral-4, #f3f2f1);
+}
+
+.apv-node__details {
+  display: flex;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-secondary-color, #a19f9d);
 }
 
 .apv-node__branch {
-  color: var(--text-secondary-color, #605e5c);
-  font-size: 11px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 120px;
 }
 
-/* --- Dark theme support via ADO CSS variables --- */
-/* ADO sets these variables automatically in dark mode:
-   --communication-background, --text-primary-color, etc.
-   Our styles reference them with light-mode fallbacks. */
+/* --- Status Indicator (ADO-style colored circles) --- */
+
+.apv-status {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.apv-status svg {
+  width: 14px;
+  height: 14px;
+}
+
+.apv-status--succeeded {
+  color: #107c10;
+}
+.apv-status--failed {
+  color: #a4262c;
+}
+.apv-status--running {
+  color: #0078d4;
+}
+.apv-status--partial {
+  color: #ffaa44;
+}
+.apv-status--canceled {
+  color: #8a8886;
+}
+.apv-status--queued {
+  color: #8a8886;
+}
+.apv-status--unknown {
+  color: #8a8886;
+}

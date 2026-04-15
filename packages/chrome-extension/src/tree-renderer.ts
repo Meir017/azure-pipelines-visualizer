@@ -1,17 +1,24 @@
 import type { BuildInfo } from './build-types.js';
 
-function statusIcon(status: string, result: string | null): string {
-  if (status === 'inProgress') return '⏳';
-  if (status === 'notStarted') return '⏸️';
-  if (result === 'succeeded') return '✅';
-  if (result === 'partiallySucceeded') return '⚠️';
-  if (result === 'failed') return '❌';
-  if (result === 'canceled') return '🚫';
-  return '❓';
+/** ADO-style status indicator: colored circle with optional icon */
+function statusIndicator(status: string, result: string | null): string {
+  if (status === 'inProgress')
+    return '<span class="apv-status apv-status--running" title="In progress"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="11 33" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 8 8" to="360 8 8" dur="1s" repeatCount="indefinite"/></svg></span>';
+  if (status === 'notStarted')
+    return '<span class="apv-status apv-status--queued" title="Queued"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="2"/></svg></span>';
+  if (result === 'succeeded')
+    return '<span class="apv-status apv-status--succeeded" title="Succeeded"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="currentColor"/><path d="M6.5 10.5L4.5 8.5l-.7.7 2.7 2.7 5-5-.7-.7z" fill="#fff"/></svg></span>';
+  if (result === 'partiallySucceeded')
+    return '<span class="apv-status apv-status--partial" title="Partially succeeded"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="currentColor"/><path d="M7.25 4.5h1.5v4h-1.5zm0 5.5h1.5v1.5h-1.5z" fill="#fff"/></svg></span>';
+  if (result === 'failed')
+    return '<span class="apv-status apv-status--failed" title="Failed"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="currentColor"/><path d="M5.17 5.17l5.66 5.66m0-5.66L5.17 10.83" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg></span>';
+  if (result === 'canceled')
+    return '<span class="apv-status apv-status--canceled" title="Canceled"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="currentColor"/><rect x="5" y="6.5" width="6" height="3" rx="0.5" fill="#fff"/></svg></span>';
+  return '<span class="apv-status apv-status--unknown" title="Unknown"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="2"/></svg></span>';
 }
 
 function resultClass(status: string, result: string | null): string {
-  if (status === 'inProgress') return 'apv-node--in-progress';
+  if (status === 'inProgress') return 'apv-node--running';
   if (result === 'succeeded') return 'apv-node--succeeded';
   if (result === 'partiallySucceeded') return 'apv-node--partial';
   if (result === 'failed') return 'apv-node--failed';
@@ -20,7 +27,7 @@ function resultClass(status: string, result: string | null): string {
 }
 
 function formatTime(iso: string | null): string {
-  if (!iso) return '—';
+  if (!iso) return '\u2014';
   const d = new Date(iso);
   return d.toLocaleString(undefined, {
     month: 'short',
@@ -55,15 +62,17 @@ function createBuildCard(build: BuildInfo): HTMLElement {
 
   card.innerHTML = `
     <div class="apv-node__header">
-      <span class="apv-node__status">${statusIcon(build.status, build.result)}</span>
+      ${statusIndicator(build.status, build.result)}
       <a class="apv-node__name" href="${link}" target="_blank" title="${build.definition.name}">${build.definition.name}</a>
     </div>
-    <div class="apv-node__number">#${build.buildNumber}</div>
-    <div class="apv-node__times">
-      <span title="Start time">🕐 ${formatTime(build.startTime)}</span>
-      ${duration ? `<span title="Duration">⏱️ ${duration}</span>` : ''}
+    <div class="apv-node__meta">
+      <span class="apv-node__number">${build.buildNumber}</span>
+      ${duration ? `<span class="apv-node__duration">${duration}</span>` : ''}
     </div>
-    <div class="apv-node__branch" title="${build.sourceBranch}">🌿 ${branch}</div>
+    <div class="apv-node__details">
+      <span class="apv-node__time">${formatTime(build.startTime)}</span>
+      <span class="apv-node__branch" title="${build.sourceBranch}">${branch}</span>
+    </div>
   `;
 
   return card;
@@ -96,7 +105,6 @@ export function renderTree(container: HTMLElement, builds: BuildInfo[]): void {
     }
   }
 
-  // Sort roots and children by start time
   const byTime = (a: BuildInfo, b: BuildInfo) =>
     (a.startTime ?? '').localeCompare(b.startTime ?? '');
   roots.sort(byTime);

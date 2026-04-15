@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="20" fill="#0078d4"/>
+  <line x1="26" y1="64" x2="56" y2="32" stroke="#fff" stroke-width="3" opacity="0.7"/>
+  <line x1="26" y1="64" x2="56" y2="64" stroke="#fff" stroke-width="3" opacity="0.7"/>
+  <line x1="26" y1="64" x2="56" y2="96" stroke="#fff" stroke-width="3" opacity="0.7"/>
+  <line x1="56" y1="32" x2="102" y2="19" stroke="#fff" stroke-width="3" opacity="0.7"/>
+  <line x1="56" y1="32" x2="102" y2="48" stroke="#fff" stroke-width="3" opacity="0.7"/>
+  <line x1="56" y1="96" x2="102" y2="80" stroke="#fff" stroke-width="3" opacity="0.7"/>
+  <line x1="56" y1="96" x2="102" y2="109" stroke="#fff" stroke-width="3" opacity="0.7"/>
+  <circle cx="26" cy="64" r="10" fill="#fff"/>
+  <circle cx="56" cy="32" r="7" fill="#fff"/>
+  <circle cx="56" cy="64" r="7" fill="#fff"/>
+  <circle cx="56" cy="96" r="7" fill="#fff"/>
+  <circle cx="102" cy="19" r="7" fill="#fff"/>
+  <circle cx="102" cy="48" r="7" fill="#fff"/>
+  <circle cx="102" cy="80" r="7" fill="#fff"/>
+  <circle cx="102" cy="109" r="7" fill="#fff"/>
+</svg>
