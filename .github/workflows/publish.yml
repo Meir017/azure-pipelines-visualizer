@@ -43,7 +43,7 @@ jobs:
         run: bun run lint
 
       - name: Test (bun)
-        run: bun test packages/core packages/server
+        run: bun test packages/core packages/server packages/embed packages/web
 
       - name: Build CLI bundle
         run: bun run build:cli
@@ -57,25 +57,35 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Bump patch version
-        working-directory: packages/cli
         run: |
           node -e "
-            const pkg = JSON.parse(require('fs').readFileSync('package.json','utf8'));
-            const [major,minor,patch] = pkg.version.split('.').map(Number);
-            pkg.version = major+'.'+minor+'.'+(patch+1);
-            require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-            console.log('v' + pkg.version);
+            const fs = require('fs');
+            for (const pkg_path of ['packages/cli/package.json', 'packages/web/package.json']) {
+              const pkg = JSON.parse(fs.readFileSync(pkg_path, 'utf8'));
+              const [major,minor,patch] = pkg.version.split('.').map(Number);
+              pkg.version = major+'.'+minor+'.'+(patch+1);
+              fs.writeFileSync(pkg_path, JSON.stringify(pkg, null, 2) + '\n');
+              console.log(pkg_path + ': v' + pkg.version);
+            }
           "
 
-      - name: Publish to npm
+      - name: Build web library
+        run: BUILD_LIB=1 bunx --bun vite build
+        working-directory: packages/web
+
+      - name: Publish CLI to npm
         working-directory: packages/cli
+        run: npm publish --provenance --access public
+
+      - name: Publish web to npm
+        working-directory: packages/web
         run: npm publish --provenance --access public
 
       - name: Commit and push version bump
         run: |
           VERSION=$(node -p "require('./packages/cli/package.json').version")
-          git add packages/cli/package.json
-          git commit -m "chore: bump cli version to ${VERSION} [skip ci]"
+          git add packages/cli/package.json packages/web/package.json
+          git commit -m "chore: bump cli+web version to ${VERSION} [skip ci]"
           git pull --rebase
           git push
 
