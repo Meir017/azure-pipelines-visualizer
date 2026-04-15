@@ -1,0 +1,336 @@
+/* ============================================================
+   Azure Pipelines Dependency Viewer — Content Script Styles
+   Designed to blend natively with Azure DevOps UI.
+   ============================================================ */
+
+/* --- Dependency Button (injected into sidebar rows) --- */
+
+.apv-deps-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-left: 4px;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  vertical-align: middle;
+  opacity: 0.6;
+  transition:
+    opacity 0.15s,
+    background-color 0.15s;
+}
+
+.apv-deps-btn:hover {
+  opacity: 1;
+  background-color: rgba(0, 120, 212, 0.1);
+}
+
+/* --- Overlay --- */
+
+.apv-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  animation: apv-fade-in 0.15s ease-out;
+}
+
+@keyframes apv-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* --- Modal --- */
+
+.apv-modal {
+  position: relative;
+  width: 90vw;
+  max-width: 1100px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--communication-background, #fff);
+  border-radius: 4px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  font-family:
+    "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue",
+    Helvetica, Ubuntu, Arial, sans-serif;
+  color: var(--text-primary-color, #323130);
+  animation: apv-slide-in 0.2s ease-out;
+}
+
+@keyframes apv-slide-in {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.apv-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--palette-neutral-10, #eaeaea);
+}
+
+.apv-modal__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary-color, #323130);
+}
+
+.apv-modal__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  font-size: 16px;
+  color: var(--text-secondary-color, #605e5c);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.apv-modal__close:hover {
+  background-color: var(--palette-neutral-8, #f3f2f1);
+}
+
+.apv-modal__body {
+  flex: 1;
+  overflow: auto;
+  padding: 16px 20px 20px;
+}
+
+.apv-modal__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0 12px;
+  font-size: 13px;
+  color: var(--text-secondary-color, #605e5c);
+}
+
+.apv-modal__loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 0;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--text-secondary-color, #605e5c);
+}
+
+.apv-modal__error {
+  padding: 20px;
+  text-align: center;
+  color: var(--status-error-text, #a4262c);
+}
+
+.apv-modal__error p {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-secondary-color, #605e5c);
+}
+
+/* --- Spinner --- */
+
+.apv-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--palette-neutral-10, #eaeaea);
+  border-top-color: var(--communication-foreground, #0078d4);
+  border-radius: 50%;
+  animation: apv-spin 0.8s linear infinite;
+}
+
+.apv-spinner--small {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
+
+@keyframes apv-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --- Tree Layout (left-to-right) --- */
+
+.apv-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.apv-tree__empty {
+  padding: 24px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-secondary-color, #605e5c);
+}
+
+.apv-tree__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.apv-tree__children {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-left: 8px;
+  padding-left: 16px;
+  border-left: 2px solid var(--palette-neutral-10, #c8c6c4);
+  position: relative;
+}
+
+.apv-tree__children::before {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--palette-neutral-10, #c8c6c4);
+}
+
+.apv-tree__children > .apv-tree__row {
+  position: relative;
+}
+
+.apv-tree__children > .apv-tree__row::before {
+  content: "";
+  position: absolute;
+  left: -16px;
+  top: 20px;
+  width: 14px;
+  height: 2px;
+  background: var(--palette-neutral-10, #c8c6c4);
+}
+
+/* --- Build Node Card --- */
+
+.apv-node {
+  min-width: 240px;
+  max-width: 300px;
+  padding: 10px 14px;
+  border-radius: 4px;
+  border-left: 4px solid var(--palette-neutral-10, #c8c6c4);
+  background: var(--palette-neutral-2, #faf9f8);
+  font-size: 12px;
+  line-height: 1.4;
+  flex-shrink: 0;
+  transition: box-shadow 0.15s;
+}
+
+.apv-node:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.apv-node--succeeded {
+  border-left-color: #107c10;
+}
+
+.apv-node--failed {
+  border-left-color: #a4262c;
+}
+
+.apv-node--in-progress {
+  border-left-color: #0078d4;
+  animation: apv-pulse 2s ease-in-out infinite;
+}
+
+.apv-node--partial {
+  border-left-color: #ffaa44;
+}
+
+.apv-node--canceled {
+  border-left-color: #8a8886;
+}
+
+@keyframes apv-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.apv-node__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.apv-node__status {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.apv-node__name {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--communication-foreground, #0078d4);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.apv-node__name:hover {
+  text-decoration: underline;
+}
+
+.apv-node__number {
+  color: var(--text-secondary-color, #605e5c);
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.apv-node__times {
+  display: flex;
+  gap: 10px;
+  color: var(--text-secondary-color, #605e5c);
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+
+.apv-node__branch {
+  color: var(--text-secondary-color, #605e5c);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- Dark theme support via ADO CSS variables --- */
+/* ADO sets these variables automatically in dark mode:
+   --communication-background, --text-primary-color, etc.
+   Our styles reference them with light-mode fallbacks. */
