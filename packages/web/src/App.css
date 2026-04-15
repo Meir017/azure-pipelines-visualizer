@@ -1088,3 +1088,375 @@ body {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
+
+/* ── Navigation ───────────────────────────────────────────── */
+
+.app__nav {
+  display: flex;
+  gap: 4px;
+}
+
+.app__nav-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+
+.app__nav-btn:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.app__nav-btn--active {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+/* ── Commit Flow ──────────────────────────────────────────── */
+
+.commit-flow-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.commit-flow-page__selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-wrap: wrap;
+}
+
+.commit-flow-page__refresh {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.commit-flow-page__refresh:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+.commit-flow-page__error {
+  padding: 12px 16px;
+  color: var(--error);
+  font-size: 13px;
+}
+
+.commit-flow-page__diagram {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.commit-flow-page__summary {
+  padding: 6px 16px;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.commit-flow-diagram {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Commit Flow Selector ─────────────────────────────────── */
+
+.commit-flow-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.commit-flow-selector__input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  min-width: 120px;
+}
+
+.commit-flow-selector__input--sha {
+  min-width: 200px;
+  font-family: monospace;
+}
+
+.commit-flow-selector__input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.commit-flow-selector__btn {
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  padding: 6px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.commit-flow-selector__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.commit-flow-selector__btn:not(:disabled):hover {
+  background: var(--accent-hover);
+}
+
+/* ── Build Node ───────────────────────────────────────────── */
+
+.build-node {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  min-width: 240px;
+  max-width: 280px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.build-node:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(137, 180, 250, 0.3);
+}
+
+.build-node--succeeded {
+  border-color: var(--success);
+}
+
+.build-node--failed {
+  border-color: var(--error);
+}
+
+.build-node--in-progress {
+  border-color: var(--accent);
+  animation: build-pulse 2s infinite;
+}
+
+.build-node--partial {
+  border-color: #f9e2af;
+}
+
+.build-node--canceled {
+  border-color: var(--text-muted);
+  opacity: 0.7;
+}
+
+@keyframes build-pulse {
+  0%,
+  100% {
+    border-color: var(--accent);
+  }
+  50% {
+    border-color: var(--accent-hover);
+    box-shadow: 0 0 8px rgba(137, 180, 250, 0.4);
+  }
+}
+
+.build-node__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.build-node__status {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.build-node__name {
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.build-node__number {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.build-node__times {
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.build-node__branch {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Build Detail Popup ───────────────────────────────────── */
+
+.build-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.build-popup {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 480px;
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.build-popup__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.build-popup__header h2 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.build-popup__close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.build-popup__close:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+.build-popup__body {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.build-popup__row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.build-popup__label {
+  font-size: 12px;
+  color: var(--text-muted);
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.build-popup__mono {
+  font-family: monospace;
+  font-size: 13px;
+}
+
+.build-popup__badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge--succeeded {
+  background: rgba(166, 227, 161, 0.2);
+  color: var(--success);
+}
+
+.badge--failed {
+  background: rgba(243, 139, 168, 0.2);
+  color: var(--error);
+}
+
+.badge--in-progress {
+  background: rgba(137, 180, 250, 0.2);
+  color: var(--accent);
+}
+
+.badge--partial {
+  background: rgba(249, 226, 175, 0.2);
+  color: #f9e2af;
+}
+
+.badge--canceled {
+  background: rgba(166, 173, 200, 0.2);
+  color: var(--text-muted);
+}
+
+.badge--pending {
+  background: rgba(166, 173, 200, 0.15);
+  color: var(--text-muted);
+}
+
+.build-popup__tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.build-popup__tag {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+}
+
+.build-popup__link {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.build-popup__link:hover {
+  text-decoration: underline;
+}

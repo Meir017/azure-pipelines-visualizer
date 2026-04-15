@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import CommitFlowPage from './components/commit-flow/CommitFlowPage.js';
 import DetailPanel from './components/DetailPanel.js';
 import ErrorBoundary from './components/ErrorBoundary.js';
 import PipelineDiagram from './components/PipelineDiagram.js';
@@ -16,6 +17,30 @@ import './App.css';
 
 export type AppProps = PipelineSelectorProps;
 
+type AppView = 'pipeline' | 'commit-flow';
+
+function useHashRoute(): [AppView, (view: AppView) => void] {
+  const getView = (): AppView => {
+    const hash = window.location.hash;
+    if (hash.startsWith('#/commit-flow')) return 'commit-flow';
+    return 'pipeline';
+  };
+
+  const [view, setViewState] = useState<AppView>(getView);
+
+  useEffect(() => {
+    const onHashChange = () => setViewState(getView());
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  const setView = (v: AppView) => {
+    window.location.hash = v === 'pipeline' ? '#/' : `#/${v}`;
+  };
+
+  return [view, setView];
+}
+
 const DETAIL_MIN_WIDTH = 280;
 const DETAIL_MAX_WIDTH = 900;
 const DETAIL_DEFAULT_WIDTH = 420;
@@ -25,6 +50,7 @@ export default function App(props: AppProps) {
     usePipelineStore();
   const [detailWidth, setDetailWidth] = useState(DETAIL_DEFAULT_WIDTH);
   const dragging = useRef(false);
+  const [view, setView] = useHashRoute();
 
   // Load custom task docs config on mount
   useEffect(() => {
@@ -76,29 +102,58 @@ export default function App(props: AppProps) {
       <div className="app">
         <header className="app__header">
           <h1>🔧 Azure Pipelines Visualizer</h1>
-          <ErrorBoundary>
-            <PipelineSelector {...props} />
-          </ErrorBoundary>
+          <nav className="app__nav">
+            <button
+              className={`app__nav-btn ${view === 'pipeline' ? 'app__nav-btn--active' : ''}`}
+              onClick={() => setView('pipeline')}
+              type="button"
+            >
+              Pipeline Templates
+            </button>
+            <button
+              className={`app__nav-btn ${view === 'commit-flow' ? 'app__nav-btn--active' : ''}`}
+              onClick={() => setView('commit-flow')}
+              type="button"
+            >
+              Commit Flow
+            </button>
+          </nav>
+          {view === 'pipeline' && (
+            <ErrorBoundary>
+              <PipelineSelector {...props} />
+            </ErrorBoundary>
+          )}
         </header>
         <main className="app__main">
-          <section className="app__content">
-            <ErrorBoundary>
-              <PipelineDiagram />
-            </ErrorBoundary>
-          </section>
-          {selectedNodeDetail && (
+          {view === 'pipeline' && (
             <>
-              <div
-                className="app__detail-resize-handle"
-                onMouseDown={onResizeStart}
-                title="Drag to resize"
-              />
-              <aside className="app__detail" style={{ width: detailWidth }}>
+              <section className="app__content">
                 <ErrorBoundary>
-                  <DetailPanel />
+                  <PipelineDiagram />
                 </ErrorBoundary>
-              </aside>
+              </section>
+              {selectedNodeDetail && (
+                <>
+                  <div
+                    className="app__detail-resize-handle"
+                    onMouseDown={onResizeStart}
+                    title="Drag to resize"
+                  />
+                  <aside className="app__detail" style={{ width: detailWidth }}>
+                    <ErrorBoundary>
+                      <DetailPanel />
+                    </ErrorBoundary>
+                  </aside>
+                </>
+              )}
             </>
+          )}
+          {view === 'commit-flow' && (
+            <section className="app__content">
+              <ErrorBoundary>
+                <CommitFlowPage />
+              </ErrorBoundary>
+            </section>
           )}
         </main>
       </div>

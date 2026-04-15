@@ -11,6 +11,7 @@ import type {
   TaskDocsConfig,
   TaskSchemaResponse,
 } from './api-client.js';
+import type { BuildInfo } from './build-types.js';
 
 const API_VERSION = '7.1';
 
@@ -126,4 +127,34 @@ export async function fetchTaskSchema(
 ): Promise<TaskSchemaResponse> {
   // Task schema not available without the server
   return { tasks: [], cached: false };
+}
+
+export async function fetchBuildsForCommit(
+  org: string,
+  project: string,
+  repoId: string,
+  commitSha: string,
+): Promise<BuildInfo[]> {
+  const params = new URLSearchParams({
+    'api-version': API_VERSION,
+    repositoryId: repoId,
+    repositoryType: 'TfsGit',
+    sourceVersion: commitSha,
+    queryOrder: 'queueTimeAscending',
+    maxBuildsPerDefinition: '50',
+  });
+  const url = `${baseUrl(org, project)}/build/builds?${params}`;
+  const resp = await adoFetch(url);
+  const data = await resp.json();
+  return data.value ?? [];
+}
+
+export async function fetchBuild(
+  org: string,
+  project: string,
+  buildId: number,
+): Promise<BuildInfo> {
+  const url = `${baseUrl(org, project)}/build/builds/${buildId}?api-version=${API_VERSION}`;
+  const resp = await adoFetch(url);
+  return resp.json();
 }

@@ -103,7 +103,30 @@ export interface TaskSchemaResponse {
   cached: boolean;
 }
 
+export type { BuildDefinitionRef, BuildInfo } from './build-types.js';
+
 export function fetchTaskSchema(org: string): Promise<TaskSchemaResponse> {
   if (isExtensionPage) return directAdo.fetchTaskSchema(org);
   return apiFetch(`/${org}/schema/tasks`);
+}
+
+export function fetchBuildsForCommit(
+  org: string,
+  project: string,
+  repoId: string,
+  commitSha: string,
+): Promise<BuildInfo[]> {
+  if (isExtensionPage)
+    return directAdo.fetchBuildsForCommit(org, project, repoId, commitSha);
+  const params = new URLSearchParams({ repoId, commitSha });
+  return apiFetch(`/${org}/${project}/builds?${params}`);
+}
+
+export function fetchBuild(
+  org: string,
+  project: string,
+  buildId: number,
+): Promise<BuildInfo> {
+  if (isExtensionPage) return directAdo.fetchBuild(org, project, buildId);
+  return apiFetch(`/${org}/${project}/builds/${buildId}`);
 }
