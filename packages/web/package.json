@@ -1,6 +1,6 @@
 {
   "name": "@meirblachman/azure-pipelines-visualizer-web",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "React components for visualizing Azure Pipelines template trees as interactive diagrams",
   "type": "module",
   "main": "dist/lib/index.js",
