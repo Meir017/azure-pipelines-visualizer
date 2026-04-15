@@ -3,8 +3,11 @@ import type { BuildInfo } from './build-types.js';
 import { renderTree } from './tree-renderer.js';
 
 let activePanel: HTMLElement | null = null;
+let activeAbort: AbortController | null = null;
 
 export function closeModal(): void {
+  activeAbort?.abort();
+  activeAbort = null;
   if (activePanel) {
     activePanel.classList.add('apv-panel--closing');
     setTimeout(() => {
@@ -74,6 +77,9 @@ export async function showDependencyModal(
   document.addEventListener('keydown', onKey);
 
   // Fetch and render
+  activeAbort = new AbortController();
+  const { signal } = activeAbort;
+
   try {
     const rootBuild = await fetchBuild(org, project, buildId);
 
@@ -96,13 +102,41 @@ export async function showDependencyModal(
     body.appendChild(statusBar);
     body.appendChild(treeContainer);
 
-    await buildTriggerChain(org, project, rootBuild, (batch) => {
-      allBuilds.push(...batch);
-      renderTree(treeContainer, allBuilds);
-      const count = allBuilds.length;
-      statusBar.querySelector('span')!.textContent =
-        `${count} pipeline${count !== 1 ? 's' : ''} found…`;
-    });
+    await buildTriggerChain(
+      org,
+      project,
+      rootBuild,
+      (batch) => {
+        // batch may be empty (status update for a build that completed)
+        for (const b of batch) {
+          const existing = allBuilds.findIndex((x) => x.id === b.id);
+          if (existing >= 0) {
+            allBuilds[existing] = b;
+          } else {
+            allBuilds.push(b);
+          }
+        }
+        renderTree(treeContainer, allBuilds);
+        const count = allBuilds.length;
+        const inProgressCount = allBuilds.filter(
+          (b) => b.status !== 'completed',
+        ).length;
+        const spinner = statusBar.querySelector('.apv-spinner');
+        const span = statusBar.querySelector('span')!;
+        if (inProgressCount > 0) {
+          if (!spinner) {
+            statusBar.insertAdjacentHTML(
+              'afterbegin',
+              '<div class="apv-spinner apv-spinner--small"></div>',
+            );
+          }
+          span.textContent = `${count} pipeline${count !== 1 ? 's' : ''} found, ${inProgressCount} still running…`;
+        } else {
+          span.textContent = `${count} pipeline${count !== 1 ? 's' : ''} found…`;
+        }
+      },
+      signal,
+    );
 
     // Done — replace spinner with summary pill
     const count = allBuilds.length;
@@ -112,6 +146,7 @@ export async function showDependencyModal(
       <span>in dependency chain</span>
     `;
   } catch (err) {
+    if (signal.aborted) return; // Panel was closed
     body.innerHTML = `
       <div class="apv-panel__error">
         <svg width="20" height="20" viewBox="0 0 20 20" fill="#a4262c">
