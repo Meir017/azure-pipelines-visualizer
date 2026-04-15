@@ -1,5 +1,5 @@
-import type { IFileProvider } from '@apv/core';
-import { collapsePath } from '@apv/core';
+import type { IFileProvider } from '@meirblachman/azure-pipelines-visualizer-core';
+import { collapsePath } from '@meirblachman/azure-pipelines-visualizer-core';
 import { getAzureDevOpsToken } from '../auth.js';
 import { MemoryTTLCache } from './memory-cache.js';
 

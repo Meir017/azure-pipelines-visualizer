@@ -19,9 +19,9 @@ The test runner is `bun:test` (not Jest/Vitest). Test files live next to source 
 
 Bun monorepo with three packages:
 
-- **`@apv/core`** — Pure TypeScript, zero runtime dependencies. Defines the `Pipeline` model, YAML parser, template detector, expression evaluator, and template resolver. Imported by both server and web.
-- **`@apv/server`** — Hono HTTP server on port 3001. Proxies Azure DevOps REST API calls, maintains a disk cache (keyed by commit SHA) and in-memory TTL caches for repo metadata and ref resolution.
-- **`@apv/web`** — React + Vite SPA on port 3000. Renders a ReactFlow diagram of the pipeline template tree. The Vite dev server proxies `/api` to the server.
+- **`@meirblachman/azure-pipelines-visualizer-core`** — Pure TypeScript, zero runtime dependencies. Defines the `Pipeline` model, YAML parser, template detector, expression evaluator, and template resolver. Imported by both server and web.
+- **`@meirblachman/azure-pipelines-visualizer-server`** — Hono HTTP server on port 3001. Proxies Azure DevOps REST API calls, maintains a disk cache (keyed by commit SHA) and in-memory TTL caches for repo metadata and ref resolution.
+- **`@meirblachman/azure-pipelines-visualizer-web`** — React + Vite SPA on port 3000. Renders a ReactFlow diagram of the pipeline template tree. The Vite dev server proxies `/api` to the server.
 
 ### Data flow
 
@@ -44,7 +44,7 @@ Bun monorepo with three packages:
 
 - All packages use **ESM** with `.js` extensions in imports (TypeScript `moduleResolution: "bundler"`).
 - Formatting: **Biome** — 2-space indent, single quotes, semicolons.
-- The `@apv/core` package must remain **pure** — no Node.js APIs, no network calls, no side effects. It's shared between server and web (browser).
+- The `@meirblachman/azure-pipelines-visualizer-core` package must remain **pure** — no Node.js APIs, no network calls, no side effects. It's shared between server and web (browser).
 - `PipelineDiagram.tsx` stashes internal state on React Flow node data using underscore-prefixed keys (`_ref`, `_parentParamContext`, `_accumulatedResources`, `_accumulatedVariables`, `_conditionResult`, `_fallbackPath`). These are cast via `as unknown as Record<string, unknown>` since they're not part of `FileNodeData`.
 - Configuration is in `apv.config.json` (validated by `apv.config.schema.json`).
 - Cache keys in `azure-devops.ts` are lowercased for case-insensitive deduplication.

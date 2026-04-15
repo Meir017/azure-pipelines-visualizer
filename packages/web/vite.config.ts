@@ -23,7 +23,7 @@ export default defineConfig(({ command }) => ({
             'react-dom',
             'react/jsx-runtime',
             '@xyflow/react',
-            '@apv/core',
+            '@meirblachman/azure-pipelines-visualizer-core',
             '@dagrejs/dagre',
             '@monaco-editor/react',
             'monaco-editor',

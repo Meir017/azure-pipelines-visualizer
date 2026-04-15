@@ -3,7 +3,7 @@
  * Used when the web app runs inside a Chrome extension page (no server needed).
  * Auth comes from the browser's existing ADO session cookies.
  */
-import { collapsePath } from '@apv/core';
+import { collapsePath } from '@meirblachman/azure-pipelines-visualizer-core';
 import type {
   FileByRepoNameResponse,
   PipelineInfo,

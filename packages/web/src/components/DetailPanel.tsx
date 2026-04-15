@@ -3,7 +3,7 @@ import {
   parseYaml,
   resolveTaskDocUrl,
   type TaskReference,
-} from '@apv/core';
+} from '@meirblachman/azure-pipelines-visualizer-core';
 import Editor from '@monaco-editor/react';
 import { useMemo } from 'react';
 import type { TaskSchemaEntry } from '../services/api-client.js';

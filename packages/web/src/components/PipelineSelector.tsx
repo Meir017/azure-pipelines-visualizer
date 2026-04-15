@@ -1,4 +1,4 @@
-import { parseAdoUrl } from '@apv/core';
+import { parseAdoUrl } from '@meirblachman/azure-pipelines-visualizer-core';
 import { useEffect, useRef, useState } from 'react';
 import {
   fetchFileByRepoName,
