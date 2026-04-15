@@ -17,6 +17,9 @@ export type { PipelineSelectorProps } from './components/PipelineSelector.js';
 export { default as PipelineSelector } from './components/PipelineSelector.js';
 export type { TemplateEdgeData } from './components/TemplateEdge.js';
 export { default as TemplateEdge } from './components/TemplateEdge.js';
+// Mount API (vanilla JS)
+export type { MountHandle, MountOptions } from './mount.js';
+export { mount } from './mount.js';
 export type {
   FileByRepoNameResponse,
   FileContentResponse,

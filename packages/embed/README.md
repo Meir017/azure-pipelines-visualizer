@@ -1,4 +1,4 @@
-# @apv/embed
+# @meirblachman/azure-pipelines-visualizer-embed
 
 Embeddable client-side library for visualizing Azure Pipelines template trees. Designed to be consumed by Chrome extensions or any web application running on the same origin as Azure DevOps.
 
@@ -12,9 +12,9 @@ Embeddable client-side library for visualizing Azure Pipelines template trees. D
 ## Installation
 
 ```bash
-npm install @apv/embed
+npm install @meirblachman/azure-pipelines-visualizer-embed
 # or
-bun add @apv/embed
+bun add @meirblachman/azure-pipelines-visualizer-embed
 ```
 
 ## Usage
@@ -22,7 +22,7 @@ bun add @apv/embed
 ### React Component
 
 ```tsx
-import { ApvEmbed } from '@apv/embed';
+import { ApvEmbed } from '@meirblachman/azure-pipelines-visualizer-embed';
 
 function App() {
   return (
@@ -40,7 +40,7 @@ function App() {
 ### Vanilla JavaScript
 
 ```ts
-import { mount } from '@apv/embed';
+import { mount } from '@meirblachman/azure-pipelines-visualizer-embed';
 
 const handle = mount(document.getElementById('pipeline')!, {
   org: 'myorg',
@@ -80,7 +80,7 @@ import {
   ensureRepoCached,
   getFileFromCache,
   clearCache,
-} from '@apv/embed';
+} from '@meirblachman/azure-pipelines-visualizer-embed';
 
 // Pre-fetch a repo
 await ensureRepoCached('org', 'project', 'repoId', 'refs/heads/main');

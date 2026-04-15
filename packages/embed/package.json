@@ -1,5 +1,5 @@
 {
-  "name": "@apv/embed",
+  "name": "@meirblachman/azure-pipelines-visualizer-embed",
   "version": "0.1.0",
   "type": "module",
   "main": "src/index.ts",

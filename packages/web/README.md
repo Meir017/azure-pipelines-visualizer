@@ -91,19 +91,25 @@ When no props are provided, the component also reads from the page's URL query p
 
 ## Embedding without React (Chrome extension, vanilla JS)
 
-If your project doesn't use React — for example, a Chrome extension — use the companion [`@apv/embed`](https://github.com/Meir017/azure-pipelines-visualizer/tree/main/packages/embed) package. It provides a `mount()` function that handles React internally and gives you a plain JavaScript API.
+If your project doesn't use React, use the `mount()` function. It handles React internally and gives you a plain JavaScript API.
 
 ### Vanilla JS
 
 ```js
-import { mount } from '@apv/embed';
+import { mount } from '@meirblachman/azure-pipelines-visualizer-web';
 
 const container = document.getElementById('pipeline-visualizer');
 
+// Load by pipeline definition ID
 const handle = mount(container, {
   org: 'myorg',
   project: 'myproject',
   pipelineId: 42,
+});
+
+// Or load by file URL
+const handle2 = mount(container, {
+  fileUrl: 'https://dev.azure.com/myorg/myproject/_git/myrepo?path=/.pipelines/main.yml',
 });
 
 // Update the pipeline later
@@ -117,9 +123,8 @@ handle.unmount();
 
 ```js
 // popup.js or content-script.js
-import { mount } from '@apv/embed';
+import { mount } from '@meirblachman/azure-pipelines-visualizer-web';
 
-// Create a container in the page
 const container = document.createElement('div');
 container.style.width = '100%';
 container.style.height = '600px';
@@ -147,7 +152,7 @@ const handle = mount(container, {
 <body>
   <div id="root"></div>
   <script type="module">
-    import { mount } from './apv-embed.js'; // bundled from @apv/embed
+    import { mount } from '@meirblachman/azure-pipelines-visualizer-web';
 
     mount(document.getElementById('root'), {
       org: 'myorg',
@@ -159,23 +164,17 @@ const handle = mount(container, {
 </html>
 ```
 
-> **Note:** The embed package talks directly to the Azure DevOps REST API using the browser's existing session cookies — no server required. This makes it ideal for Chrome extensions where users are already logged into Azure DevOps.
-
 ### `mount()` API
 
 ```ts
-mount(element: HTMLElement, options: MountOptions): MountHandle
+mount(element: HTMLElement, options?: MountOptions): MountHandle
 ```
 
-| Option | Type | Description |
-|--------|------|-------------|
-| `org` | `string` | Azure DevOps organization |
-| `project` | `string` | Azure DevOps project |
-| `pipelineId` | `number` | Pipeline build definition ID |
+`MountOptions` accepts the same props as `<App>`: `fileUrl`, `org`, `project`, `pipelineId`, `repo`, `path`, `branch`.
 
 | Handle method | Description |
 |---------------|-------------|
-| `update(partial)` | Update org, project, or pipelineId without remounting |
+| `update(partial)` | Update any option without remounting |
 | `unmount()` | Remove the visualizer and clean up |
 
 ## Using individual components
@@ -198,6 +197,7 @@ import '@xyflow/react/dist/style.css';
 
 | Export | Description |
 |---|---|
+| `mount` | Vanilla JS mount function — no React needed in your project |
 | `App` | Full application shell with selector, diagram, and detail panel |
 | `PipelineDiagram` | Core diagram component — renders the template tree with ReactFlow |
 | `PipelineSelector` | URL input bar with auto-load from query parameters |
