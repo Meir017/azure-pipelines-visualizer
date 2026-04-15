@@ -134,6 +134,95 @@ Build links dynamically:
 
 If no query parameters are present, the component shows an empty URL input bar where users can paste an Azure DevOps file URL manually.
 
+## Embedding without React (Chrome extension, vanilla JS)
+
+If your project doesn't use React — for example, a Chrome extension — use the companion [`@apv/embed`](https://github.com/Meir017/azure-pipelines-visualizer/tree/main/packages/embed) package. It provides a `mount()` function that handles React internally and gives you a plain JavaScript API.
+
+### Vanilla JS
+
+```js
+import { mount } from '@apv/embed';
+
+const container = document.getElementById('pipeline-visualizer');
+
+const handle = mount(container, {
+  org: 'myorg',
+  project: 'myproject',
+  pipelineId: 42,
+});
+
+// Update the pipeline later
+handle.update({ pipelineId: 99 });
+
+// Clean up when done
+handle.unmount();
+```
+
+### Chrome extension (content script or popup)
+
+```js
+// popup.js or content-script.js
+import { mount } from '@apv/embed';
+
+// Create a container in the page
+const container = document.createElement('div');
+container.style.width = '100%';
+container.style.height = '600px';
+document.body.appendChild(container);
+
+const handle = mount(container, {
+  org: 'myorg',
+  project: 'myproject',
+  pipelineId: 42,
+});
+```
+
+### Chrome extension HTML page
+
+```html
+<!-- popup.html or a dedicated extension page -->
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { margin: 0; }
+    #root { width: 100vw; height: 100vh; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module">
+    import { mount } from './apv-embed.js'; // bundled from @apv/embed
+
+    mount(document.getElementById('root'), {
+      org: 'myorg',
+      project: 'myproject',
+      pipelineId: 42,
+    });
+  </script>
+</body>
+</html>
+```
+
+> **Note:** The embed package talks directly to the Azure DevOps REST API using the browser's existing session cookies — no server required. This makes it ideal for Chrome extensions where users are already logged into Azure DevOps.
+
+### `mount()` API
+
+```ts
+mount(element: HTMLElement, options: MountOptions): MountHandle
+```
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `org` | `string` | Azure DevOps organization |
+| `project` | `string` | Azure DevOps project |
+| `pipelineId` | `number` | Pipeline build definition ID |
+
+| Handle method | Description |
+|---------------|-------------|
+| `update(partial)` | Update org, project, or pipelineId without remounting |
+| `unmount()` | Remove the visualizer and clean up |
+
 ## Using individual components
 
 You can also import specific components for more control:
