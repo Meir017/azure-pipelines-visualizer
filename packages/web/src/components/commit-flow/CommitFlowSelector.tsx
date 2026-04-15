@@ -1,9 +1,10 @@
+import { parseAdoCommitUrl } from '@meirblachman/azure-pipelines-visualizer-core';
 import { useState } from 'react';
 
 export interface CommitFlowParams {
   org: string;
   project: string;
-  repoId: string;
+  repoName: string;
   commitSha: string;
 }
 
@@ -16,22 +17,27 @@ export default function CommitFlowSelector({
   onLoad,
   loading,
 }: CommitFlowSelectorProps) {
-  const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
-  const [org, setOrg] = useState(params.get('org') || '');
-  const [project, setProject] = useState(params.get('project') || '');
-  const [repoId, setRepoId] = useState(params.get('repoId') || '');
-  const [commitSha, setCommitSha] = useState(params.get('commitSha') || '');
-
-  const canSubmit =
-    org.trim() && project.trim() && repoId.trim() && commitSha.trim();
+  const [urlInput, setUrlInput] = useState('');
+  const [urlError, setUrlError] = useState<string | null>(null);
 
   const handleSubmit = () => {
-    if (!canSubmit) return;
+    const input = urlInput.trim();
+    if (!input) return;
+    setUrlError(null);
+
+    const parsed = parseAdoCommitUrl(input);
+    if (!parsed) {
+      setUrlError(
+        'Invalid URL. Expected: https://dev.azure.com/{org}/{project}/_git/{repo}/commit/{sha}',
+      );
+      return;
+    }
+
     onLoad({
-      org: org.trim(),
-      project: project.trim(),
-      repoId: repoId.trim(),
-      commitSha: commitSha.trim(),
+      org: parsed.org,
+      project: parsed.project,
+      repoName: parsed.repoName,
+      commitSha: parsed.commitSha,
     });
   };
 
@@ -46,44 +52,23 @@ export default function CommitFlowSelector({
     <div className="commit-flow-selector">
       <input
         type="text"
-        placeholder="Organization"
-        value={org}
-        onChange={(e) => setOrg(e.target.value)}
+        placeholder="https://dev.azure.com/{org}/{project}/_git/{repo}/commit/{sha}"
+        value={urlInput}
+        onChange={(e) => setUrlInput(e.target.value)}
         onKeyDown={handleKeyDown}
-        className="commit-flow-selector__input"
-      />
-      <input
-        type="text"
-        placeholder="Project"
-        value={project}
-        onChange={(e) => setProject(e.target.value)}
-        onKeyDown={handleKeyDown}
-        className="commit-flow-selector__input"
-      />
-      <input
-        type="text"
-        placeholder="Repository ID or Name"
-        value={repoId}
-        onChange={(e) => setRepoId(e.target.value)}
-        onKeyDown={handleKeyDown}
-        className="commit-flow-selector__input"
-      />
-      <input
-        type="text"
-        placeholder="Commit SHA"
-        value={commitSha}
-        onChange={(e) => setCommitSha(e.target.value)}
-        onKeyDown={handleKeyDown}
-        className="commit-flow-selector__input commit-flow-selector__input--sha"
+        className="commit-flow-selector__input commit-flow-selector__input--url"
       />
       <button
         className="commit-flow-selector__btn"
         onClick={handleSubmit}
-        disabled={!canSubmit || loading}
+        disabled={!urlInput.trim() || loading}
         type="button"
       >
         {loading ? '⏳ Loading...' : 'Load Builds'}
       </button>
+      {urlError && (
+        <div className="commit-flow-selector__error">{urlError}</div>
+      )}
     </div>
   );
 }

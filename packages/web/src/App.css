@@ -1198,14 +1198,22 @@ body {
   min-width: 120px;
 }
 
-.commit-flow-selector__input--sha {
-  min-width: 200px;
+.commit-flow-selector__input--url {
+  flex: 1;
+  min-width: 400px;
   font-family: monospace;
 }
 
 .commit-flow-selector__input:focus {
   outline: none;
   border-color: var(--accent);
+}
+
+.commit-flow-selector__error {
+  width: 100%;
+  color: var(--error);
+  font-size: 12px;
+  margin-top: 2px;
 }
 
 .commit-flow-selector__btn {

@@ -1,21 +1,26 @@
 import { Hono } from 'hono';
-import { getBuild, listBuildsForCommit } from '../services/azure-devops.js';
+import {
+  getBuild,
+  getRepository,
+  listBuildsForCommit,
+} from '../services/azure-devops.js';
 
 const builds = new Hono();
 
 builds.get('/:org/:project/builds', async (c) => {
   const { org, project } = c.req.param();
-  const repoId = c.req.query('repoId');
   const commitSha = c.req.query('commitSha');
+  const repoName = c.req.query('repoName');
 
-  if (!repoId || !commitSha) {
+  if (!repoName || !commitSha) {
     return c.json(
-      { error: 'Both repoId and commitSha query parameters are required' },
+      { error: 'Both repoName and commitSha query parameters are required' },
       400,
     );
   }
 
-  const data = await listBuildsForCommit(org, project, repoId, commitSha);
+  const repo = await getRepository(org, project, repoName);
+  const data = await listBuildsForCommit(org, project, repo.id, commitSha);
   return c.json(data);
 });
 

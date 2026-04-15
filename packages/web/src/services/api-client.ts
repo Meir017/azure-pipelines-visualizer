@@ -113,12 +113,12 @@ export function fetchTaskSchema(org: string): Promise<TaskSchemaResponse> {
 export function fetchBuildsForCommit(
   org: string,
   project: string,
-  repoId: string,
+  repoName: string,
   commitSha: string,
 ): Promise<BuildInfo[]> {
   if (isExtensionPage)
-    return directAdo.fetchBuildsForCommit(org, project, repoId, commitSha);
-  const params = new URLSearchParams({ repoId, commitSha });
+    return directAdo.fetchBuildsForCommit(org, project, repoName, commitSha);
+  const params = new URLSearchParams({ repoName, commitSha });
   return apiFetch(`/${org}/${project}/builds?${params}`);
 }
 

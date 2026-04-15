@@ -25,7 +25,7 @@ export default function CommitFlowPage() {
       const data = await fetchBuildsForCommit(
         params.org,
         params.project,
-        params.repoId,
+        params.repoName,
         params.commitSha,
       );
       setBuilds(data);
