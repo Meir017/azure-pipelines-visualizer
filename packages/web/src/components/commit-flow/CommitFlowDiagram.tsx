@@ -134,7 +134,7 @@ function buildGraph(builds: BuildInfo[]): { nodes: Node[]; edges: Edge[] } {
   // Determine root nodes: builds not triggered by another build in the set
   const childIds = new Set<number>();
   for (const b of builds) {
-    if (b.triggeredByBuild && buildById.has(b.triggeredByBuild.id)) {
+    if (b.upstreamBuildId && buildById.has(b.upstreamBuildId)) {
       childIds.add(b.id);
     }
   }
@@ -159,10 +159,10 @@ function buildGraph(builds: BuildInfo[]): { nodes: Node[]; edges: Edge[] } {
 
   const edges: Edge[] = [];
   for (const b of builds) {
-    if (b.triggeredByBuild && buildById.has(b.triggeredByBuild.id)) {
+    if (b.upstreamBuildId && buildById.has(b.upstreamBuildId)) {
       edges.push({
-        id: `e-${b.triggeredByBuild.id}-${b.id}`,
-        source: String(b.triggeredByBuild.id),
+        id: `e-${b.upstreamBuildId}-${b.id}`,
+        source: String(b.upstreamBuildId),
         target: String(b.id),
         animated: b.status === 'inProgress',
         style: { stroke: '#89b4fa', strokeWidth: 2 },

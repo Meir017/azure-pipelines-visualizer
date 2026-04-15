@@ -122,6 +122,18 @@ export function fetchBuildsForCommit(
   return apiFetch(`/${org}/${project}/builds?${params}`);
 }
 
+export function fetchCommitFlowGraph(
+  org: string,
+  project: string,
+  repoName: string,
+  commitSha: string,
+): Promise<BuildInfo[]> {
+  if (isExtensionPage)
+    return directAdo.fetchBuildsForCommit(org, project, repoName, commitSha);
+  const params = new URLSearchParams({ repoName, commitSha });
+  return apiFetch(`/${org}/${project}/commit-flow?${params}`);
+}
+
 export function fetchBuild(
   org: string,
   project: string,

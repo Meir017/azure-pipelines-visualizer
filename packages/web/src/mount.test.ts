@@ -50,6 +50,7 @@ mock.module('./services/api-client.js', () => ({
   fetchTaskDocsConfig: mock(() => Promise.resolve({ customTaskDocs: {} })),
   fetchTaskSchema: mock(() => Promise.resolve({ tasks: [] })),
   fetchBuildsForCommit: mock(() => Promise.resolve([])),
+  fetchCommitFlowGraph: mock(() => Promise.resolve([])),
   fetchBuild: mock(() => Promise.resolve({})),
 }));
 

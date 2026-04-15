@@ -1,7 +1,7 @@
 import '@xyflow/react/dist/style.css';
 import { useCallback, useState } from 'react';
 import type { BuildInfo } from '../../services/api-client.js';
-import { fetchBuildsForCommit } from '../../services/api-client.js';
+import { fetchCommitFlowGraph } from '../../services/api-client.js';
 import BuildDetailPopup from './BuildDetailPopup.js';
 import CommitFlowDiagram from './CommitFlowDiagram.js';
 import CommitFlowSelector, {
@@ -22,7 +22,7 @@ export default function CommitFlowPage() {
     setSelectedBuild(null);
     setLastParams(params);
     try {
-      const data = await fetchBuildsForCommit(
+      const data = await fetchCommitFlowGraph(
         params.org,
         params.project,
         params.repoName,
