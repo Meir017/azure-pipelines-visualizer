@@ -3,12 +3,15 @@ import type { BuildInfo } from './build-types.js';
 /** Small status icon matching ADO's build status circles. */
 function statusIndicator(status: string, result: string | null): string {
   const cls = statusClass(status, result);
+  // Running: solid blue filled circle (ADO pattern)
   if (status === 'inProgress')
-    return `<span class="apv-row__status apv-row__status--running"><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="8 24" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 6 6" to="360 6 6" dur="1s" repeatCount="indefinite"/></circle></svg></span>`;
+    return `<span class="apv-row__status apv-row__status--running"><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="5.5" fill="currentColor"/></svg></span>`;
+  // Queued: hollow gray circle
   if (status === 'notStarted')
     return `<span class="apv-row__status apv-row__status--queued"><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span>`;
+  // Succeeded: green circle + white checkmark (ADO style — single clean stroke)
   if (result === 'succeeded')
-    return `<span class="apv-row__status ${cls}"><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="5.5" fill="currentColor"/><path d="M4.8 7.8L3.3 6.3l-.5.5 2 2 3.7-3.7-.5-.5z" fill="#fff"/></svg></span>`;
+    return `<span class="apv-row__status ${cls}"><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="5.5" fill="currentColor"/><path d="M3.5 6.2l2 2 3-3.4" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
   if (result === 'partiallySucceeded')
     return `<span class="apv-row__status ${cls}"><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="5.5" fill="currentColor"/><path d="M5.4 3.5h1.2v3h-1.2zm0 4h1.2v1.2H5.4z" fill="#fff"/></svg></span>`;
   if (result === 'failed')
