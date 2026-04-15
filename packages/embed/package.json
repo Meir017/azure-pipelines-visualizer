@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@apv/core": "workspace:*",
-    "@apv/web": "workspace:*",
+    "@meirblachman/azure-pipelines-visualizer-web": "workspace:*",
     "@dagrejs/dagre": "^2.0.4",
     "@xyflow/react": "^12.10.1",
     "fflate": "^0.8.2",

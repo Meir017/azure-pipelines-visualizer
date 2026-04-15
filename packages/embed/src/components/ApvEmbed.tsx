@@ -1,7 +1,7 @@
-import PipelineDiagram from '@apv/web/src/components/PipelineDiagram.js';
-import type { FileByRepoNameResponse } from '@apv/web/src/services/api-client.js';
-import { FileFetchProvider } from '@apv/web/src/services/file-fetch-context.js';
-import { usePipelineStore } from '@apv/web/src/store/pipeline-store.js';
+import PipelineDiagram from '@meirblachman/azure-pipelines-visualizer-web/src/components/PipelineDiagram.js';
+import type { FileByRepoNameResponse } from '@meirblachman/azure-pipelines-visualizer-web/src/services/api-client.js';
+import { FileFetchProvider } from '@meirblachman/azure-pipelines-visualizer-web/src/services/file-fetch-context.js';
+import { usePipelineStore } from '@meirblachman/azure-pipelines-visualizer-web/src/store/pipeline-store.js';
 import { useCallback, useEffect, useState } from 'react';
 import {
   fetchFileContent,
