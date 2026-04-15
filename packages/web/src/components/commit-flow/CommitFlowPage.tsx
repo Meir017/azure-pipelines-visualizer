@@ -1,7 +1,7 @@
 import '@xyflow/react/dist/style.css';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import type { BuildInfo } from '../../services/api-client.js';
-import { fetchCommitFlowGraph } from '../../services/api-client.js';
+import { streamCommitFlowGraph } from '../../services/api-client.js';
 import BuildDetailPopup from './BuildDetailPopup.js';
 import CommitFlowDiagram from './CommitFlowDiagram.js';
 import CommitFlowSelector, {
@@ -14,29 +14,41 @@ export default function CommitFlowPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedBuild, setSelectedBuild] = useState<BuildInfo | null>(null);
   const [lastParams, setLastParams] = useState<CommitFlowParams | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
-  const handleLoad = useCallback(async (params: CommitFlowParams) => {
+  const handleLoad = useCallback((params: CommitFlowParams) => {
+    // Cancel any in-flight stream
+    abortRef.current?.abort();
+
     setLoading(true);
     setError(null);
     setBuilds([]);
     setSelectedBuild(null);
     setLastParams(params);
-    try {
-      const data = await fetchCommitFlowGraph(
-        params.org,
-        params.project,
-        params.repoName,
-        params.commitSha,
-      );
-      setBuilds(data);
-      if (data.length === 0) {
-        setError('No builds found for this commit.');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setLoading(false);
-    }
+
+    abortRef.current = streamCommitFlowGraph(
+      params.org,
+      params.project,
+      params.repoName,
+      params.commitSha,
+      (batch) => {
+        setBuilds((prev) => [...prev, ...batch]);
+      },
+      () => {
+        setLoading(false);
+        // Check if any builds were received
+        setBuilds((prev) => {
+          if (prev.length === 0) {
+            setError('No builds found for this commit.');
+          }
+          return prev;
+        });
+      },
+      (errMsg) => {
+        setLoading(false);
+        setError(errMsg);
+      },
+    );
   }, []);
 
   const handleRefresh = useCallback(() => {
@@ -64,6 +76,7 @@ export default function CommitFlowPage() {
         <div className="commit-flow-page__diagram">
           <div className="commit-flow-page__summary">
             {builds.length} build{builds.length !== 1 ? 's' : ''} found
+            {loading && ' (loading…)'}
           </div>
           <CommitFlowDiagram builds={builds} onNodeClick={setSelectedBuild} />
         </div>

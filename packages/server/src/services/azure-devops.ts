@@ -374,14 +374,14 @@ export async function listBuildsTriggeredBy(
 
 /**
  * Build the full commit flow graph: root builds + recursively triggered builds.
- * Returns a flat array of all builds in the trigger chain.
+ * Yields builds progressively as they are discovered (BFS).
  */
-export async function getCommitFlowGraph(
+export async function* streamCommitFlowGraph(
   org: string,
   project: string,
   repositoryId: string,
   commitSha: string,
-): Promise<BuildInfo[]> {
+): AsyncGenerator<BuildInfo[]> {
   const rootBuilds = await listBuildsForCommit(
     org,
     project,
@@ -390,6 +390,10 @@ export async function getCommitFlowGraph(
   );
   const visited = new Map<number, BuildInfo>();
   for (const b of rootBuilds) visited.set(b.id, b);
+
+  if (rootBuilds.length > 0) {
+    yield rootBuilds;
+  }
 
   // BFS to find downstream triggered builds (max depth 5)
   let frontier = [...rootBuilds];
@@ -407,18 +411,43 @@ export async function getCommitFlowGraph(
         ),
       ),
     );
+    const newBuilds: BuildInfo[] = [];
     for (const children of childResults) {
       for (const child of children) {
         if (!visited.has(child.id)) {
           visited.set(child.id, child);
           nextFrontier.push(child);
+          newBuilds.push(child);
         }
       }
     }
+    if (newBuilds.length > 0) {
+      yield newBuilds;
+    }
     frontier = nextFrontier;
   }
+}
 
-  return Array.from(visited.values());
+/**
+ * Build the full commit flow graph (non-streaming).
+ * Returns a flat array of all builds in the trigger chain.
+ */
+export async function getCommitFlowGraph(
+  org: string,
+  project: string,
+  repositoryId: string,
+  commitSha: string,
+): Promise<BuildInfo[]> {
+  const all: BuildInfo[] = [];
+  for await (const batch of streamCommitFlowGraph(
+    org,
+    project,
+    repositoryId,
+    commitSha,
+  )) {
+    all.push(...batch);
+  }
+  return all;
 }
 
 export async function getBuild(

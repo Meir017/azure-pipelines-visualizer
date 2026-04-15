@@ -134,6 +134,67 @@ export function fetchCommitFlowGraph(
   return apiFetch(`/${org}/${project}/commit-flow?${params}`);
 }
 
+/**
+ * Stream commit flow graph via SSE — calls onBatch with each new batch of builds.
+ * Returns an AbortController to cancel the stream.
+ */
+export function streamCommitFlowGraph(
+  org: string,
+  project: string,
+  repoName: string,
+  commitSha: string,
+  onBatch: (builds: BuildInfo[]) => void,
+  onDone: () => void,
+  onError: (err: string) => void,
+): AbortController {
+  const controller = new AbortController();
+
+  if (isExtensionPage) {
+    // Extension mode: fall back to single fetch
+    directAdo
+      .fetchBuildsForCommit(org, project, repoName, commitSha)
+      .then((builds) => {
+        onBatch(builds);
+        onDone();
+      })
+      .catch((err) =>
+        onError(err instanceof Error ? err.message : String(err)),
+      );
+    return controller;
+  }
+
+  const params = new URLSearchParams({ repoName, commitSha });
+  const url = `${API_BASE}/${org}/${project}/commit-flow/stream?${params}`;
+  const eventSource = new EventSource(url);
+
+  controller.signal.addEventListener('abort', () => eventSource.close());
+
+  eventSource.addEventListener('builds', (e) => {
+    try {
+      const builds: BuildInfo[] = JSON.parse(e.data);
+      onBatch(builds);
+    } catch {
+      // ignore parse errors
+    }
+  });
+
+  eventSource.addEventListener('done', () => {
+    eventSource.close();
+    onDone();
+  });
+
+  eventSource.addEventListener('error', (e) => {
+    eventSource.close();
+    const msg =
+      e instanceof MessageEvent && e.data
+        ? JSON.parse(e.data).error
+        : 'Connection lost';
+    onError(msg);
+  });
+
+  return controller;
+}
+
 export function fetchBuild(
   org: string,
   project: string,
