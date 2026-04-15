@@ -68,7 +68,7 @@ function BuildNode({ data }: NodeProps) {
 
   return (
     <div className={`build-node ${resultClass(d.status, d.result)}`}>
-      {!d.isRoot && <Handle type="target" position={Position.Top} />}
+      {!d.isRoot && <Handle type="target" position={Position.Left} />}
 
       <div className="build-node__header">
         <span className="build-node__status">
@@ -90,7 +90,7 @@ function BuildNode({ data }: NodeProps) {
         🌿 {d.sourceBranch.replace('refs/heads/', '')}
       </div>
 
-      <Handle type="source" position={Position.Bottom} />
+      <Handle type="source" position={Position.Right} />
     </div>
   );
 }

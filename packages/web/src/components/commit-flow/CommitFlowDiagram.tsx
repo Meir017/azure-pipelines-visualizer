@@ -15,8 +15,7 @@ import BuildNode, { type BuildNodeData } from './BuildNode.js';
 
 const NODE_WIDTH = 280;
 const NODE_HEIGHT = 130;
-const GRID_GAP_X = 20;
-const GRID_GAP_Y = 20;
+const ROW_GAP = 20;
 
 const nodeTypes = { build: BuildNode };
 
@@ -25,39 +24,16 @@ interface CommitFlowDiagramProps {
   onNodeClick: (build: BuildInfo) => void;
 }
 
-/** Layout connected components with dagre (tree), disconnected nodes in a grid. */
+/**
+ * Timeline layout: X axis = time, Y axis = swim lanes.
+ * Connected nodes use dagre LR for the trigger tree;
+ * disconnected nodes are placed in rows below, sorted by start time.
+ */
 function layoutGraph(
   nodes: Node[],
   edges: Edge[],
 ): { nodes: Node[]; edges: Edge[] } {
-  if (edges.length === 0) {
-    return { nodes: gridLayout(nodes), edges };
-  }
-
-  // Find connected components
-  const adj = new Map<string, Set<string>>();
-  for (const n of nodes) adj.set(n.id, new Set());
-  for (const e of edges) {
-    adj.get(e.source)?.add(e.target);
-    adj.get(e.target)?.add(e.source);
-  }
-  const visited = new Set<string>();
-  const components: Set<string>[] = [];
-  for (const n of nodes) {
-    if (visited.has(n.id)) continue;
-    const comp = new Set<string>();
-    const stack = [n.id];
-    while (stack.length > 0) {
-      const id = stack.pop()!;
-      if (visited.has(id)) continue;
-      visited.add(id);
-      comp.add(id);
-      for (const nb of adj.get(id) ?? []) {
-        if (!visited.has(nb)) stack.push(nb);
-      }
-    }
-    components.push(comp);
-  }
+  if (nodes.length === 0) return { nodes, edges };
 
   // Separate connected (have edges) from isolated nodes
   const connectedIds = new Set<string>();
@@ -68,61 +44,79 @@ function layoutGraph(
   const isolatedNodes = nodes.filter((n) => !connectedIds.has(n.id));
   const connectedNodes = nodes.filter((n) => connectedIds.has(n.id));
 
-  // Layout connected nodes with dagre
-  const g = new dagre.graphlib.Graph();
-  g.setDefaultEdgeLabel(() => ({}));
-  g.setGraph({ rankdir: 'TB', ranksep: 80, nodesep: 40 });
-  for (const node of connectedNodes) {
-    g.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
-  }
-  for (const edge of edges) {
-    g.setEdge(edge.source, edge.target);
-  }
-  dagre.layout(g);
+  let laid: Node[] = [];
 
-  const dagreNodes = connectedNodes.map((node) => {
-    const pos = g.node(node.id);
-    return {
-      ...node,
-      position: { x: pos.x - NODE_WIDTH / 2, y: pos.y - NODE_HEIGHT / 2 },
-    };
-  });
+  if (connectedNodes.length > 0) {
+    // Layout connected nodes with dagre LR (left-to-right timeline)
+    const g = new dagre.graphlib.Graph();
+    g.setDefaultEdgeLabel(() => ({}));
+    g.setGraph({ rankdir: 'LR', ranksep: 80, nodesep: 30 });
+    for (const node of connectedNodes) {
+      g.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
+    }
+    for (const edge of edges) {
+      g.setEdge(edge.source, edge.target);
+    }
+    dagre.layout(g);
 
-  // Find bounding box of dagre-laid-out nodes to place grid below
-  let maxY = 0;
-  for (const n of dagreNodes) {
-    maxY = Math.max(maxY, n.position.y + NODE_HEIGHT);
+    laid = connectedNodes.map((node) => {
+      const pos = g.node(node.id);
+      return {
+        ...node,
+        position: { x: pos.x - NODE_WIDTH / 2, y: pos.y - NODE_HEIGHT / 2 },
+      };
+    });
   }
 
-  // Grid layout for isolated nodes, placed below the tree
-  const gridStartY = dagreNodes.length > 0 ? maxY + 60 : 0;
-  const gridded = gridLayout(isolatedNodes, gridStartY);
+  // Place isolated nodes in rows below the tree, sorted by start time
+  if (isolatedNodes.length > 0) {
+    let maxY = 0;
+    for (const n of laid) maxY = Math.max(maxY, n.position.y + NODE_HEIGHT);
+    const startY = laid.length > 0 ? maxY + 60 : 0;
 
-  return { nodes: [...dagreNodes, ...gridded], edges };
-}
+    const sorted = [...isolatedNodes].sort((a, b) => {
+      const aTime = (a.data as BuildNodeData).startTime ?? '';
+      const bTime = (b.data as BuildNodeData).startTime ?? '';
+      return aTime < bTime ? -1 : aTime > bTime ? 1 : 0;
+    });
 
-/** Arrange nodes in a grid, sorted by start time. */
-function gridLayout(nodes: Node[], startY = 0): Node[] {
-  const cols = Math.max(1, Math.ceil(Math.sqrt(nodes.length)));
+    // Compute time-based X positions for isolated nodes
+    const times = sorted
+      .map((n) => {
+        const t = (n.data as BuildNodeData).startTime;
+        return t ? new Date(t).getTime() : null;
+      })
+      .filter((t): t is number => t !== null);
 
-  // Sort by start time so the grid reads chronologically
-  const sorted = [...nodes].sort((a, b) => {
-    const aTime = (a.data as BuildNodeData).startTime ?? '';
-    const bTime = (b.data as BuildNodeData).startTime ?? '';
-    return aTime < bTime ? -1 : aTime > bTime ? 1 : 0;
-  });
+    if (times.length > 0) {
+      const minTime = Math.min(...times);
+      const maxTime = Math.max(...times);
+      const span = maxTime - minTime || 1;
+      // Scale to a reasonable width (at least 2 node widths per node)
+      const totalWidth = Math.max(sorted.length * (NODE_WIDTH + ROW_GAP), 1200);
 
-  return sorted.map((node, i) => {
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    return {
-      ...node,
-      position: {
-        x: col * (NODE_WIDTH + GRID_GAP_X),
-        y: startY + row * (NODE_HEIGHT + GRID_GAP_Y),
-      },
-    };
-  });
+      let row = 0;
+      for (const node of sorted) {
+        const t = (node.data as BuildNodeData).startTime;
+        const ms = t ? new Date(t).getTime() : minTime;
+        const x = ((ms - minTime) / span) * totalWidth;
+        node.position = {
+          x,
+          y: startY + row * (NODE_HEIGHT + ROW_GAP),
+        };
+        row++;
+      }
+    } else {
+      // No timestamps — stack vertically
+      sorted.forEach((node, i) => {
+        node.position = { x: 0, y: startY + i * (NODE_HEIGHT + ROW_GAP) };
+      });
+    }
+
+    laid = [...laid, ...sorted];
+  }
+
+  return { nodes: laid, edges };
 }
 
 function buildGraph(builds: BuildInfo[]): { nodes: Node[]; edges: Edge[] } {
