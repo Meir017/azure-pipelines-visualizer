@@ -14,7 +14,7 @@ export function closeModal(): void {
   }
 }
 
-const TREE_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M6 1H2v3h1.5v2H2v3h1.5v2H2v3h4v-3H4.5v-2H6V7H4.5V5H6V1zm4 0h4v3h-4V1zm0 5h4v3h-4V6zm0 5h4v3h-4v-3zM7 2.5h2v1H7v-1zm0 5h2v1H7v-1zm0 5h2v1H7v-1z"/></svg>`;
+const TREE_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M1 5.5C1 3.5 2.5 2 4 2h1l.5 1H4c-1 0-2 .8-2 2.5S3 8 4 8h1.5l-.5 1H4C2.5 9 1 7.5 1 5.5z"/><rect x="5.5" y="4.5" width="2" height="2" rx=".4"/><path d="M7.5 5.5H9.5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/><path d="M9.5 2.5V11.5" stroke="currentColor" stroke-width=".8"/><path d="M9.5 2.5H11M9.5 5.5H11M9.5 8.5H11M9.5 11.5H11" stroke="currentColor" stroke-width=".8"/><rect x="11" y="1.75" width="4" height="1.5" rx=".5"/><rect x="11" y="4.75" width="4" height="1.5" rx=".5"/><rect x="11" y="7.75" width="4" height="1.5" rx=".5"/><rect x="11" y="10.75" width="4" height="1.5" rx=".5"/></svg>`;
 
 export async function showDependencyModal(
   org: string,
