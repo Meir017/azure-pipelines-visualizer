@@ -253,6 +253,7 @@
 .apv-row__status svg {
   width: 16px;
   height: 16px;
+  fill: currentColor;
 }
 
 .apv-row__status--succeeded {
