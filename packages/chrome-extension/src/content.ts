@@ -30,6 +30,9 @@ function extractBuildId(href: string): number | null {
  * ADO's sidebar uses different DOM structures; we look for build links.
  */
 function injectButtons(container: Element): void {
+  // Don't inject into our own panel
+  if (container.closest('.apv-panel')) return;
+
   // Find all links to build results that we haven't already processed
   const buildLinks = container.querySelectorAll<HTMLAnchorElement>(
     'a[href*="_build/results"]',
@@ -77,6 +80,8 @@ function startObserver(): void {
 
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
+      // Skip mutations inside our own panel
+      if ((mutation.target as Element).closest?.('.apv-panel')) continue;
       for (const node of mutation.addedNodes) {
         if (node instanceof HTMLElement) {
           // Check if this is or contains build links
