@@ -1,7 +1,8 @@
 # Azure Pipelines Visualizer
 
 [![CI](https://github.com/Meir017/azure-pipelines-visualizer/actions/workflows/ci.yml/badge.svg)](https://github.com/Meir017/azure-pipelines-visualizer/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/@meirblachman/azure-pipelines-visualizer)](https://www.npmjs.com/package/@meirblachman/azure-pipelines-visualizer)
+[![npm CLI](https://img.shields.io/npm/v/@meirblachman/azure-pipelines-visualizer?label=npm%20cli)](https://www.npmjs.com/package/@meirblachman/azure-pipelines-visualizer)
+[![npm Web](https://img.shields.io/npm/v/@meirblachman/azure-pipelines-visualizer-web?label=npm%20web)](https://www.npmjs.com/package/@meirblachman/azure-pipelines-visualizer-web)
 
 An interactive visualizer for Azure DevOps pipelines. Paste a pipeline URL and explore its template hierarchy as an expandable diagram with YAML preview and task documentation links.
 
@@ -57,6 +58,50 @@ npx @meirblachman/azure-pipelines-visualizer -c ./my-config.json -p 8080
 ```
 
 The `PORT` environment variable is still supported as a fallback when `--port` is not specified.
+
+## Web Library
+
+The visualizer is also available as a React component library for embedding in your own apps or Chrome extensions:
+
+```bash
+npm install @meirblachman/azure-pipelines-visualizer-web
+```
+
+### React
+
+```tsx
+import { App } from '@meirblachman/azure-pipelines-visualizer-web';
+import '@meirblachman/azure-pipelines-visualizer-web/dist/lib/style.css';
+import '@xyflow/react/dist/style.css';
+
+// Load by pipeline definition ID
+<App org="myorg" project="myproject" pipelineId={42} />
+
+// Load by file URL
+<App fileUrl="https://dev.azure.com/myorg/myproject/_git/myrepo?path=/.pipelines/main.yml" />
+
+// Load by repo path
+<App org="myorg" project="myproject" repo="myrepo" path="/.pipelines/main.yml" />
+```
+
+### Vanilla JS / Chrome extension (no React needed)
+
+```js
+import { mount } from '@meirblachman/azure-pipelines-visualizer-web';
+
+const handle = mount(document.getElementById('root'), {
+  org: 'myorg',
+  project: 'myproject',
+  pipelineId: 42,
+});
+
+handle.update({ pipelineId: 99 }); // update
+handle.unmount();                   // clean up
+```
+
+> **Chrome extensions:** The library auto-detects `chrome-extension:` protocol and talks directly to Azure DevOps REST APIs using browser cookies — no server required.
+
+See the full [web library documentation](packages/web/README.md) for all props, exports, and CDN usage.
 
 ## Development Setup
 
@@ -170,7 +215,8 @@ bun run build:standalone    # produces ./apv (or apv.exe on Windows)
 
 ```
 packages/
-  core/     # Pipeline model, YAML parser, template detector, task resolver
+  core/     # Pipeline model, YAML parser, template detector, expression evaluator
   server/   # Hono API server (ADO proxy + disk-backed file cache)
-  web/      # React + Vite frontend (ReactFlow diagram, Monaco editor)
+  web/      # React + Vite frontend (ReactFlow diagram, Monaco editor, npm library)
+  cli/      # CLI wrapper — bundles server + web for npx usage
 ```
