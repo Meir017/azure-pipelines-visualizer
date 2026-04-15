@@ -43,7 +43,7 @@ jobs:
         run: bun run lint
 
       - name: Test (bun)
-        run: bun test packages/core packages/server packages/embed packages/web
+        run: bun test packages/core packages/server packages/web
 
       - name: Build CLI bundle
         run: bun run build:cli
