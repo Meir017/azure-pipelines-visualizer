@@ -1,7 +1,7 @@
 /* ============================================================
    Azure Pipelines Dependency Viewer — Content Script Styles
-   Matches ADO's Bolt design system: right-side panel, Segoe UI,
-   ADO color tokens with light-mode fallbacks, status circles.
+   Uses ADO Bolt design-system CSS custom properties so colors
+   automatically follow the user's light / dark theme.
    ============================================================ */
 
 /* --- Dependency Button (injected into sidebar rows) --- */
@@ -50,8 +50,8 @@
   z-index: 2000000;
   display: flex;
   flex-direction: column;
-  background: var(--communication-background, #ffffff);
-  box-shadow: -3px 0 15px rgba(0, 0, 0, 0.15);
+  background: var(--callout-background-color, var(--background-color, #ffffff));
+  box-shadow: var(--callout-shadow, -3px 0 15px rgba(0, 0, 0, 0.15));
   font-family:
     "Segoe UI", "Segoe UI Web (West European)", -apple-system,
     BlinkMacSystemFont, Roboto, "Helvetica Neue", Helvetica, Ubuntu, Arial,
@@ -79,8 +79,9 @@
   justify-content: space-between;
   min-height: 48px;
   padding: 0 16px;
-  border-bottom: 1px solid var(--palette-neutral-8, #edebe9);
-  background: var(--communication-background, #ffffff);
+  border-bottom: 1px solid
+    var(--separator-color, var(--palette-neutral-8, #edebe9));
+  background: var(--callout-background-color, var(--background-color, #ffffff));
   flex-shrink: 0;
 }
 
@@ -185,8 +186,8 @@
   padding: 16px;
   margin: 12px 0;
   border-radius: 3px;
-  background: #fde7e9;
-  border-left: 3px solid #a4262c;
+  background: var(--status-error-background, rgba(164, 38, 44, 0.1));
+  border-left: 3px solid var(--palette-error, #a4262c);
 }
 
 .apv-panel__error svg {
@@ -197,7 +198,7 @@
 .apv-panel__error-title {
   font-weight: 600;
   font-size: 14px;
-  color: #a4262c;
+  color: var(--palette-error, #a4262c);
   margin-bottom: 4px;
 }
 
@@ -221,7 +222,7 @@
 
 .apv-badge--info {
   background: var(--communication-foreground, #0078d4);
-  color: #ffffff;
+  color: var(--communication-foreground-text, #ffffff);
 }
 
 /* --- Spinner (ADO-style) --- */
@@ -322,7 +323,7 @@
   border-radius: 3px;
   border: 1px solid var(--palette-neutral-8, #edebe9);
   border-left: 3px solid var(--palette-neutral-8, #c8c6c4);
-  background: var(--communication-background, #ffffff);
+  background: var(--callout-background-color, var(--background-color, #ffffff));
   font-size: 12px;
   line-height: 1.4;
   cursor: default;
@@ -334,24 +335,24 @@
 .apv-node:hover {
   border-color: var(--palette-neutral-20, #a19f9d);
   box-shadow:
-    0 1.6px 3.6px rgba(0, 0, 0, 0.1),
-    0 0.3px 0.9px rgba(0, 0, 0, 0.08);
+    0 1.6px 3.6px var(--card-shadow-color, rgba(0, 0, 0, 0.1)),
+    0 0.3px 0.9px var(--card-shadow-color, rgba(0, 0, 0, 0.08));
 }
 
 .apv-node--succeeded {
-  border-left-color: #107c10;
+  border-left-color: var(--palette-success, #107c10);
 }
 .apv-node--failed {
-  border-left-color: #a4262c;
+  border-left-color: var(--palette-error, #a4262c);
 }
 .apv-node--running {
-  border-left-color: #0078d4;
+  border-left-color: var(--communication-foreground, #0078d4);
 }
 .apv-node--partial {
-  border-left-color: #ffaa44;
+  border-left-color: var(--palette-warning, #ffaa44);
 }
 .apv-node--canceled {
-  border-left-color: #8a8886;
+  border-left-color: var(--palette-neutral-60, #8a8886);
 }
 
 .apv-node__header {
@@ -424,23 +425,23 @@
 }
 
 .apv-status--succeeded {
-  color: #107c10;
+  color: var(--palette-success, #107c10);
 }
 .apv-status--failed {
-  color: #a4262c;
+  color: var(--palette-error, #a4262c);
 }
 .apv-status--running {
-  color: #0078d4;
+  color: var(--communication-foreground, #0078d4);
 }
 .apv-status--partial {
-  color: #ffaa44;
+  color: var(--palette-warning, #ffaa44);
 }
 .apv-status--canceled {
-  color: #8a8886;
+  color: var(--palette-neutral-60, #8a8886);
 }
 .apv-status--queued {
-  color: #8a8886;
+  color: var(--palette-neutral-60, #8a8886);
 }
 .apv-status--unknown {
-  color: #8a8886;
+  color: var(--palette-neutral-60, #8a8886);
 }

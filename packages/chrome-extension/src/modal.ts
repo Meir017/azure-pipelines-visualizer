@@ -149,7 +149,7 @@ export async function showDependencyModal(
     if (signal.aborted) return; // Panel was closed
     body.innerHTML = `
       <div class="apv-panel__error">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="#a4262c">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="color: var(--palette-error, #a4262c)">
           <path d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm-.75 4.5h1.5v5h-1.5v-5zm.75 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
         </svg>
         <div>
