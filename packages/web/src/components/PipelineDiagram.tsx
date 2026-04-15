@@ -32,7 +32,7 @@ import {
   resolveTemplateSource,
   type TemplateReference,
 } from '@meirblachman/azure-pipelines-visualizer-core';
-import type { FetchFileByRepoNameFn }from '../services/file-fetch-context.js';
+import type { FetchFileByRepoNameFn } from '../services/file-fetch-context.js';
 import { useFileFetch } from '../services/file-fetch-context.js';
 import { usePipelineStore } from '../store/pipeline-store.js';
 import { getLayoutedElements } from './diagram-layout.js';
