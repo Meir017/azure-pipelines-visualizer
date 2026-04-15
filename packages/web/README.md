@@ -236,11 +236,16 @@ Load the library directly from [unpkg](https://unpkg.com) or [jsDelivr](https://
 </html>
 ```
 
-## API server requirement
+## Data fetching
 
-The web components call `/api/*` endpoints to fetch pipeline data from Azure DevOps. You need the companion server running and accessible at the same origin (or configure a reverse proxy).
+The library automatically detects its runtime environment and uses the appropriate data source:
 
-The easiest way to get started:
+- **Chrome extension** (`chrome-extension:` protocol) → talks directly to the Azure DevOps REST API using the browser's existing session cookies. **No server required.**
+- **Web app** (any other origin) → calls `/api/*` endpoints, which requires the companion server running at the same origin (or behind a reverse proxy).
+
+### Running with the API server
+
+For web apps, start the companion server:
 
 ```bash
 npx @meirblachman/azure-pipelines-visualizer
