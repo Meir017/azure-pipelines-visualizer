@@ -2,7 +2,7 @@
 
 ## Context
 
-This document compares our current `@apv/core` parser against the **official Azure Pipelines parser**
+This document compares our current `@meirblachman/azure-pipelines-visualizer-core` parser against the **official Azure Pipelines parser**
 ([`PipelineParser.cs`](https://github.com/microsoft/azure-pipelines-agent/blob/master/src/Agent.Listener/DistributedTask.Pipelines/Yaml/PipelineParser.cs))
 and the [official JSON schema](https://github.com/microsoft/azure-pipelines-vscode/blob/main/service-schema.json)
 (v1.261.1, 1.6 MB) from the VS Code extension.

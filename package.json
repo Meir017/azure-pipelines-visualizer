@@ -9,13 +9,13 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
-    "dev": "bun run --filter @apv/server dev",
+    "dev": "bun run --filter @meirblachman/azure-pipelines-visualizer-server dev",
     "dev:web": "bun run --filter @meirblachman/azure-pipelines-visualizer-web dev",
     "build": "bun run --filter @meirblachman/azure-pipelines-visualizer-web build",
     "build:web": "bun run --filter @meirblachman/azure-pipelines-visualizer-web build",
     "build:standalone": "bun run build:web && bun scripts/generate-web-assets.ts && bun build --compile packages/server/src/standalone.ts --outfile apv",
     "build:cli": "bun run build:web && node packages/cli/scripts/bundle.mjs",
-    "start": "bun run --filter @apv/server start"
+    "start": "bun run --filter @meirblachman/azure-pipelines-visualizer-server start"
   },
   "devDependencies": {
     "@biomejs/biome": "~2.0.0",

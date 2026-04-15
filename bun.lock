@@ -11,7 +11,7 @@
     },
     "packages/cli": {
       "name": "@meirblachman/azure-pipelines-visualizer",
-      "version": "0.1.14",
+      "version": "0.2.1",
       "bin": {
         "apv": "dist/index.min.js",
       },
@@ -20,7 +20,7 @@
       },
     },
     "packages/core": {
-      "name": "@apv/core",
+      "name": "@meirblachman/azure-pipelines-visualizer-core",
       "version": "0.1.0",
       "dependencies": {
         "js-yaml": "^4.1.0",
@@ -30,12 +30,12 @@
       },
     },
     "packages/server": {
-      "name": "@apv/server",
+      "name": "@meirblachman/azure-pipelines-visualizer-server",
       "version": "0.1.0",
       "dependencies": {
-        "@apv/core": "workspace:*",
         "@azure/identity": "^4.0.0",
         "@hono/node-server": "^1.19.14",
+        "@meirblachman/azure-pipelines-visualizer-core": "workspace:*",
         "hono": "^4.0.0",
       },
       "devDependencies": {
@@ -45,7 +45,7 @@
     },
     "packages/web": {
       "name": "@meirblachman/azure-pipelines-visualizer-web",
-      "version": "0.1.1",
+      "version": "0.2.1",
       "dependencies": {
         "@dagrejs/dagre": "^2.0.4",
         "@monaco-editor/react": "^4.7.0",
@@ -53,7 +53,7 @@
         "zustand": "^4.5.0",
       },
       "devDependencies": {
-        "@apv/core": "workspace:*",
+        "@meirblachman/azure-pipelines-visualizer-core": "workspace:*",
         "@types/react": "^18.2.0",
         "@types/react-dom": "^18.2.0",
         "@vitejs/plugin-react": "^4.2.0",
@@ -65,7 +65,7 @@
         "vite": "^5.0.0",
       },
       "peerDependencies": {
-        "@apv/core": "workspace:*",
+        "@meirblachman/azure-pipelines-visualizer-core": "workspace:*",
         "@xyflow/react": "^12.0.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
@@ -73,10 +73,6 @@
     },
   },
   "packages": {
-    "@apv/core": ["@apv/core@workspace:packages/core"],
-
-    "@apv/server": ["@apv/server@workspace:packages/server"],
-
     "@azure/abort-controller": ["@azure/abort-controller@2.1.2", "", { "dependencies": { "tslib": "^2.6.2" } }, "sha512-nBrLsEWm4J2u5LpAPjxADTlq3trDgVZZXHNKabeXZtpq3d3AbN/KGO82R87rdDz5/lYB024rtEf10/q0urNgsA=="],
 
     "@azure/core-auth": ["@azure/core-auth@1.10.1", "", { "dependencies": { "@azure/abort-controller": "^2.1.2", "@azure/core-util": "^1.13.0", "tslib": "^2.6.2" } }, "sha512-ykRMW8PjVAn+RS6ww5cmK9U2CyH9p4Q88YJwvUslfuMmN98w/2rdGRLPqJYObapBCdzBVeDgYWdJnFPFb7qzpg=="],
@@ -230,6 +226,10 @@
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
 
     "@meirblachman/azure-pipelines-visualizer": ["@meirblachman/azure-pipelines-visualizer@workspace:packages/cli"],
+
+    "@meirblachman/azure-pipelines-visualizer-core": ["@meirblachman/azure-pipelines-visualizer-core@workspace:packages/core"],
+
+    "@meirblachman/azure-pipelines-visualizer-server": ["@meirblachman/azure-pipelines-visualizer-server@workspace:packages/server"],
 
     "@meirblachman/azure-pipelines-visualizer-web": ["@meirblachman/azure-pipelines-visualizer-web@workspace:packages/web"],
 

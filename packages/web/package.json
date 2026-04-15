@@ -27,7 +27,7 @@
     "test": "bun test"
   },
   "peerDependencies": {
-    "@apv/core": "workspace:*",
+    "@meirblachman/azure-pipelines-visualizer-core": "workspace:*",
     "@xyflow/react": "^12.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
@@ -39,7 +39,7 @@
     "zustand": "^4.5.0"
   },
   "devDependencies": {
-    "@apv/core": "workspace:*",
+    "@meirblachman/azure-pipelines-visualizer-core": "workspace:*",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.2.0",
