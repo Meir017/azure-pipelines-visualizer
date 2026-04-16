@@ -46,13 +46,54 @@ function resultBadge(
   return { label: status, className: '' };
 }
 
+/** Extract the ADO base URL (https://dev.azure.com/{org}/{project}) from the build's web link. */
+function adoBaseUrl(build: BuildInfo): string | null {
+  const href = build._links?.web?.href;
+  if (!href) return null;
+  // https://dev.azure.com/{org}/{project}/_build/results?buildId=...
+  const m = href.match(/(https:\/\/dev\.azure\.com\/[^/]+\/[^/]+)/);
+  return m ? m[1] : null;
+}
+
+function AdoLink({
+  href,
+  children,
+}: {
+  href: string | null;
+  children: React.ReactNode;
+}) {
+  if (!href) return <span>{children}</span>;
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="build-popup__link"
+    >
+      {children} ↗
+    </a>
+  );
+}
+
 export default function BuildDetailPopup({
   build,
   onClose,
 }: BuildDetailPopupProps) {
   const badge = resultBadge(build.status, build.result);
   const duration = formatDuration(build.startTime, build.finishTime);
-  const webUrl = build._links?.web?.href;
+  const webUrl = build._links?.web?.href ?? null;
+  const base = adoBaseUrl(build);
+  const branch = build.sourceBranch.replace('refs/heads/', '');
+
+  // ADO deep links
+  const buildResultUrl = webUrl;
+  const definitionUrl = base
+    ? `${base}/_build?definitionId=${build.definition.id}`
+    : null;
+  const commitUrl = base
+    ? `${base}/_git/?version=GC${build.sourceVersion}`
+    : null;
+  const branchUrl = base ? `${base}/_git/?version=GB${branch}` : null;
 
   return (
     <div
@@ -70,7 +111,9 @@ export default function BuildDetailPopup({
         onKeyDown={(e) => e.stopPropagation()}
       >
         <div className="build-popup__header">
-          <h2>{build.definition.name}</h2>
+          <h2>
+            <AdoLink href={definitionUrl}>{build.definition.name}</AdoLink>
+          </h2>
           <button
             className="build-popup__close"
             onClick={onClose}
@@ -83,7 +126,7 @@ export default function BuildDetailPopup({
         <div className="build-popup__body">
           <div className="build-popup__row">
             <span className="build-popup__label">Build Number</span>
-            <span>#{build.buildNumber}</span>
+            <AdoLink href={buildResultUrl}>#{build.buildNumber}</AdoLink>
           </div>
 
           <div className="build-popup__row">
@@ -91,6 +134,11 @@ export default function BuildDetailPopup({
             <span className={`build-popup__badge ${badge.className}`}>
               {badge.label}
             </span>
+          </div>
+
+          <div className="build-popup__row">
+            <span className="build-popup__label">Project</span>
+            <span>{build.project.name}</span>
           </div>
 
           <div className="build-popup__row">
@@ -117,14 +165,16 @@ export default function BuildDetailPopup({
 
           <div className="build-popup__row">
             <span className="build-popup__label">Branch</span>
-            <span>{build.sourceBranch.replace('refs/heads/', '')}</span>
+            <AdoLink href={branchUrl}>{branch}</AdoLink>
           </div>
 
           <div className="build-popup__row">
             <span className="build-popup__label">Commit</span>
-            <span className="build-popup__mono">
-              {build.sourceVersion.slice(0, 8)}
-            </span>
+            <AdoLink href={commitUrl}>
+              <span className="build-popup__mono">
+                {build.sourceVersion.slice(0, 8)}
+              </span>
+            </AdoLink>
           </div>
 
           {build.requestedFor && (
@@ -169,14 +219,14 @@ export default function BuildDetailPopup({
           )}
 
           {webUrl && (
-            <div className="build-popup__row">
+            <div className="build-popup__actions">
               <a
                 href={webUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="build-popup__link"
+                className="build-popup__action-link"
               >
-                Open in Azure DevOps ↗
+                Open Build in Azure DevOps ↗
               </a>
             </div>
           )}

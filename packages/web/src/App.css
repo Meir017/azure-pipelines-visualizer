@@ -1475,3 +1475,21 @@ body {
 .build-popup__link:hover {
   text-decoration: underline;
 }
+
+.build-popup__actions {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.build-popup__action-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.build-popup__action-link:hover {
+  text-decoration: underline;
+}
