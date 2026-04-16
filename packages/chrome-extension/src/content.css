@@ -62,8 +62,10 @@
   gap: 3px;
 }
 
-.apv-deps-summary__chip > svg {
-  fill: currentColor;
+.apv-deps-summary__icon {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
 }
 
 /* --- Loading / empty / error states --- */
