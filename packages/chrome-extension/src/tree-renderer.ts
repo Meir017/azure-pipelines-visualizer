@@ -87,6 +87,52 @@ export function renderDeps(
     return;
   }
 
+  // Summary bar
+  const summary = document.createElement('div');
+  summary.className = 'apv-deps-summary';
+
+  const counts: Record<string, number> = {};
+  for (const b of deps) {
+    const key = b.status === 'completed' ? (b.result ?? 'unknown') : b.status;
+    counts[key] = (counts[key] ?? 0) + 1;
+  }
+
+  const totalSpan = document.createElement('span');
+  totalSpan.className = 'apv-deps-summary__total';
+  totalSpan.textContent = `${deps.length} pipeline${deps.length === 1 ? '' : 's'}`;
+  summary.appendChild(totalSpan);
+
+  // Show counts in a consistent order
+  const statusOrder: [string, string, string | null][] = [
+    ['succeeded', 'completed', 'succeeded'],
+    ['failed', 'completed', 'failed'],
+    ['running', 'inProgress', null],
+    ['partiallySucceeded', 'completed', 'partiallySucceeded'],
+    ['canceled', 'completed', 'canceled'],
+    ['queued', 'notStarted', null],
+  ];
+
+  for (const [key, svgStatus, svgResult] of statusOrder) {
+    const count = counts[key] ?? (key === 'running' ? counts.inProgress : 0);
+    if (!count) continue;
+
+    const chip = document.createElement('span');
+    chip.className = 'apv-deps-summary__chip';
+
+    const icon = statusSvg(svgStatus, svgResult);
+    icon.setAttribute('width', '12');
+    icon.setAttribute('height', '12');
+    chip.appendChild(icon);
+
+    const num = document.createElement('span');
+    num.textContent = String(count);
+    chip.appendChild(num);
+
+    summary.appendChild(chip);
+  }
+
+  container.appendChild(summary);
+
   // Build adjacency map
   const buildMap = new Map<number, BuildInfo>();
   for (const b of builds) buildMap.set(b.id, b);
