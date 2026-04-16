@@ -3,7 +3,7 @@
   "name": "Azure Pipelines Dependency Viewer",
   "version": "0.1.0",
   "description": "Adds pipeline dependency visualization to Azure DevOps commit pages",
-  "permissions": ["activeTab"],
+  "permissions": ["activeTab", "storage"],
   "host_permissions": [
     "https://dev.azure.com/*",
     "https://*.visualstudio.com/*"
@@ -19,5 +19,9 @@
   "icons": {
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
   }
 }

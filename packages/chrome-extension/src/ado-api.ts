@@ -33,11 +33,12 @@ export async function fetchBuild(
   return toBuildInfo(data);
 }
 
-/** Find builds triggered (directly or via pipeline completion) by a specific build. */
-async function listBuildsTriggeredBy(
+/** Search a single project for builds triggered by a specific parent build. */
+async function searchProjectForTriggers(
   org: string,
   project: string,
   parentBuildId: number,
+  parentProjectId: string | null,
   parentFinishTime: string,
 ): Promise<BuildInfo[]> {
   const refMs = new Date(parentFinishTime).getTime();
@@ -60,9 +61,19 @@ async function listBuildsTriggeredBy(
       toBuildInfo,
     );
     for (const b of builds) {
-      if (b.upstreamBuildId === parentBuildId) {
-        results.push(b);
+      if (b.upstreamBuildId !== parentBuildId) continue;
+
+      // For cross-project resource triggers, verify projectId matches the parent
+      if (
+        parentProjectId &&
+        b.reason === 'resourceTrigger' &&
+        b.triggerInfo.projectId &&
+        b.triggerInfo.projectId !== parentProjectId
+      ) {
+        continue;
       }
+
+      results.push(b);
     }
   }
 
@@ -70,14 +81,61 @@ async function listBuildsTriggeredBy(
 }
 
 /**
+ * Find builds triggered by a specific build, searching the primary project
+ * and optionally related projects. Fails soft on related project errors.
+ */
+async function listBuildsTriggeredBy(
+  org: string,
+  projects: string[],
+  parentBuildId: number,
+  parentProjectId: string | null,
+  parentFinishTime: string,
+): Promise<BuildInfo[]> {
+  if (projects.length === 0) return [];
+
+  const [primary, ...related] = projects;
+
+  // Primary project: hard fail on error
+  const primaryResults = await searchProjectForTriggers(
+    org,
+    primary,
+    parentBuildId,
+    parentProjectId,
+    parentFinishTime,
+  );
+
+  if (related.length === 0) return primaryResults;
+
+  // Related projects: fail soft (ignore 401/403/404 errors)
+  const relatedResults = await Promise.allSettled(
+    related.map((proj) =>
+      searchProjectForTriggers(
+        org,
+        proj,
+        parentBuildId,
+        parentProjectId,
+        parentFinishTime,
+      ),
+    ),
+  );
+
+  const allResults = [...primaryResults];
+  for (const result of relatedResults) {
+    if (result.status === 'fulfilled') {
+      allResults.push(...result.value);
+    }
+  }
+
+  return allResults;
+}
+
+/**
  * Build full trigger chain with polling for in-progress builds.
- * Calls onBatch with each new set of discovered builds, and onUpdate
- * when an existing build's status changes. Polls in-progress builds
- * until they complete, then searches for their triggered children.
+ * Supports cross-project discovery: pass multiple project names in `projects`.
  */
 export async function buildTriggerChain(
   org: string,
-  project: string,
+  projects: string[],
   rootBuild: BuildInfo,
   onBatch: (builds: BuildInfo[]) => void,
   signal?: AbortSignal,
@@ -86,13 +144,10 @@ export async function buildTriggerChain(
   visited.set(rootBuild.id, rootBuild);
   onBatch([rootBuild]);
 
-  // Track builds at each depth for the depth limit
   const buildDepth = new Map<number, number>();
   buildDepth.set(rootBuild.id, 0);
 
-  // Pending: completed builds whose children we haven't searched yet
   const pendingExpansion: BuildInfo[] = [];
-  // In-progress builds we need to poll
   const inProgress = new Map<number, BuildInfo>();
 
   if (rootBuild.status === 'completed' && rootBuild.finishTime) {
@@ -109,10 +164,8 @@ export async function buildTriggerChain(
   ) {
     if (signal?.aborted) break;
 
-    // Expand all completed builds whose children we haven't found yet
     while (pendingExpansion.length > 0) {
       const batch = pendingExpansion.splice(0);
-      // Only expand builds within the depth limit
       const expandable = batch.filter(
         (b) => (buildDepth.get(b.id) ?? 0) < MAX_DEPTH,
       );
@@ -120,7 +173,13 @@ export async function buildTriggerChain(
 
       const childResults = await Promise.all(
         expandable.map((parent) =>
-          listBuildsTriggeredBy(org, project, parent.id, parent.finishTime!),
+          listBuildsTriggeredBy(
+            org,
+            projects,
+            parent.id,
+            parent.project.id || null,
+            parent.finishTime!,
+          ),
         ),
       );
 
@@ -147,26 +206,27 @@ export async function buildTriggerChain(
       }
     }
 
-    // If no in-progress builds left, we're done
     if (inProgress.size === 0) break;
 
-    // Poll in-progress builds
     await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
     if (signal?.aborted) break;
 
-    const pollIds = [...inProgress.keys()];
-    const refreshed = await Promise.all(
-      pollIds.map((id) => fetchBuild(org, project, id)),
+    // Poll in-progress builds from their actual project (may be cross-project)
+    const pollEntries = [...inProgress.values()];
+    const refreshed = await Promise.allSettled(
+      pollEntries.map((b) =>
+        fetchBuild(org, b.project.name || projects[0], b.id),
+      ),
     );
 
-    for (const build of refreshed) {
-      // Update the build info in visited map
+    for (const result of refreshed) {
+      if (result.status !== 'fulfilled') continue;
+      const build = result.value;
       visited.set(build.id, build);
 
       if (build.status === 'completed' && build.finishTime) {
         inProgress.delete(build.id);
         pendingExpansion.push(build);
-        // Notify that this build's status changed
         onBatch([]);
       }
     }

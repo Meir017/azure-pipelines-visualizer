@@ -1,5 +1,6 @@
 import { buildTriggerChain } from './ado-api.js';
 import type { BuildInfo } from './build-types.js';
+import { getRelatedProjects, loadRelatedProjectGroups } from './config.js';
 import { renderDeps } from './tree-renderer.js';
 
 const MARKER = 'data-apv-injected';
@@ -30,7 +31,7 @@ async function toggleExpand(
   rootBuild: BuildInfo,
   container: HTMLElement,
   org: string,
-  project: string,
+  projects: string[],
 ): Promise<void> {
   let entry = cache.get(buildId);
 
@@ -53,7 +54,7 @@ async function toggleExpand(
 
   // Already cached?
   if (entry.builds.length > 0) {
-    renderDeps(container, entry.builds, buildId);
+    renderDeps(container, entry.builds, buildId, projects[0]);
     return;
   }
 
@@ -69,7 +70,7 @@ async function toggleExpand(
   try {
     await buildTriggerChain(
       org,
-      project,
+      projects,
       rootBuild,
       (batch) => {
         for (const b of batch) {
@@ -78,7 +79,7 @@ async function toggleExpand(
           else entry!.builds.push(b);
         }
         if (entry!.expanded) {
-          renderDeps(container, entry!.builds, buildId);
+          renderDeps(container, entry!.builds, buildId, projects[0]);
         }
       },
       abort.signal,
@@ -95,9 +96,13 @@ async function toggleExpand(
 
 // ── Inject into the Pipelines sidebar ───────────────────────────────
 
-function injectIntoSidebar(dialog: Element): void {
+async function injectIntoSidebar(dialog: Element): Promise<void> {
   const ctx = parseAdoContext();
   if (!ctx) return;
+
+  const groups = await loadRelatedProjectGroups();
+  const related = getRelatedProjects(ctx.project, groups);
+  const projects = [ctx.project, ...related];
 
   const rows = dialog.querySelectorAll('.repos-pipeline-status-item');
 
@@ -140,13 +145,7 @@ function injectIntoSidebar(dialog: Element): void {
       // We need the root build info — fetch it
       const { fetchBuild } = await import('./ado-api.js');
       const rootBuild = await fetchBuild(ctx.org, ctx.project, buildId);
-      await toggleExpand(
-        buildId,
-        rootBuild,
-        depsContainer,
-        ctx.org,
-        ctx.project,
-      );
+      await toggleExpand(buildId, rootBuild, depsContainer, ctx.org, projects);
 
       // Update toggle text based on final state
       const finalEntry = cache.get(buildId);

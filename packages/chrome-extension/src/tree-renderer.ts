@@ -15,7 +15,11 @@ function formatDuration(start: string | null, end: string | null): string {
   return `${hrs}h ${remMins}m`;
 }
 
-function createRow(build: BuildInfo, depth: number): HTMLElement {
+function createRow(
+  build: BuildInfo,
+  depth: number,
+  currentProject: string,
+): HTMLElement {
   const row = document.createElement('div');
   row.className = 'apv-dep';
   if (depth > 0) row.style.paddingLeft = `${depth * 20}px`;
@@ -34,6 +38,21 @@ function createRow(build: BuildInfo, depth: number): HTMLElement {
   link.textContent = build.definition.name;
   link.title = build.definition.name;
   content.appendChild(link);
+
+  // Show project badge for cross-project builds
+  const buildProject = build.project.name;
+  const decodedCurrent = decodeURIComponent(currentProject);
+  if (
+    buildProject &&
+    buildProject !== decodedCurrent &&
+    buildProject !== currentProject
+  ) {
+    const badge = document.createElement('span');
+    badge.className = 'apv-dep__project';
+    badge.textContent = buildProject;
+    badge.title = `From project: ${buildProject}`;
+    content.appendChild(badge);
+  }
 
   const meta = document.createElement('span');
   meta.className = 'apv-dep__meta';
@@ -55,6 +74,7 @@ export function renderDeps(
   container: HTMLElement,
   builds: BuildInfo[],
   rootBuildId: number,
+  currentProject?: string,
 ): void {
   container.innerHTML = '';
 
@@ -99,7 +119,7 @@ export function renderDeps(
   });
 
   function appendSubtree(build: BuildInfo, depth: number): void {
-    container.appendChild(createRow(build, depth));
+    container.appendChild(createRow(build, depth, currentProject ?? ''));
     const kids = children.get(build.id);
     if (kids) {
       kids.sort(byTime);
