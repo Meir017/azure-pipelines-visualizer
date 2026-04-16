@@ -28,6 +28,38 @@
           "OneBranch.Pipeline.Signing": "https://onebranch.dev/docs/tasks/signing"
         }
       ]
+    },
+    "relatedProjectGroups": {
+      "type": "array",
+      "description": "Groups of related Azure DevOps projects for cross-project pipeline trigger discovery. When viewing triggered pipelines for a commit, the extension searches all projects in the same group.",
+      "items": {
+        "type": "array",
+        "description": "A group of related projects.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "The Azure DevOps project ID (GUID). Found via /_apis/projects."
+            },
+            "name": {
+              "type": "string",
+              "description": "The Azure DevOps project name as it appears in the URL."
+            }
+          },
+          "required": ["id", "name"],
+          "additionalProperties": false
+        },
+        "minItems": 2
+      },
+      "examples": [
+        [
+          [
+            { "id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", "name": "ProjectA" },
+            { "id": "ffffffff-1111-2222-3333-444444444444", "name": "ProjectB" }
+          ]
+        ]
+      ]
     }
   },
   "additionalProperties": false
