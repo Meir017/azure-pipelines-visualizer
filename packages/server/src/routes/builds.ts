@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { streamSSE } from 'hono/streaming';
+import { getRelatedProjects } from '../config.js';
 import {
   getBuild,
   getCommitFlowGraph,
@@ -24,12 +25,13 @@ builds.get('/:org/:project/commit-flow/stream', async (c) => {
   }
 
   const repo = await getRepository(org, project, repoName);
+  const projects = [project, ...getRelatedProjects(project)];
 
   return streamSSE(c, async (stream) => {
     try {
       for await (const batch of streamCommitFlowGraph(
         org,
-        project,
+        projects,
         repo.id,
         commitSha,
       )) {
@@ -64,7 +66,8 @@ builds.get('/:org/:project/commit-flow', async (c) => {
   }
 
   const repo = await getRepository(org, project, repoName);
-  const data = await getCommitFlowGraph(org, project, repo.id, commitSha);
+  const projects = [project, ...getRelatedProjects(project)];
+  const data = await getCommitFlowGraph(org, projects, repo.id, commitSha);
   return c.json(data);
 });
 

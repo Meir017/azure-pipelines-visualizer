@@ -1332,6 +1332,13 @@ body {
   text-overflow: ellipsis;
 }
 
+.build-node__project {
+  font-size: 11px;
+  color: var(--accent-color, #89b4fa);
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
 /* ── Build Detail Popup ───────────────────────────────────── */
 
 .build-popup-overlay {

@@ -12,6 +12,7 @@ export interface BuildNodeData {
   sourceBranch: string;
   webUrl: string | null;
   isRoot: boolean;
+  projectName: string;
 }
 
 function formatTime(iso: string | null): string {
@@ -78,6 +79,15 @@ function BuildNode({ data }: NodeProps) {
           {d.pipelineName}
         </span>
       </div>
+
+      {!d.isRoot && d.projectName && (
+        <div
+          className="build-node__project"
+          title={`Project: ${d.projectName}`}
+        >
+          📁 {d.projectName}
+        </div>
+      )}
 
       <div className="build-node__number">#{d.buildNumber}</div>
 

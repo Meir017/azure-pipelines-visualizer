@@ -55,7 +55,10 @@
       "examples": [
         [
           [
-            { "id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", "name": "ProjectA" },
+            {
+              "id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+              "name": "ProjectA"
+            },
             { "id": "ffffffff-1111-2222-3333-444444444444", "name": "ProjectB" }
           ]
         ]

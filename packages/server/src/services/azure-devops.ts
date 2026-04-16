@@ -333,58 +333,87 @@ export async function listBuildsForCommit(
 /** Find builds triggered (directly or via pipeline completion) by a specific build. */
 export async function listBuildsTriggeredBy(
   org: string,
-  project: string,
+  projects: string[],
   parentBuildId: number,
+  parentProjectId: string,
   parentFinishTime: string | null,
   parentQueueTime: string,
 ): Promise<BuildInfo[]> {
   // Use finishTime if available, otherwise fall back to queueTime
   const refTime = parentFinishTime ?? parentQueueTime;
   const refMs = new Date(refTime).getTime();
-  const results: BuildInfo[] = [];
 
-  // Query for buildCompletion and resourceTrigger reasons separately
-  for (const reason of ['buildCompletion', 'resourceTrigger']) {
-    const params = new URLSearchParams({
-      'api-version': API_VERSION,
-      reasonFilter: reason,
-      queryOrder: 'queueTimeAscending',
-      $top: '200',
-      // Triggered builds usually queue within minutes of the parent finishing
-      minTime: new Date(refMs - 10 * 60 * 1000).toISOString(),
-      maxTime: new Date(refMs + 60 * 60 * 1000).toISOString(),
-    });
+  const searchProject = async (project: string): Promise<BuildInfo[]> => {
+    const results: BuildInfo[] = [];
+    // Query for buildCompletion and resourceTrigger reasons separately
+    for (const reason of ['buildCompletion', 'resourceTrigger']) {
+      const params = new URLSearchParams({
+        'api-version': API_VERSION,
+        reasonFilter: reason,
+        queryOrder: 'queueTimeAscending',
+        $top: '200',
+        // Triggered builds usually queue within minutes of the parent finishing
+        minTime: new Date(refMs - 10 * 60 * 1000).toISOString(),
+        maxTime: new Date(refMs + 60 * 60 * 1000).toISOString(),
+      });
 
-    const url = `${baseUrl(org, project)}/build/builds?${params}`;
-    const resp = await adoFetch(url);
-    const data = await resp.json();
-    const builds = ((data.value ?? []) as Record<string, unknown>[]).map(
-      toBuildInfo,
-    );
-    // Filter to builds whose upstream is the parent
-    for (const b of builds) {
-      if (b.upstreamBuildId === parentBuildId) {
+      const url = `${baseUrl(org, project)}/build/builds?${params}`;
+      const resp = await adoFetch(url);
+      const data = await resp.json();
+      const builds = ((data.value ?? []) as Record<string, unknown>[]).map(
+        toBuildInfo,
+      );
+      // Filter to builds whose upstream is the parent
+      for (const b of builds) {
+        if (b.upstreamBuildId !== parentBuildId) continue;
+        // For resource triggers from other projects, verify the projectId matches
+        if (
+          b.reason === 'resourceTrigger' &&
+          b.triggerInfo.projectId &&
+          b.triggerInfo.projectId !== parentProjectId
+        ) {
+          continue;
+        }
         results.push(b);
       }
     }
+    return results;
+  };
+
+  if (projects.length <= 1) {
+    return searchProject(projects[0]);
   }
 
-  return results;
+  // Search all projects in parallel; soft-fail related (non-primary) projects
+  const results = await Promise.allSettled(projects.map(searchProject));
+  const all: BuildInfo[] = [];
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i];
+    if (r.status === 'fulfilled') {
+      all.push(...r.value);
+    } else if (i === 0) {
+      throw r.reason; // primary project must succeed
+    } else {
+      console.warn(`Cross-project search failed for ${projects[i]}:`, r.reason);
+    }
+  }
+  return all;
 }
 
 /**
  * Build the full commit flow graph: root builds + recursively triggered builds.
  * Yields builds progressively as they are discovered (BFS).
+ * Searches related projects for cross-project trigger chains.
  */
 export async function* streamCommitFlowGraph(
   org: string,
-  project: string,
+  projects: string[],
   repositoryId: string,
   commitSha: string,
 ): AsyncGenerator<BuildInfo[]> {
   const rootBuilds = await listBuildsForCommit(
     org,
-    project,
+    projects[0],
     repositoryId,
     commitSha,
   );
@@ -404,8 +433,9 @@ export async function* streamCommitFlowGraph(
       frontier.map((parent) =>
         listBuildsTriggeredBy(
           org,
-          project,
+          projects,
           parent.id,
+          parent.project.id,
           parent.finishTime,
           parent.queueTime,
         ),
@@ -434,14 +464,14 @@ export async function* streamCommitFlowGraph(
  */
 export async function getCommitFlowGraph(
   org: string,
-  project: string,
+  projects: string[],
   repositoryId: string,
   commitSha: string,
 ): Promise<BuildInfo[]> {
   const all: BuildInfo[] = [];
   for await (const batch of streamCommitFlowGraph(
     org,
-    project,
+    projects,
     repositoryId,
     commitSha,
   )) {
