@@ -4,6 +4,7 @@ import { getConfig } from './config.js';
 import { builds } from './routes/builds.js';
 import { files } from './routes/files.js';
 import { pipelines } from './routes/pipelines.js';
+import { health } from './routes/health.js';
 import { schema } from './routes/schema.js';
 
 // Load config on startup
@@ -26,6 +27,7 @@ app.route('/api', pipelines);
 app.route('/api', builds);
 app.route('/api', files);
 app.route('/api', schema);
+app.route('/api', health);
 
 // Global error handler
 app.onError((err, c) => {
