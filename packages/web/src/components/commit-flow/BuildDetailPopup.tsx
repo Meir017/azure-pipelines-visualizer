@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import type { BuildInfo } from '../../services/api-client.js';
+import BuildTimelineGantt from './BuildTimelineGantt.js';
 
 interface BuildDetailPopupProps {
   build: BuildInfo;
+  org: string;
   onClose: () => void;
 }
 
@@ -77,8 +80,10 @@ function AdoLink({
 
 export default function BuildDetailPopup({
   build,
+  org,
   onClose,
 }: BuildDetailPopupProps) {
+  const [showGantt, setShowGantt] = useState(false);
   const badge = resultBadge(build.status, build.result);
   const duration = formatDuration(build.startTime, build.finishTime);
   const webUrl = build._links?.web?.href ?? null;
@@ -106,7 +111,7 @@ export default function BuildDetailPopup({
       aria-modal="true"
     >
       <div
-        className="build-popup"
+        className={`build-popup ${showGantt ? 'build-popup--wide' : ''}`}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
@@ -228,6 +233,26 @@ export default function BuildDetailPopup({
               >
                 Open Build in Azure DevOps ↗
               </a>
+            </div>
+          )}
+
+          <div className="build-popup__actions">
+            <button
+              type="button"
+              className="build-popup__gantt-toggle"
+              onClick={() => setShowGantt((v) => !v)}
+            >
+              {showGantt ? '▾ Hide Gantt Timeline' : '▸ Show Gantt Timeline'}
+            </button>
+          </div>
+
+          {showGantt && (
+            <div className="build-popup__gantt">
+              <BuildTimelineGantt
+                org={org}
+                project={build.project.name}
+                buildId={build.id}
+              />
             </div>
           )}
         </div>

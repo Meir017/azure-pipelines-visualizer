@@ -82,9 +82,10 @@ export default function CommitFlowPage() {
         </div>
       )}
 
-      {selectedBuild && (
+      {selectedBuild && lastParams && (
         <BuildDetailPopup
           build={selectedBuild}
+          org={lastParams.org}
           onClose={() => setSelectedBuild(null)}
         />
       )}
