@@ -203,3 +203,44 @@ export function fetchBuild(
   if (isExtensionPage) return directAdo.fetchBuild(org, project, buildId);
   return apiFetch(`/${org}/${project}/builds/${buildId}`);
 }
+
+export interface TestRun {
+  id: number;
+  name: string;
+  totalTests: number;
+  passedTests: number;
+  failedTests: number;
+  incompleteTests: number;
+  notApplicableTests: number;
+  unanalyzedTests: number;
+  state: string;
+  startedDate: string;
+  completedDate: string;
+}
+
+export interface TestResult {
+  id: number;
+  testCaseTitle: string;
+  outcome: string;
+  durationInMs: number;
+  automatedTestStorage: string;
+  automatedTestName: string;
+  errorMessage?: string;
+  stackTrace?: string;
+}
+
+export function fetchTestRunsForBuild(
+  org: string,
+  project: string,
+  buildId: number,
+): Promise<TestRun[]> {
+  return apiFetch(`/${org}/${project}/builds/${buildId}/test-runs`);
+}
+
+export function fetchTestRunResults(
+  org: string,
+  project: string,
+  runId: number,
+): Promise<TestResult[]> {
+  return apiFetch(`/${org}/${project}/test-runs/${runId}/results`);
+}
