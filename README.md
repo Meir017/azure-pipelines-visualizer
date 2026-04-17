@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.svg" alt="Azure Pipelines Visualizer" width="128" height="128" />
+</p>
+
 # Azure Pipelines Visualizer
 
 [![CI](https://github.com/Meir017/azure-pipelines-visualizer/actions/workflows/ci.yml/badge.svg)](https://github.com/Meir017/azure-pipelines-visualizer/actions/workflows/ci.yml)
