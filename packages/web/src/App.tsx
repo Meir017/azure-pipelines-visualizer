@@ -6,6 +6,7 @@ import PipelineDiagram from './components/PipelineDiagram.js';
 import PipelineSelector, {
   type PipelineSelectorProps,
 } from './components/PipelineSelector.js';
+import ParameterExplorerPanel from './components/parameter-explorer/ParameterExplorerPanel.js';
 import {
   fetchFileByRepoName,
   fetchTaskDocsConfig,
@@ -14,15 +15,17 @@ import {
 import { FileFetchProvider } from './services/file-fetch-context.js';
 import { usePipelineStore } from './store/pipeline-store.js';
 import './App.css';
+import './components/parameter-explorer/parameter-explorer.css';
 
 export type AppProps = PipelineSelectorProps;
 
-type AppView = 'pipeline' | 'commit-flow';
+type AppView = 'pipeline' | 'commit-flow' | 'parameters';
 
 function useHashRoute(): [AppView, (view: AppView) => void] {
   const getView = (): AppView => {
     const hash = window.location.hash;
     if (hash.startsWith('#/commit-flow')) return 'commit-flow';
+    if (hash.startsWith('#/parameters')) return 'parameters';
     return 'pipeline';
   };
 
@@ -117,6 +120,13 @@ export default function App(props: AppProps) {
             >
               Commit Flow
             </button>
+            <button
+              className={`app__nav-btn ${view === 'parameters' ? 'app__nav-btn--active' : ''}`}
+              onClick={() => setView('parameters')}
+              type="button"
+            >
+              Parameters
+            </button>
           </nav>
           {view === 'pipeline' && (
             <ErrorBoundary>
@@ -152,6 +162,13 @@ export default function App(props: AppProps) {
             <section className="app__content">
               <ErrorBoundary>
                 <CommitFlowPage />
+              </ErrorBoundary>
+            </section>
+          )}
+          {view === 'parameters' && (
+            <section className="app__content">
+              <ErrorBoundary>
+                <ParameterExplorerPanel />
               </ErrorBoundary>
             </section>
           )}
