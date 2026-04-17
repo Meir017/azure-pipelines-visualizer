@@ -4,7 +4,14 @@
 [![npm CLI](https://img.shields.io/npm/v/@meirblachman/azure-pipelines-visualizer?label=npm%20cli)](https://www.npmjs.com/package/@meirblachman/azure-pipelines-visualizer)
 [![npm Web](https://img.shields.io/npm/v/@meirblachman/azure-pipelines-visualizer-web?label=npm%20web)](https://www.npmjs.com/package/@meirblachman/azure-pipelines-visualizer-web)
 
-An interactive visualizer for Azure DevOps pipelines. Paste a pipeline URL and explore its template hierarchy as an expandable diagram with YAML preview and task documentation links.
+An interactive visualizer for Azure DevOps pipelines. Two main views:
+
+- **Pipeline Templates** — paste a pipeline URL and explore its template hierarchy as an expandable diagram with YAML preview and task documentation links.
+- **Commit Flow** — paste a commit URL and see the full tree of pipelines that ran for it, including cross-project trigger chains.
+
+## Pipeline Templates
+
+Visualize how pipeline YAML files reference templates across repositories. Expand nodes to drill into the full template tree, view YAML source, and browse task documentation.
 
 ### Paste a URL and load the pipeline
 
@@ -21,6 +28,26 @@ An interactive visualizer for Azure DevOps pipelines. Paste a pipeline URL and e
 ### View YAML and task documentation in the detail panel
 
 ![Detail panel](assets/detail-panel.png)
+
+## Commit Flow
+
+Visualize the full chain of pipelines triggered by a commit. The tool discovers downstream builds via `buildCompletion` and `resourceTrigger` mechanisms, including cross-project triggers when configured.
+
+- Paste an Azure DevOps commit URL (e.g. `https://dev.azure.com/{org}/{project}/_git/{repo}/commit/{sha}`)
+- Builds stream in progressively via SSE as the BFS traversal discovers them
+- Click any build node to see details — pipeline name, build number, branch, and commit are all clickable links to Azure DevOps
+- Cross-project builds are labeled with a project badge
+- Configure `relatedProjectGroups` in `apv.config.json` to discover triggers across related ADO projects
+
+## Chrome Extension
+
+A companion Chrome extension that enhances Azure DevOps commit pages directly in the browser. See [`packages/chrome-extension/README.md`](packages/chrome-extension/README.md) for details.
+
+- Injects into ADO's build status sidebar — no separate UI
+- Shows triggered pipeline trees inline with expand/collapse toggles
+- Cross-project discovery via configurable project groups (Options page)
+- ADO-native styling with dark/light theme support
+- No server required — uses ADO REST APIs directly via browser cookies
 
 
 ## Quick Start with npx
@@ -131,6 +158,10 @@ Open http://localhost:3000.
 
 ## Usage
 
+The app has two views, accessible via the navigation tabs at the top.
+
+### Pipeline Templates
+
 1. Paste an Azure DevOps file URL, e.g.:
    ```
    https://dev.azure.com/{org}/{project}/_git/{repo}?path=/.pipelines/main.yml
@@ -138,6 +169,17 @@ Open http://localhost:3000.
 2. Click **Load Pipeline** — the root file and its template references appear as a diagram.
 3. Click any template node to expand it and fetch its contents recursively.
 4. Click an expanded node to view its YAML and task list in the detail panel.
+
+### Commit Flow
+
+1. Switch to the **Commit Flow** tab.
+2. Paste an Azure DevOps commit URL, e.g.:
+   ```
+   https://dev.azure.com/{org}/{project}/_git/{repo}/commit/{sha}
+   ```
+3. Click **Load** — builds stream in progressively as they are discovered.
+4. Click any build node to open a detail popup with clickable links to Azure DevOps (build results, pipeline definition, branch, commit).
+5. Cross-project triggered builds appear with a project badge when `relatedProjectGroups` is configured.
 
 ## Disk Cache
 
@@ -150,16 +192,28 @@ Fetched pipeline and template files are cached on disk under `.cache/ado-file-ca
 
 This keeps cache hits accurate even when a branch moves forward.
 
-You can optionally override the cache location in `apv.config.json`:
+You can optionally override the cache location and configure cross-project discovery in `apv.config.json`:
 
 ```jsonc
 {
   "cacheDir": ".cache/ado-file-cache",
   "customTaskDocs": {
     "OneBranch.Pipeline.Build@1": "https://example.com/docs/build-task"
-  }
+  },
+  "relatedProjectGroups": [
+    [
+      { "id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", "name": "ProjectA" },
+      { "id": "ffffffff-1111-2222-3333-444444444444", "name": "ProjectB" }
+    ]
+  ]
 }
 ```
+
+| Key | Description |
+|-----|-------------|
+| `cacheDir` | Directory for the on-disk file cache (default: `~/.apv/cache/ado-file-cache`) |
+| `customTaskDocs` | Map task names to custom documentation URLs |
+| `relatedProjectGroups` | Groups of related ADO projects for cross-project trigger discovery in Commit Flow |
 
 ## Scripts
 
@@ -215,8 +269,9 @@ bun run build:standalone    # produces ./apv (or apv.exe on Windows)
 
 ```
 packages/
-  core/     # Pipeline model, YAML parser, template detector, expression evaluator
-  server/   # Hono API server (ADO proxy + disk-backed file cache)
-  web/      # React + Vite frontend (ReactFlow diagram, Monaco editor, npm library)
-  cli/      # CLI wrapper — bundles server + web for npx usage
+  core/              # Pipeline model, YAML parser, template detector, expression evaluator
+  server/            # Hono API server (ADO proxy + disk-backed file cache)
+  web/               # React + Vite frontend (ReactFlow diagram, Monaco editor, npm library)
+  cli/               # CLI wrapper — bundles server + web for npx usage
+  chrome-extension/  # Chrome extension — injects into ADO sidebar with pipeline trigger trees
 ```

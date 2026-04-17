@@ -4,10 +4,12 @@ A Chrome extension that adds pipeline dependency visualization directly into Azu
 
 ## Features
 
-- **Sidebar Enhancement**: Adds a 🔗 button next to each pipeline in the build status sidebar on ADO commit pages
-- **Dependency Tree**: Click the button to see the full pipeline trigger chain in a modal overlay
-- **Progressive Loading**: Discovers downstream triggered pipelines via BFS, rendering them as they're found
-- **Native Look & Feel**: Styled to match Azure DevOps UI using ADO's CSS variables (supports dark mode)
+- **Inline Sidebar Enhancement**: Injects directly into ADO's build status sidebar — adds "Show triggered pipelines" toggles to each pipeline row
+- **Recursive Dependency Tree**: Discovers downstream triggered pipelines via BFS traversal (`buildCompletion` and `resourceTrigger` mechanisms)
+- **Cross-Project Discovery**: Searches related ADO projects for cross-project resource triggers (configured via Options page)
+- **Progressive Loading**: Polls in-progress builds and expands their children as they complete
+- **Pipeline Status Summary**: Shows a summary bar with total count and per-status chips (succeeded, failed, running, etc.)
+- **ADO-Native Styling**: Uses Azure DevOps CSS custom properties for seamless light/dark theme integration
 - **No Server Required**: Calls the ADO REST API directly using your browser session cookies
 
 ## Install (Developer Mode)
@@ -16,7 +18,7 @@ A Chrome extension that adds pipeline dependency visualization directly into Azu
    ```bash
    # From the repository root
    bun install
-   bun run build:extension
+   cd packages/chrome-extension && node build.mjs
    ```
 
 2. Open Chrome and navigate to `chrome://extensions/`
@@ -25,24 +27,40 @@ A Chrome extension that adds pipeline dependency visualization directly into Azu
 
 4. Click **Load unpacked** and select the `packages/chrome-extension/dist` folder
 
-5. Navigate to any Azure DevOps commits page (e.g., `https://dev.azure.com/org/project/_git/repo/commits`)
+5. Navigate to any Azure DevOps commit page and click the build status column to open the sidebar
 
-6. Click the status column on a commit to open the build sidebar — you'll see 🔗 buttons next to each pipeline
+## Configuration
+
+### Cross-Project Discovery
+
+To discover triggered pipelines across related ADO projects:
+
+1. Right-click the extension icon → **Options**
+2. Add a project group with related projects (name + GUID pairs)
+3. Save — the extension will search all projects in the group when expanding triggered pipelines
+
+Project GUIDs can be found via the ADO REST API: `https://dev.azure.com/{org}/_apis/projects`
 
 ## How It Works
 
 1. A content script runs on `dev.azure.com` pages
-2. A MutationObserver watches for the build status sidebar to appear
-3. When pipeline links are detected, a dependency button is injected next to each one
-4. Clicking the button fetches the build details and runs a BFS traversal to find all downstream triggered pipelines
-5. Results are rendered as a left-to-right tree in a modal overlay
+2. A `MutationObserver` watches for the build status sidebar dialog to appear
+3. For each pipeline row in the sidebar, a "Show triggered pipelines" toggle is injected
+4. Clicking the toggle fetches the build details and runs a BFS traversal:
+   - Queries for `buildCompletion` and `resourceTrigger` builds within a time window around the parent build
+   - Filters by `upstreamBuildId` and `triggerInfo.projectId` to match the correct parent
+   - Recursively expands up to 5 levels deep
+   - Polls in-progress builds every 15 seconds until completion (max 10 minutes)
+5. Results are rendered as an indented tree with ADO-native status icons and a summary bar
 
 ## Development
 
 ```bash
-# Watch mode (auto-rebuild on changes)
+# Build once
 cd packages/chrome-extension
-bun run watch
+node build.mjs
+
+# Watch mode (auto-rebuild on changes — reload extension in chrome://extensions/)
 ```
 
 After rebuilding, click the refresh icon on the extension card in `chrome://extensions/`.

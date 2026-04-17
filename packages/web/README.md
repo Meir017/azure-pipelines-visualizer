@@ -1,8 +1,15 @@
 # @meirblachman/azure-pipelines-visualizer-web
 
-React components for visualizing Azure Pipelines template trees as interactive diagrams.
+React components for visualizing Azure Pipelines — both template trees and commit build flows.
 
 [![npm](https://img.shields.io/npm/v/@meirblachman/azure-pipelines-visualizer-web)](https://www.npmjs.com/package/@meirblachman/azure-pipelines-visualizer-web)
+
+## Two main views
+
+The `App` component provides two views via hash routing:
+
+- **Pipeline Templates** (`#/`) — paste a pipeline URL and explore its template hierarchy as an interactive diagram with YAML preview and task docs.
+- **Commit Flow** (`#/commit-flow`) — paste a commit URL and visualize the full chain of pipelines triggered by that commit, including cross-project triggers.
 
 ## Installation
 
@@ -198,12 +205,20 @@ import '@xyflow/react/dist/style.css';
 | Export | Description |
 |---|---|
 | `mount` | Vanilla JS mount function — no React needed in your project |
-| `App` | Full application shell with selector, diagram, and detail panel |
+| `App` | Full application shell with selector, diagram, detail panel, and commit flow |
+| **Pipeline Templates** | |
 | `PipelineDiagram` | Core diagram component — renders the template tree with ReactFlow |
 | `PipelineSelector` | URL input bar with auto-load from query parameters |
 | `DetailPanel` | YAML preview and task docs for the selected node |
 | `FileNode` | Custom ReactFlow node for pipeline files |
 | `TemplateEdge` | Custom ReactFlow edge with template metadata |
+| **Commit Flow** | |
+| `CommitFlowPage` | Full commit flow view with selector, diagram, and build detail popup |
+| `CommitFlowDiagram` | ReactFlow diagram of the build trigger chain |
+| `CommitFlowSelector` | Commit URL input bar |
+| `BuildNode` | Custom ReactFlow node for pipeline builds |
+| `BuildDetailPopup` | Modal popup with clickable links to ADO (build, definition, branch, commit) |
+| **Shared** | |
 | `ErrorBoundary` | React error boundary wrapper |
 | `usePipelineStore` | Zustand store hook for pipeline state |
 | `getLayoutedElements` | Dagre-based layout utility for nodes and edges |
