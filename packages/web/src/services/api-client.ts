@@ -203,3 +203,11 @@ export function fetchBuild(
   if (isExtensionPage) return directAdo.fetchBuild(org, project, buildId);
   return apiFetch(`/${org}/${project}/builds/${buildId}`);
 }
+
+export function fetchBuildTimeline(
+  org: string,
+  project: string,
+  buildId: number,
+): Promise<unknown[]> {
+  return apiFetch(`/${org}/${project}/builds/${buildId}/timeline`);
+}

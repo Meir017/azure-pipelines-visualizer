@@ -3,6 +3,7 @@ import { streamSSE } from 'hono/streaming';
 import { getRelatedProjects } from '../config.js';
 import {
   getBuild,
+  getBuildTimeline,
   getCommitFlowGraph,
   getRepository,
   listBuildsForCommit,
@@ -91,6 +92,12 @@ builds.get('/:org/:project/builds', async (c) => {
 builds.get('/:org/:project/builds/:buildId', async (c) => {
   const { org, project, buildId } = c.req.param();
   const data = await getBuild(org, project, Number(buildId));
+  return c.json(data);
+});
+
+builds.get('/:org/:project/builds/:buildId/timeline', async (c) => {
+  const { org, project, buildId } = c.req.param();
+  const data = await getBuildTimeline(org, project, Number(buildId));
   return c.json(data);
 });
 
