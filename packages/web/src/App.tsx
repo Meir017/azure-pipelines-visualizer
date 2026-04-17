@@ -6,6 +6,7 @@ import PipelineDiagram from './components/PipelineDiagram.js';
 import PipelineSelector, {
   type PipelineSelectorProps,
 } from './components/PipelineSelector.js';
+import RunHistoryPage from './components/run-history/RunHistoryPage.js';
 import {
   fetchFileByRepoName,
   fetchTaskDocsConfig,
@@ -17,12 +18,13 @@ import './App.css';
 
 export type AppProps = PipelineSelectorProps;
 
-type AppView = 'pipeline' | 'commit-flow';
+type AppView = 'pipeline' | 'commit-flow' | 'run-history';
 
 function useHashRoute(): [AppView, (view: AppView) => void] {
   const getView = (): AppView => {
     const hash = window.location.hash;
     if (hash.startsWith('#/commit-flow')) return 'commit-flow';
+    if (hash.startsWith('#/run-history')) return 'run-history';
     return 'pipeline';
   };
 
@@ -117,6 +119,13 @@ export default function App(props: AppProps) {
             >
               Commit Flow
             </button>
+            <button
+              className={`app__nav-btn ${view === 'run-history' ? 'app__nav-btn--active' : ''}`}
+              onClick={() => setView('run-history')}
+              type="button"
+            >
+              Run History
+            </button>
           </nav>
           {view === 'pipeline' && (
             <ErrorBoundary>
@@ -152,6 +161,13 @@ export default function App(props: AppProps) {
             <section className="app__content">
               <ErrorBoundary>
                 <CommitFlowPage />
+              </ErrorBoundary>
+            </section>
+          )}
+          {view === 'run-history' && (
+            <section className="app__content">
+              <ErrorBoundary>
+                <RunHistoryPage />
               </ErrorBoundary>
             </section>
           )}

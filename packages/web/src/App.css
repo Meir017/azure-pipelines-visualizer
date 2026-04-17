@@ -1493,3 +1493,137 @@ body {
 .build-popup__action-link:hover {
   text-decoration: underline;
 }
+
+/* ── Run History ── */
+
+.rh-page {
+  padding: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.rh-selector {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.rh-input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 8px 12px;
+  font-size: 13px;
+  flex: 1;
+  min-width: 120px;
+}
+
+.rh-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.rh-load-btn {
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.rh-load-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rh-load-btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.rh-error {
+  background: rgba(243, 139, 168, 0.15);
+  color: var(--error);
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+.rh-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 40px;
+}
+
+.rh-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rh-stats-row {
+  display: flex;
+  gap: 12px;
+}
+
+.rh-stat-card {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+
+.rh-stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.rh-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.rh-stat-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.rh-chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.rh-chart-card h3 {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+.rh-tooltip {
+  position: fixed;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  pointer-events: none;
+  z-index: 100;
+  transform: translate(12px, -50%);
+  white-space: nowrap;
+}

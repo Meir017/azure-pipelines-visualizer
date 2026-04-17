@@ -195,6 +195,14 @@ export function streamCommitFlowGraph(
   return controller;
 }
 
+export function fetchBuildsForDefinition(
+  org: string,
+  project: string,
+  definitionId: number,
+): Promise<BuildInfo[]> {
+  return apiFetch(`/${org}/${project}/definitions/${definitionId}/history`);
+}
+
 export function fetchBuild(
   org: string,
   project: string,
