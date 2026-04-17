@@ -1,4 +1,8 @@
 import { buildTriggerChain } from './ado-api.js';
+import {
+  injectBuildPageBanner,
+  isBuildResultPage,
+} from './build-page-banner.js';
 import type { BuildInfo } from './build-types.js';
 import { getRelatedProjects, loadRelatedProjectGroups } from './config.js';
 import { renderDeps } from './tree-renderer.js';
@@ -161,15 +165,34 @@ async function injectIntoSidebar(dialog: Element): Promise<void> {
 
 // ── Observer ────────────────────────────────────────────────────────
 
+/** Track last URL to detect SPA navigation */
+let lastUrl = window.location.href;
+
+function checkBuildPage(): void {
+  if (isBuildResultPage()) {
+    injectBuildPageBanner();
+  }
+}
+
 function startObserver(): void {
   // Scan for any already-open sidebar
   const existing = document.querySelector('[role="dialog"]');
   if (existing) injectIntoSidebar(existing);
 
+  // Check if we're already on a build result page
+  checkBuildPage();
+
   const observer = new MutationObserver((mutations) => {
+    // Detect SPA navigation (URL changed without page reload)
+    if (window.location.href !== lastUrl) {
+      lastUrl = window.location.href;
+      checkBuildPage();
+    }
+
     for (const mutation of mutations) {
       if ((mutation.target as Element).closest?.('.apv-deps-container'))
         continue;
+      if ((mutation.target as Element).closest?.('.apv-build-banner')) continue;
       for (const node of mutation.addedNodes) {
         if (!(node instanceof HTMLElement)) continue;
         // Sidebar dialog appeared or content was added to it
@@ -187,6 +210,20 @@ function startObserver(): void {
           node.querySelector?.('.repos-pipeline-status-item')
         ) {
           injectIntoSidebar(parentDialog);
+        }
+
+        // Build result page: header appeared, try injecting banner
+        if (isBuildResultPage()) {
+          if (
+            node.matches?.(
+              '.build-header, .bolt-header-title-area, [data-renderedregion="header"], .page-content',
+            ) ||
+            node.querySelector?.(
+              '.build-header, .bolt-header-title-area, [data-renderedregion="header"]',
+            )
+          ) {
+            checkBuildPage();
+          }
         }
       }
     }

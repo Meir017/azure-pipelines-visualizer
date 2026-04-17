@@ -7,6 +7,7 @@ const watch = process.argv.includes('--watch');
 mkdirSync('dist', { recursive: true });
 cpSync('manifest.json', 'dist/manifest.json');
 cpSync('src/content.css', 'dist/content.css');
+cpSync('src/build-page-banner.css', 'dist/build-page-banner.css');
 cpSync('src/options.html', 'dist/options.html');
 mkdirSync('dist/icons', { recursive: true });
 try {

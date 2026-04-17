@@ -1,0 +1,176 @@
+/* ============================================================
+   Azure Pipelines Dependency Viewer — Build Page Banner Styles
+   Injected into ADO build result pages.
+   Uses ADO's own CSS custom properties for seamless theming.
+   ============================================================ */
+
+/* --- Main banner container --- */
+
+.apv-build-banner {
+  margin: 0 32px 8px;
+  padding: 12px 16px;
+  background: var(--palette-primary-tint-40, rgba(235, 245, 255, 1));
+  border-left: 3px solid var(--communication-foreground, rgba(0, 120, 212, 1));
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text-primary-color, rgba(50, 49, 48, 1));
+}
+
+/* --- Banner header row --- */
+
+.apv-build-banner__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.apv-build-banner__logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: var(--communication-foreground, rgba(0, 120, 212, 1));
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.apv-build-banner__title {
+  flex: 1;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.apv-build-banner__title--error {
+  color: var(--component-status-error, rgba(205, 74, 69, 1));
+}
+
+.apv-build-banner__upstream-link {
+  font-size: 12px;
+  color: var(--communication-foreground, rgba(0, 120, 212, 1));
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.apv-build-banner__upstream-link:hover {
+  text-decoration: underline;
+}
+
+/* --- Trigger chain collapsible section --- */
+
+.apv-build-banner__chain-section {
+  margin-top: 8px;
+}
+
+.apv-build-banner__chain-toggle {
+  display: inline-block;
+  padding: 2px 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--communication-foreground, rgba(0, 120, 212, 1));
+  cursor: pointer;
+}
+
+.apv-build-banner__chain-toggle:hover {
+  text-decoration: underline;
+}
+
+.apv-build-banner__chain-toggle:focus-visible {
+  outline: 1px solid var(--communication-foreground, rgba(0, 120, 212, 1));
+  outline-offset: 1px;
+}
+
+.apv-build-banner__chain-container {
+  margin-top: 8px;
+  padding: 8px 0;
+}
+
+/* --- Trigger chain horizontal layout --- */
+
+.apv-chain {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 4px 0;
+}
+
+.apv-chain-arrow {
+  color: var(--text-secondary-color, rgba(96, 94, 92, 1));
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.apv-chain-node {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid
+    var(--separator-color, var(--palette-neutral-8, rgba(234, 234, 234, 1)));
+  background: var(--background-color, rgba(255, 255, 255, 1));
+  text-decoration: none;
+  color: var(--text-primary-color, rgba(50, 49, 48, 1));
+  font-size: 12px;
+  line-height: 18px;
+  white-space: nowrap;
+  transition: border-color 0.15s;
+}
+
+.apv-chain-node:hover {
+  border-color: var(--communication-foreground, rgba(0, 120, 212, 1));
+  text-decoration: none;
+}
+
+.apv-chain-node--current {
+  border-color: var(--communication-foreground, rgba(0, 120, 212, 1));
+  border-width: 2px;
+  font-weight: 600;
+  background: var(--palette-primary-tint-40, rgba(235, 245, 255, 1));
+}
+
+.apv-chain-node > svg {
+  flex-shrink: 0;
+}
+
+.apv-chain-node__text {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.apv-chain-node__number {
+  color: var(--text-secondary-color, rgba(96, 94, 92, 1));
+  font-weight: 400;
+}
+
+/* --- Downstream group (multiple targets) --- */
+
+.apv-chain-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* --- Loading / empty states --- */
+
+.apv-chain-loading {
+  font-size: 12px;
+  color: var(--text-secondary-color, rgba(96, 94, 92, 1));
+  padding: 4px 0;
+}
+
+.apv-chain-empty {
+  font-size: 12px;
+  color: var(--text-secondary-color, rgba(96, 94, 92, 1));
+  padding: 4px 0;
+}
