@@ -1,0 +1,219 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <defs>
+    <filter id="shadow5" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.1"/>
+    </filter>
+    <marker id="arrowBlue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#93C5FD"/>
+    </marker>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#CBD5E1"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="500" rx="8" fill="#F8FAFC"/>
+
+  <!-- Header -->
+  <rect width="800" height="44" rx="8" fill="#1E3A5F"/>
+  <text x="20" y="28" font-family="Segoe UI, sans-serif" font-size="15" font-weight="600" fill="white">Environment &amp; Deployment Map</text>
+  <text x="680" y="28" font-family="Segoe UI, sans-serif" font-size="11" fill="#94A3B8">MyProject • contoso</text>
+
+  <!-- Column headers -->
+  <text x="55" y="68" font-family="Segoe UI, sans-serif" font-size="11" font-weight="600" fill="#64748B" text-anchor="middle">PIPELINES</text>
+  <text x="250" y="68" font-family="Segoe UI, sans-serif" font-size="11" font-weight="600" fill="#64748B" text-anchor="middle">STAGES</text>
+  <text x="500" y="68" font-family="Segoe UI, sans-serif" font-size="11" font-weight="600" fill="#64748B" text-anchor="middle">ENVIRONMENTS</text>
+
+  <!-- ===================== -->
+  <!-- Pipeline nodes (left) -->
+  <!-- ===================== -->
+
+  <!-- Pipeline 1: Build-Deploy-Web -->
+  <rect x="10" y="85" width="130" height="50" rx="8" fill="white" stroke="#3B82F6" stroke-width="2" filter="url(#shadow5)"/>
+  <rect x="10" y="85" width="5" height="50" rx="3" fill="#3B82F6"/>
+  <text x="24" y="105" font-family="Segoe UI, sans-serif" font-size="11" font-weight="600" fill="#1E3A5F">Build-Deploy-Web</text>
+  <text x="24" y="120" font-family="Segoe UI, sans-serif" font-size="9" fill="#94A3B8">web-app repo</text>
+
+  <!-- Pipeline 2: Build-Deploy-API -->
+  <rect x="10" y="165" width="130" height="50" rx="8" fill="white" stroke="#3B82F6" stroke-width="2" filter="url(#shadow5)"/>
+  <rect x="10" y="165" width="5" height="50" rx="3" fill="#3B82F6"/>
+  <text x="24" y="185" font-family="Segoe UI, sans-serif" font-size="11" font-weight="600" fill="#1E3A5F">Build-Deploy-API</text>
+  <text x="24" y="200" font-family="Segoe UI, sans-serif" font-size="9" fill="#94A3B8">api-service repo</text>
+
+  <!-- Pipeline 3: Infra-Provision -->
+  <rect x="10" y="245" width="130" height="50" rx="8" fill="white" stroke="#3B82F6" stroke-width="2" filter="url(#shadow5)"/>
+  <rect x="10" y="245" width="5" height="50" rx="3" fill="#3B82F6"/>
+  <text x="24" y="265" font-family="Segoe UI, sans-serif" font-size="11" font-weight="600" fill="#1E3A5F">Infra-Provision</text>
+  <text x="24" y="280" font-family="Segoe UI, sans-serif" font-size="9" fill="#94A3B8">infra repo</text>
+
+  <!-- ===================== -->
+  <!-- Stage nodes (middle)  -->
+  <!-- ===================== -->
+
+  <!-- Deploy-Dev stage (Web) -->
+  <rect x="195" y="78" width="110" height="30" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="215" y="97" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">Deploy-Dev</text>
+
+  <!-- Deploy-Staging stage (Web) -->
+  <rect x="195" y="115" width="110" height="30" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="207" y="134" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">Deploy-Staging</text>
+
+  <!-- Deploy-Prod stage (Web) -->
+  <rect x="195" y="152" width="110" height="30" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="212" y="171" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">Deploy-Prod</text>
+
+  <!-- Deploy-Dev stage (API) -->
+  <rect x="195" y="200" width="110" height="30" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="215" y="219" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">Deploy-Dev</text>
+
+  <!-- Deploy-Prod stage (API) -->
+  <rect x="195" y="237" width="110" height="30" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="212" y="256" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">Deploy-Prod</text>
+
+  <!-- Provision stage (Infra) -->
+  <rect x="195" y="274" width="110" height="30" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="218" y="293" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">Provision</text>
+
+  <!-- ======================== -->
+  <!-- Pipeline → Stage edges   -->
+  <!-- ======================== -->
+  <line x1="140" y1="110" x2="195" y2="93" stroke="#CBD5E1" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+  <line x1="140" y1="110" x2="195" y2="130" stroke="#CBD5E1" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+  <line x1="140" y1="110" x2="195" y2="167" stroke="#CBD5E1" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+  <line x1="140" y1="190" x2="195" y2="215" stroke="#CBD5E1" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+  <line x1="140" y1="190" x2="195" y2="252" stroke="#CBD5E1" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+  <line x1="140" y1="270" x2="195" y2="289" stroke="#CBD5E1" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+  <!-- ========================== -->
+  <!-- Environment nodes (right)  -->
+  <!-- ========================== -->
+
+  <!-- Dev Environment -->
+  <rect x="420" y="75" width="170" height="70" rx="10" fill="white" stroke="#22C55E" stroke-width="2.5" filter="url(#shadow5)"/>
+  <rect x="420" y="75" width="170" height="24" rx="10" fill="#22C55E"/>
+  <rect x="420" y="87" width="170" height="12" fill="#22C55E"/>
+  <text x="470" y="92" font-family="Segoe UI, sans-serif" font-size="12" font-weight="700" fill="white">🟢 Dev</text>
+  <text x="432" y="115" font-family="Segoe UI, sans-serif" font-size="9" fill="#475569">Last deploy: 12 min ago ✓</text>
+  <text x="432" y="130" font-family="Segoe UI, sans-serif" font-size="9" fill="#475569">2 resources • No approvals</text>
+
+  <!-- Staging Environment -->
+  <rect x="420" y="165" width="170" height="70" rx="10" fill="white" stroke="#EAB308" stroke-width="2.5" filter="url(#shadow5)"/>
+  <rect x="420" y="165" width="170" height="24" rx="10" fill="#EAB308"/>
+  <rect x="420" y="177" width="170" height="12" fill="#EAB308"/>
+  <text x="461" y="182" font-family="Segoe UI, sans-serif" font-size="12" font-weight="700" fill="white">🟡 Staging</text>
+  <text x="432" y="205" font-family="Segoe UI, sans-serif" font-size="9" fill="#475569">Last deploy: 2h ago ✓</text>
+  <text x="432" y="220" font-family="Segoe UI, sans-serif" font-size="9" fill="#475569">3 resources • 1 approval gate</text>
+
+  <!-- Approval gate diamond on Staging -->
+  <polygon points="398,200 408,190 418,200 408,210" fill="#F59E0B" stroke="#D97706" stroke-width="1"/>
+  <text x="403" y="204" font-family="Segoe UI, sans-serif" font-size="8" fill="white">🔒</text>
+
+  <!-- Prod Environment -->
+  <rect x="420" y="255" width="170" height="70" rx="10" fill="white" stroke="#EF4444" stroke-width="2.5" filter="url(#shadow5)"/>
+  <rect x="420" y="255" width="170" height="24" rx="10" fill="#EF4444"/>
+  <rect x="420" y="267" width="170" height="12" fill="#EF4444"/>
+  <text x="462" y="272" font-family="Segoe UI, sans-serif" font-size="12" font-weight="700" fill="white">🔴 Production</text>
+  <text x="432" y="295" font-family="Segoe UI, sans-serif" font-size="9" fill="#475569">Last deploy: 1d ago ✓</text>
+  <text x="432" y="310" font-family="Segoe UI, sans-serif" font-size="9" fill="#475569">5 resources • 2 approval gates</text>
+
+  <!-- Approval gate diamonds on Prod -->
+  <polygon points="398,278 408,268 418,278 408,288" fill="#EF4444" stroke="#DC2626" stroke-width="1"/>
+  <text x="403" y="282" font-family="Segoe UI, sans-serif" font-size="8" fill="white">🔒</text>
+  <polygon points="398,298 408,288 418,298 408,308" fill="#8B5CF6" stroke="#7C3AED" stroke-width="1"/>
+  <text x="403" y="302" font-family="Segoe UI, sans-serif" font-size="8" fill="white">✓</text>
+
+  <!-- ========================== -->
+  <!-- Stage → Environment edges  -->
+  <!-- ========================== -->
+  <line x1="305" y1="93" x2="420" y2="105" stroke="#22C55E" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <line x1="305" y1="130" x2="420" y2="195" stroke="#EAB308" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <line x1="305" y1="167" x2="420" y2="285" stroke="#EF4444" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <line x1="305" y1="215" x2="420" y2="115" stroke="#22C55E" stroke-width="2" stroke-dasharray="4,2" marker-end="url(#arrowBlue)"/>
+  <line x1="305" y1="252" x2="420" y2="295" stroke="#EF4444" stroke-width="2" stroke-dasharray="4,2" marker-end="url(#arrowBlue)"/>
+  <line x1="305" y1="289" x2="420" y2="110" stroke="#22C55E" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrowBlue)"/>
+
+  <!-- ============================= -->
+  <!-- Deployment Strategy detail     -->
+  <!-- ============================= -->
+  <rect x="615" y="75" width="170" height="90" rx="8" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow5)"/>
+  <text x="625" y="93" font-family="Segoe UI, sans-serif" font-size="10" font-weight="600" fill="#334155">Strategy: rolling (Prod)</text>
+  <text x="625" y="108" font-family="Segoe UI, sans-serif" font-size="9" fill="#94A3B8">maxParallel: 25%</text>
+
+  <!-- Strategy sub-flow nodes -->
+  <rect x="625" y="115" width="62" height="18" rx="4" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1"/>
+  <text x="633" y="128" font-family="Segoe UI, sans-serif" font-size="8" fill="#1E40AF">preDeploy</text>
+
+  <rect x="695" y="115" width="48" height="18" rx="4" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1"/>
+  <text x="703" y="128" font-family="Segoe UI, sans-serif" font-size="8" fill="#1E40AF">deploy</text>
+
+  <rect x="625" y="140" width="68" height="18" rx="4" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1"/>
+  <text x="630" y="153" font-family="Segoe UI, sans-serif" font-size="8" fill="#1E40AF">routeTraffic</text>
+
+  <rect x="701" y="140" width="72" height="18" rx="4" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1"/>
+  <text x="704" y="153" font-family="Segoe UI, sans-serif" font-size="8" fill="#1E40AF">postRoute</text>
+
+  <!-- small arrows between strategy nodes -->
+  <text x="689" y="128" font-family="Segoe UI, sans-serif" font-size="10" fill="#93C5FD">→</text>
+  <text x="695" y="153" font-family="Segoe UI, sans-serif" font-size="10" fill="#93C5FD">→</text>
+
+  <!-- ============================= -->
+  <!-- Deployment Timeline strip      -->
+  <!-- ============================= -->
+  <rect x="10" y="340" width="780" height="10" rx="0" fill="transparent"/>
+  <line x1="10" y1="345" x2="790" y2="345" stroke="#E2E8F0" stroke-width="1"/>
+
+  <text x="20" y="370" font-family="Segoe UI, sans-serif" font-size="11" font-weight="600" fill="#334155">Deployment History — Production</text>
+
+  <!-- Timeline bar -->
+  <rect x="20" y="380" width="760" height="40" rx="6" fill="#F1F5F9" stroke="#E2E8F0" stroke-width="1"/>
+
+  <!-- Timeline entries -->
+  <rect x="35" y="387" width="100" height="26" rx="5" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1"/>
+  <text x="43" y="404" font-family="Segoe UI, sans-serif" font-size="9" font-weight="600" fill="#166534">✓ #1247 — 1d ago</text>
+
+  <rect x="150" y="387" width="100" height="26" rx="5" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1"/>
+  <text x="158" y="404" font-family="Segoe UI, sans-serif" font-size="9" font-weight="600" fill="#166534">✓ #1245 — 3d ago</text>
+
+  <rect x="265" y="387" width="100" height="26" rx="5" fill="#FEE2E2" stroke="#FCA5A5" stroke-width="1"/>
+  <text x="273" y="404" font-family="Segoe UI, sans-serif" font-size="9" font-weight="600" fill="#DC2626">✗ #1240 — 5d ago</text>
+
+  <rect x="380" y="387" width="100" height="26" rx="5" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1"/>
+  <text x="388" y="404" font-family="Segoe UI, sans-serif" font-size="9" font-weight="600" fill="#166534">✓ #1238 — 6d ago</text>
+
+  <rect x="495" y="387" width="100" height="26" rx="5" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1"/>
+  <text x="503" y="404" font-family="Segoe UI, sans-serif" font-size="9" font-weight="600" fill="#166534">✓ #1235 — 8d ago</text>
+
+  <rect x="610" y="387" width="100" height="26" rx="5" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1"/>
+  <text x="618" y="404" font-family="Segoe UI, sans-serif" font-size="9" font-weight="600" fill="#166534">✓ #1230 — 10d ago</text>
+
+  <!-- Arrow indicators between timeline entries -->
+  <text x="138" y="404" font-family="Segoe UI, sans-serif" font-size="10" fill="#CBD5E1">←</text>
+  <text x="253" y="404" font-family="Segoe UI, sans-serif" font-size="10" fill="#CBD5E1">←</text>
+  <text x="368" y="404" font-family="Segoe UI, sans-serif" font-size="10" fill="#CBD5E1">←</text>
+  <text x="483" y="404" font-family="Segoe UI, sans-serif" font-size="10" fill="#CBD5E1">←</text>
+  <text x="598" y="404" font-family="Segoe UI, sans-serif" font-size="10" fill="#CBD5E1">←</text>
+
+  <!-- Legend -->
+  <rect x="20" y="435" width="760" height="50" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="35" y="455" font-family="Segoe UI, sans-serif" font-size="10" font-weight="600" fill="#64748B">Legend:</text>
+
+  <rect x="90" y="445" width="12" height="12" rx="3" fill="#22C55E"/>
+  <text x="108" y="455" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">Dev</text>
+
+  <rect x="150" y="445" width="12" height="12" rx="3" fill="#EAB308"/>
+  <text x="168" y="455" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">Staging</text>
+
+  <rect x="225" y="445" width="12" height="12" rx="3" fill="#EF4444"/>
+  <text x="243" y="455" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">Production</text>
+
+  <polygon points="320,451 328,445 336,451 328,457" fill="#F59E0B" stroke="#D97706" stroke-width="0.5"/>
+  <text x="342" y="455" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">Approval Gate</text>
+
+  <line x1="430" y1="451" x2="460" y2="451" stroke="#CBD5E1" stroke-width="1.5"/>
+  <text x="466" y="455" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">Pipeline Edge</text>
+
+  <line x1="550" y1="451" x2="580" y2="451" stroke="#CBD5E1" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="586" y="455" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">Cross-pipeline</text>
+
+  <text x="35" y="475" font-family="Segoe UI, sans-serif" font-size="9" fill="#94A3B8">Click an environment to view checks, approvals, and deployment strategy details.</text>
+</svg>
