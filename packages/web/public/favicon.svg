@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- Concept 2: Official rocket as root node, tree fans right -->
+  <rect width="256" height="256" rx="40" fill="#0078d4"/>
+
+  <!-- Official Azure Pipelines rocket, scaled small as root node -->
+  <g transform="translate(14, 88) scale(0.85)">
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M2.32029 57.7416C0.971342 56.3927 0.762734 54.2789 1.82198 52.6922L34.6246 3.55804C36.1087 1.33497 38.6051 0 41.2781 0H76.9999C79.209 0 80.9999 1.79086 80.9999 4V39.7222C80.9999 42.3951 79.6649 44.8915 77.4419 46.3756L28.308 79.1784C26.7214 80.2377 24.6076 80.0291 23.2586 78.6801L2.32029 57.7416Z" transform="translate(15)" fill="#2560E0"/>
+    <path d="M0 4V26L14 40.4156L20 34L38 52L32 58L46 72H68C70.2091 72 72 70.2091 72 68V36L36 0H4C1.79086 0 0 1.79086 0 4Z" transform="translate(0 24)" fill="#0F46BD"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M0 30.5401L30.54 0L36.454 5.91397L5.91399 36.4541L0 30.5401Z" transform="translate(19.9519 39.5938)" fill="#729AF2"/>
+    <path d="M12 24.0001C18.6274 24.0001 24 18.6275 24 12.0001C24 5.37261 18.6274 0 12 0C5.37258 0 0 5.37261 0 12.0001C0 18.6275 5.37258 24.0001 12 24.0001Z" transform="translate(58 14)" fill="#91B0F2"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M0 0L7.99999 2.97878e-08V16.0001H24V24H0V0Z" transform="translate(0 72)" fill="#91B0F2"/>
+  </g>
+
+  <!-- Edges from rocket to tree -->
+  <line x1="100" y1="128" x2="145" y2="65" stroke="#fff" stroke-width="4" opacity="0.6"/>
+  <line x1="100" y1="128" x2="145" y2="128" stroke="#fff" stroke-width="4" opacity="0.6"/>
+  <line x1="100" y1="128" x2="145" y2="191" stroke="#fff" stroke-width="4" opacity="0.6"/>
+
+  <line x1="145" y1="65" x2="210" y2="42" stroke="#fff" stroke-width="3" opacity="0.45"/>
+  <line x1="145" y1="65" x2="210" y2="88" stroke="#fff" stroke-width="3" opacity="0.45"/>
+  <line x1="145" y1="128" x2="210" y2="128" stroke="#fff" stroke-width="3" opacity="0.45"/>
+  <line x1="145" y1="191" x2="210" y2="168" stroke="#fff" stroke-width="3" opacity="0.45"/>
+  <line x1="145" y1="191" x2="210" y2="214" stroke="#fff" stroke-width="3" opacity="0.45"/>
+
+  <!-- Level 1 nodes -->
+  <circle cx="145" cy="65" r="10" fill="#fff"/>
+  <circle cx="145" cy="128" r="10" fill="#fff"/>
+  <circle cx="145" cy="191" r="10" fill="#fff"/>
+
+  <!-- Level 2 leaf nodes -->
+  <circle cx="210" cy="42" r="8" fill="#91B0F2"/>
+  <circle cx="210" cy="88" r="8" fill="#91B0F2"/>
+  <circle cx="210" cy="128" r="8" fill="#91B0F2"/>
+  <circle cx="210" cy="168" r="8" fill="#91B0F2"/>
+  <circle cx="210" cy="214" r="8" fill="#91B0F2"/>
+</svg>
