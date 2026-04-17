@@ -1,5 +1,8 @@
 # Feature 9: Export to Diagram Formats
 
+![Mockup](09-export-diagrams-mockup.svg)
+
+
 ## Summary
 
 An export system that lets users generate portable diagram files from any visualization in the Azure Pipelines Visualizer — template trees, artifact lineage graphs, and commit flow views. Supported formats include Mermaid, Draw.io XML, PlantUML, PNG, SVG, and clipboard copy. Designed for embedding in wikis, ADRs, documentation, and presentations.

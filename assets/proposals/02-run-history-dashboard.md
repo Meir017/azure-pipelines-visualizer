@@ -1,5 +1,8 @@
 # Feature Proposal: Pipeline Run History Dashboard
 
+![Mockup](02-run-history-dashboard-mockup.svg)
+
+
 ## Summary
 
 A dashboard that aggregates historical build data for a pipeline definition, presenting success/failure trends, duration metrics, queue latency, and breakdowns by branch and requester — enabling teams to quickly identify reliability issues and performance regressions.

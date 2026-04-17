@@ -1,5 +1,8 @@
 # Feature 10: Org-Wide Pipeline Topology
 
+![Mockup](10-org-topology-mockup.svg)
+
+
 ## Summary
 
 Bird's-eye view of all pipelines across an Azure DevOps organization or project collection. An interactive force-directed (or hierarchical) graph shows inter-pipeline dependencies, shared templates, shared variable groups, and cross-project triggers. Users can filter by project, folder, or dependency type, and zoom into clusters.

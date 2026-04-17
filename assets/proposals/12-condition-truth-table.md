@@ -1,5 +1,8 @@
 # Feature 12: Condition Truth Table
 
+![Mockup](12-condition-truth-table-mockup.svg)
+
+
 ## Summary
 
 For conditional stages, jobs, and steps in an Azure Pipeline, display a truth table showing which conditions evaluated to true or false for a given run, along with the actual variable and parameter values that drove each decision. Includes an expression tree visualization showing how sub-expressions combine. Answers "why didn't stage X run?" visually.

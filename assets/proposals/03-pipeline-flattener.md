@@ -1,5 +1,8 @@
 # Feature Proposal: Expanded Pipeline Flattener
 
+![Mockup](03-pipeline-flattener-mockup.svg)
+
+
 ## Summary
 
 A split-pane view that shows the fully-resolved, flattened pipeline YAML after all templates have been expanded, expressions evaluated, and conditions applied — side-by-side with the original template tree. Each section of the flattened output is color-annotated to indicate which source template it originated from.

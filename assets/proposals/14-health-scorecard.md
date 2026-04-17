@@ -1,5 +1,8 @@
 # Feature 14: Pipeline Health Scorecard
 
+![Mockup](14-health-scorecard-mockup.svg)
+
+
 ## Summary
 
 A per-pipeline health scoring system that computes a composite 0–100 score from five weighted dimensions: success rate, duration trend, flaky test percentage, queue wait time, and failure clustering. The scorecard provides a single at-a-glance health metric with detailed breakdowns, trend visualization, and a cross-pipeline leaderboard.

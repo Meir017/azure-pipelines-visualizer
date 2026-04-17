@@ -1,5 +1,8 @@
 # Feature 4: "Why Did This Run?" Explainer
 
+![Mockup](04-why-did-this-run-mockup.svg)
+
+
 ## Summary
 
 Generate a human-readable narrative explaining why any given build was triggered, replacing cryptic `build.reason` codes with clear, contextual sentences. Display the full trigger chain as a breadcrumb trail when pipelines trigger other pipelines.

@@ -1,5 +1,8 @@
 # Feature 8: Parameter "What-If" Explorer
 
+![Mockup](08-parameter-explorer-mockup.svg)
+
+
 ## Summary
 
 An interactive sidebar panel that lets users modify pipeline parameter values and instantly see how the template tree changes — which templates get included or excluded, which conditional branches flip, and which template paths resolve differently. A real-time "what-if" simulator powered by the existing expression evaluator.

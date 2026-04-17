@@ -1,5 +1,8 @@
 # Feature 6: Test Results Visualization
 
+![Mockup](06-test-results-viz-mockup.svg)
+
+
 ## Summary
 
 Visualize test results for a build as an interactive dashboard with four panels: a treemap by namespace, a bar chart of slowest tests, a flaky test detector, and summary counters. Accessible as a drill-down from the build timeline or as a standalone view.

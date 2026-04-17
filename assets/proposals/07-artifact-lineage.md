@@ -1,5 +1,8 @@
 # Feature 7: Resource & Artifact Lineage Graph
 
+![Mockup](07-artifact-lineage-mockup.svg)
+
+
 ## Summary
 
 A cross-pipeline DAG visualization that maps how artifacts and resources flow between Azure DevOps pipelines. Nodes represent pipelines, edges represent artifact/resource relationships, and the graph reveals the full lineage from build → publish → consume → deploy.

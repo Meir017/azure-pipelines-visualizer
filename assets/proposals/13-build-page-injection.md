@@ -1,5 +1,8 @@
 # Feature 13: Chrome Extension — Build Result Page Injection
 
+![Mockup](13-build-page-injection-mockup.svg)
+
+
 ## Summary
 
 Extend the Azure Pipelines Visualizer Chrome extension beyond the current commit sidebar injection (`.repos-pipeline-status-item`) to inject rich visualization components directly into ADO build result pages (`/_build/results?buildId=N`). Build result pages are where developers spend the most debugging time, making them the highest-value injection target.

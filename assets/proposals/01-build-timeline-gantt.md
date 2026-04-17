@@ -1,5 +1,8 @@
 # Feature Proposal: Build Timeline Gantt View
 
+![Mockup](01-build-timeline-gantt-mockup.svg)
+
+
 ## Summary
 
 An interactive Gantt chart that visualizes the execution timeline of an Azure Pipelines build, showing stages, jobs, and tasks with their real start/finish times, parallelism, and results at a glance.

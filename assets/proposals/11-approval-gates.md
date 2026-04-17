@@ -1,5 +1,8 @@
 # Feature 11: Approval & Check Gate Timeline
 
+![Mockup](11-approval-gates-mockup.svg)
+
+
 ## Summary
 
 A horizontal waterfall visualization of deployment gates and approval checks for a pipeline run or release. Shows who approved, when, how long each gate waited, which checks passed or failed, business-hours delays, and sequential lock contention. Surfaces human bottlenecks and process delays at a glance.

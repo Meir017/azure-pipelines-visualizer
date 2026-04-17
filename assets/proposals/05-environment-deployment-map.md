@@ -1,5 +1,8 @@
 # Feature 5: Environment & Deployment Map
 
+![Mockup](05-environment-deployment-map-mockup.svg)
+
+
 ## Summary
 
 Visualize which pipelines deploy to which environments as a left-to-right flow diagram: **Pipeline → Stages → Environments**. Each environment node shows deployment history, approval gates, checks, and deployment strategy details. Lives as a new dedicated web view.
