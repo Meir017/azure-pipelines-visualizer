@@ -1,4 +1,5 @@
 import type { BuildInfo } from '../../services/api-client.js';
+import WhyDidThisRun from './WhyDidThisRun.js';
 
 interface BuildDetailPopupProps {
   build: BuildInfo;
@@ -124,6 +125,8 @@ export default function BuildDetailPopup({
         </div>
 
         <div className="build-popup__body">
+          <WhyDidThisRun build={build} />
+
           <div className="build-popup__row">
             <span className="build-popup__label">Build Number</span>
             <AdoLink href={buildResultUrl}>#{build.buildNumber}</AdoLink>
