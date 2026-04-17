@@ -1493,3 +1493,93 @@ body {
 .build-popup__action-link:hover {
   text-decoration: underline;
 }
+
+/* Why Did This Run banner */
+.why-run-banner {
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  border-left: 4px solid #888;
+  background: #f8f9fa;
+  font-size: 13px;
+}
+
+.why-run-banner__main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.why-run-banner__icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.why-run-banner__text {
+  line-height: 1.4;
+}
+
+.why-run-banner__text code,
+.why-run-banner__text > span {
+  font-family: monospace;
+}
+
+.why-run-banner__chain {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #e0e0e0;
+  font-size: 12px;
+  color: #555;
+  flex-wrap: wrap;
+}
+
+.why-run-banner__step {
+  background: #e8e8e8;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.why-run-banner__step--current {
+  background: #d0e0ff;
+  font-weight: 600;
+}
+
+.why-run-banner__separator {
+  color: #999;
+  font-weight: bold;
+}
+
+/* Reason color variants */
+.why-run--ci {
+  border-left-color: #2e86de;
+  background: #eaf3fc;
+}
+
+.why-run--pr {
+  border-left-color: #8854d0;
+  background: #f3eefa;
+}
+
+.why-run--manual {
+  border-left-color: #f7b731;
+  background: #fef9ec;
+}
+
+.why-run--pipeline {
+  border-left-color: #20bf6b;
+  background: #ecfaf2;
+}
+
+.why-run--schedule {
+  border-left-color: #fa8231;
+  background: #fef3ec;
+}
+
+.why-run--other {
+  border-left-color: #888;
+  background: #f4f4f4;
+}
