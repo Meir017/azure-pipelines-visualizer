@@ -1324,8 +1324,6 @@ body {
   margin-top: 12px;
   border-top: 1px solid var(--border);
   padding-top: 12px;
-  max-height: 50vh;
-  overflow: auto;
 }
 
 .gantt-container {
@@ -1628,7 +1626,8 @@ body {
   width: 480px;
   max-width: 90vw;
   max-height: 85vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   transition: width 0.2s ease;
 }
@@ -1643,6 +1642,7 @@ body {
   justify-content: space-between;
   padding: 16px 20px;
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .build-popup__header h2 {
@@ -1670,6 +1670,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .build-popup__row {
