@@ -1493,3 +1493,246 @@ body {
 .build-popup__action-link:hover {
   text-decoration: underline;
 }
+
+/* ── Pipeline Flattener ──────────────────────────────────── */
+
+.flattener-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.flattener-page__selector {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.flattener-page__error {
+  color: var(--error);
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.flattener-page__placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 15px;
+  padding: 24px;
+  text-align: center;
+}
+
+/* Split view */
+.flattener-view {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.flattener-view__left {
+  width: 280px;
+  min-width: 200px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.flattener-view__right {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.flattener-view__section-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  margin-top: 16px;
+}
+
+.flattener-view__section-title:first-child {
+  margin-top: 0;
+}
+
+.flattener-view__section-title--error {
+  color: var(--error);
+}
+
+.flattener-view__empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* Template tree */
+.flattener-tree {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.flattener-tree__item {
+  padding: 4px 8px;
+  font-size: 12px;
+  font-family: "Cascadia Code", "Fira Code", monospace;
+  border-left: 3px solid var(--border);
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  word-break: break-all;
+}
+
+.flattener-tree__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.flattener-tree__badge {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0 4px;
+  font-size: 10px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.flattener-tree__item--error {
+  padding: 4px 8px;
+  font-size: 12px;
+  color: var(--error);
+  border-left: 3px solid var(--error);
+  margin-bottom: 2px;
+}
+
+/* Tabs */
+.flattener-view__tabs {
+  display: flex;
+  gap: 2px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.flattener-view__tab {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 4px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+
+.flattener-view__tab:hover:not(:disabled) {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.flattener-view__tab:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.flattener-view__tab--active {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+/* YAML container */
+.flattener-view__yaml-container {
+  flex: 1;
+  overflow: auto;
+  padding: 0;
+}
+
+.flattener-view__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* YAML syntax highlighting */
+.flattener-yaml {
+  margin: 0;
+  padding: 12px;
+  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  background: var(--bg);
+  tab-size: 2;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.flattener-yaml code {
+  font-family: inherit;
+}
+
+.flattener-yaml__line {
+  display: inline;
+}
+
+.flattener-yaml__line-num {
+  display: inline-block;
+  width: 3.5em;
+  text-align: right;
+  padding-right: 1em;
+  color: var(--text-muted);
+  opacity: 0.4;
+  user-select: none;
+}
+
+.flattener-yaml--comment {
+  color: #6c7086;
+  font-style: italic;
+}
+
+.flattener-yaml--key {
+  color: #89b4fa;
+}
+
+.flattener-yaml--colon {
+  color: var(--text-muted);
+}
+
+.flattener-yaml--value {
+  color: #cdd6f4;
+}
+
+.flattener-yaml--string {
+  color: #a6e3a1;
+}
+
+.flattener-yaml--bool {
+  color: #fab387;
+}
+
+.flattener-yaml--number {
+  color: #f9e2af;
+}
+
+.flattener-yaml--dash {
+  color: var(--text-muted);
+}

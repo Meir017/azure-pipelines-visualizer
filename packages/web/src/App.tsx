@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import CommitFlowPage from './components/commit-flow/CommitFlowPage.js';
 import DetailPanel from './components/DetailPanel.js';
 import ErrorBoundary from './components/ErrorBoundary.js';
+import FlattenerPage from './components/pipeline-flattener/FlattenerPage.js';
 import PipelineDiagram from './components/PipelineDiagram.js';
 import PipelineSelector, {
   type PipelineSelectorProps,
@@ -17,12 +18,13 @@ import './App.css';
 
 export type AppProps = PipelineSelectorProps;
 
-type AppView = 'pipeline' | 'commit-flow';
+type AppView = 'pipeline' | 'commit-flow' | 'flattener';
 
 function useHashRoute(): [AppView, (view: AppView) => void] {
   const getView = (): AppView => {
     const hash = window.location.hash;
     if (hash.startsWith('#/commit-flow')) return 'commit-flow';
+    if (hash.startsWith('#/flattener')) return 'flattener';
     return 'pipeline';
   };
 
@@ -117,6 +119,13 @@ export default function App(props: AppProps) {
             >
               Commit Flow
             </button>
+            <button
+              className={`app__nav-btn ${view === 'flattener' ? 'app__nav-btn--active' : ''}`}
+              onClick={() => setView('flattener')}
+              type="button"
+            >
+              Flattener
+            </button>
           </nav>
           {view === 'pipeline' && (
             <ErrorBoundary>
@@ -152,6 +161,13 @@ export default function App(props: AppProps) {
             <section className="app__content">
               <ErrorBoundary>
                 <CommitFlowPage />
+              </ErrorBoundary>
+            </section>
+          )}
+          {view === 'flattener' && (
+            <section className="app__content">
+              <ErrorBoundary>
+                <FlattenerPage />
               </ErrorBoundary>
             </section>
           )}
