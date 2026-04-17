@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import CommitFlowPage from './components/commit-flow/CommitFlowPage.js';
+import ConditionTablePage from './components/condition-table/ConditionTablePage.js';
 import DetailPanel from './components/DetailPanel.js';
 import ErrorBoundary from './components/ErrorBoundary.js';
 import PipelineDiagram from './components/PipelineDiagram.js';
@@ -17,12 +18,13 @@ import './App.css';
 
 export type AppProps = PipelineSelectorProps;
 
-type AppView = 'pipeline' | 'commit-flow';
+type AppView = 'pipeline' | 'commit-flow' | 'conditions';
 
 function useHashRoute(): [AppView, (view: AppView) => void] {
   const getView = (): AppView => {
     const hash = window.location.hash;
     if (hash.startsWith('#/commit-flow')) return 'commit-flow';
+    if (hash.startsWith('#/conditions')) return 'conditions';
     return 'pipeline';
   };
 
@@ -117,6 +119,13 @@ export default function App(props: AppProps) {
             >
               Commit Flow
             </button>
+            <button
+              className={`app__nav-btn ${view === 'conditions' ? 'app__nav-btn--active' : ''}`}
+              onClick={() => setView('conditions')}
+              type="button"
+            >
+              Conditions
+            </button>
           </nav>
           {view === 'pipeline' && (
             <ErrorBoundary>
@@ -152,6 +161,13 @@ export default function App(props: AppProps) {
             <section className="app__content">
               <ErrorBoundary>
                 <CommitFlowPage />
+              </ErrorBoundary>
+            </section>
+          )}
+          {view === 'conditions' && (
+            <section className="app__content" style={{ overflow: 'auto' }}>
+              <ErrorBoundary>
+                <ConditionTablePage />
               </ErrorBoundary>
             </section>
           )}
