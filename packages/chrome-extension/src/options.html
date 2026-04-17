@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Azure Pipelines Dependency Viewer – Options</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      font-size: 14px;
+      color: #333;
+      padding: 24px;
+      max-width: 640px;
+    }
+    h1 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    p.desc { color: #666; font-size: 13px; margin-bottom: 20px; line-height: 1.5; }
+    .group {
+      border: 1px solid #e1e1e1;
+      border-radius: 4px;
+      padding: 12px;
+      margin-bottom: 12px;
+      background: #fafafa;
+    }
+    .group-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .group-header span { font-weight: 600; font-size: 13px; }
+    .entry {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 6px;
+      align-items: center;
+    }
+    input {
+      padding: 4px 8px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      font-size: 13px;
+      font-family: inherit;
+    }
+    input.name-input { flex: 1; }
+    input.id-input { flex: 1.5; }
+    button {
+      padding: 4px 12px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      background: #fff;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    button:hover { background: #f0f0f0; }
+    button.primary {
+      background: #0078d4;
+      color: #fff;
+      border-color: #0078d4;
+    }
+    button.primary:hover { background: #106ebe; }
+    button.danger { color: #c00; border-color: #c00; }
+    button.danger:hover { background: #fff0f0; }
+    .actions { margin-top: 16px; display: flex; gap: 8px; align-items: center; }
+    .status {
+      font-size: 13px;
+      color: #107c10;
+      margin-left: 8px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .status.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <h1>Cross-Project Pipeline Discovery</h1>
+  <p class="desc">
+    Configure groups of related Azure DevOps projects. When viewing triggered
+    pipelines for a commit, the extension will also search other projects in
+    the same group. Each entry needs the project <strong>name</strong> (as it
+    appears in the URL) and its <strong>ID</strong> (a GUID, found in
+    <code>_apis/projects</code>).
+  </p>
+  <div id="groups"></div>
+  <div class="actions">
+    <button id="add-group">+ Add Group</button>
+    <button id="save" class="primary">Save</button>
+    <span id="status" class="status">Saved!</span>
+  </div>
+  <script src="options.js"></script>
+</body>
+</html>

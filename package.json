@@ -15,7 +15,8 @@
     "build:web": "bun run --filter @meirblachman/azure-pipelines-visualizer-web build",
     "build:standalone": "bun run build:web && bun scripts/generate-web-assets.ts && bun build --compile packages/server/src/standalone.ts --outfile apv",
     "build:cli": "bun run build:web && node packages/cli/scripts/bundle.mjs",
-    "start": "bun run --filter @meirblachman/azure-pipelines-visualizer-server start"
+    "start": "bun run --filter @meirblachman/azure-pipelines-visualizer-server start",
+    "build:extension": "bun run --filter @meirblachman/azure-pipelines-visualizer-chrome-extension build"
   },
   "devDependencies": {
     "@biomejs/biome": "~2.0.0",

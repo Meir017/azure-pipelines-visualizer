@@ -148,6 +148,7 @@ function buildGraph(builds: BuildInfo[]): { nodes: Node[]; edges: Edge[] } {
       sourceBranch: b.sourceBranch,
       webUrl: b._links?.web?.href ?? null,
       isRoot: !childIds.has(b.id),
+      projectName: b.project.name,
     } satisfies BuildNodeData,
   }));
 

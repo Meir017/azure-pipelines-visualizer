@@ -3,5 +3,11 @@
   "cacheDir": ".cache/ado-file-cache",
   "customTaskDocs": {
     "MyCustomTask@1": "https://example.com/docs/my-task"
-  }
+  },
+  "relatedProjectGroups": [
+    [
+      { "id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", "name": "ProjectA" },
+      { "id": "ffffffff-1111-2222-3333-444444444444", "name": "ProjectB" }
+    ]
+  ]
 }
