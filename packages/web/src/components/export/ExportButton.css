@@ -1,0 +1,82 @@
+.export-container {
+  position: relative;
+  display: inline-block;
+  z-index: 10;
+}
+
+.export-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  color: var(--fg, #c6d0f5);
+  background: var(--surface0, #292c3c);
+  border: 1px solid var(--border, #414559);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.export-trigger:hover {
+  background: var(--surface1, #363a4f);
+}
+
+.export-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 180px;
+  background: var(--surface0, #292c3c);
+  border: 1px solid var(--border, #414559);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  padding: 4px 0;
+  list-style: none;
+  margin: 0;
+}
+
+.export-dropdown li {
+  padding: 0;
+}
+
+.export-dropdown button {
+  width: 100%;
+  padding: 8px 14px;
+  text-align: left;
+  font-size: 0.85rem;
+  color: var(--fg, #c6d0f5);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.export-dropdown button:hover {
+  background: var(--surface1, #363a4f);
+}
+
+.export-toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 18px;
+  background: var(--accent, #8caaee);
+  color: var(--base, #232634);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  z-index: 9999;
+  animation: export-toast-fade 2s ease-out forwards;
+}
+
+@keyframes export-toast-fade {
+  0% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
