@@ -5,6 +5,7 @@ import {
   getBuild,
   getCommitFlowGraph,
   getRepository,
+  listBuildArtifacts,
   listBuildsForCommit,
   streamCommitFlowGraph,
 } from '../services/azure-devops.js';
@@ -91,6 +92,12 @@ builds.get('/:org/:project/builds', async (c) => {
 builds.get('/:org/:project/builds/:buildId', async (c) => {
   const { org, project, buildId } = c.req.param();
   const data = await getBuild(org, project, Number(buildId));
+  return c.json(data);
+});
+
+builds.get('/:org/:project/builds/:buildId/artifacts', async (c) => {
+  const { org, project, buildId } = c.req.param();
+  const data = await listBuildArtifacts(org, project, Number(buildId));
   return c.json(data);
 });
 

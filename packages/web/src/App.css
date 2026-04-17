@@ -1297,6 +1297,250 @@ body {
   margin-bottom: 4px;
 }
 
+/* ─── Artifact Lineage ─────────────────────────────────────── */
+
+.artifact-lineage-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 16px;
+  gap: 12px;
+}
+
+.artifact-lineage-page__selector {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.artifact-lineage-page__input {
+  padding: 6px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 14px;
+  min-width: 140px;
+}
+
+.artifact-lineage-page__input--short {
+  min-width: 100px;
+  max-width: 120px;
+}
+
+.artifact-lineage-page__input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.artifact-lineage-page__btn {
+  padding: 6px 16px;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.artifact-lineage-page__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.artifact-lineage-page__btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.artifact-lineage-page__error {
+  color: var(--error);
+  font-size: 13px;
+}
+
+.artifact-lineage-page__summary {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.artifact-lineage-page__diagram {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.artifact-lineage-graph {
+  flex: 1;
+  min-height: 400px;
+}
+
+/* Artifact node */
+
+.artifact-node {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  width: 260px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.artifact-node:hover {
+  border-color: var(--accent);
+}
+
+.artifact-node--succeeded { border-color: var(--success); }
+.artifact-node--failed { border-color: var(--error); }
+.artifact-node--in-progress { border-color: var(--badge-trigger); }
+.artifact-node--partial { border-color: var(--badge-job); }
+.artifact-node--canceled { border-color: var(--text-muted); }
+
+.artifact-node__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.artifact-node__status {
+  font-size: 14px;
+}
+
+.artifact-node__name {
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.artifact-node__project {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.artifact-node__number {
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.artifact-node__artifacts {
+  color: var(--badge-resources);
+  font-weight: 500;
+}
+
+/* Artifact edge label */
+
+.artifact-edge__label {
+  fill: var(--badge-resources);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Side panel overlay */
+
+.artifact-lineage-page__panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.artifact-lineage-page__panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 400px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.artifact-lineage-page__panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.artifact-lineage-page__panel-header h3 {
+  font-size: 16px;
+  color: var(--text);
+}
+
+.artifact-lineage-page__panel-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.artifact-lineage-page__panel-body p {
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.artifact-lineage-page__panel-body h4 {
+  margin: 12px 0 8px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.artifact-lineage-page__no-artifacts {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.artifact-lineage-page__artifact-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.artifact-lineage-page__artifact-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: var(--bg);
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.artifact-lineage-page__artifact-name {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.artifact-lineage-page__artifact-type {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.artifact-lineage-page__ado-link {
+  display: inline-block;
+  margin-top: 12px;
+  color: var(--accent);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.artifact-lineage-page__ado-link:hover {
+  text-decoration: underline;
+}
+
 .build-node__status {
   font-size: 14px;
   flex-shrink: 0;

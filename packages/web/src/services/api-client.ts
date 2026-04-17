@@ -203,3 +203,22 @@ export function fetchBuild(
   if (isExtensionPage) return directAdo.fetchBuild(org, project, buildId);
   return apiFetch(`/${org}/${project}/builds/${buildId}`);
 }
+
+export interface BuildArtifact {
+  id: number;
+  name: string;
+  resource: {
+    type: string;
+    data: string;
+    url: string;
+    downloadUrl: string;
+  };
+}
+
+export function fetchBuildArtifacts(
+  org: string,
+  project: string,
+  buildId: number,
+): Promise<BuildArtifact[]> {
+  return apiFetch(`/${org}/${project}/builds/${buildId}/artifacts`);
+}

@@ -491,6 +491,28 @@ export async function getBuild(
   return toBuildInfo(data);
 }
 
+export interface BuildArtifact {
+  id: number;
+  name: string;
+  resource: {
+    type: string;
+    data: string;
+    url: string;
+    downloadUrl: string;
+  };
+}
+
+export async function listBuildArtifacts(
+  org: string,
+  project: string,
+  buildId: number,
+): Promise<BuildArtifact[]> {
+  const url = `${baseUrl(org, project)}/build/builds/${buildId}/artifacts?api-version=${API_VERSION}`;
+  const resp = await adoFetch(url);
+  const data = await resp.json();
+  return data.value ?? [];
+}
+
 /**
  * IFileProvider implementation backed by the Azure DevOps REST API.
  * The `repo` parameter is the repo name (or "org/project/repoName" for cross-project).
