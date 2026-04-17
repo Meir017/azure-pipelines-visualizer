@@ -1,0 +1,206 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" font-family="Segoe UI, system-ui, sans-serif">
+  <defs>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#f1f5f9"/>
+    </linearGradient>
+    <linearGradient id="greenGlow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#dcfce7"/>
+      <stop offset="100%" stop-color="#bbf7d0"/>
+    </linearGradient>
+    <linearGradient id="redGlow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fef2f2"/>
+      <stop offset="100%" stop-color="#fecaca"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="500" fill="url(#bg)" rx="8"/>
+
+  <!-- Title bar -->
+  <rect width="800" height="44" fill="#1e293b" rx="8" ry="8"/>
+  <rect y="20" width="800" height="24" fill="#1e293b"/>
+  <text x="20" y="28" fill="#f8fafc" font-size="14" font-weight="600">Azure Pipelines Visualizer — Template Tree</text>
+  <text x="780" y="28" fill="#94a3b8" font-size="11" text-anchor="end">MyProject / web-app-pipeline</text>
+
+  <!-- ==================== LEFT SIDEBAR: Parameter Panel ==================== -->
+  <rect x="0" y="44" width="240" height="456" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+
+  <!-- Panel header -->
+  <rect x="0" y="44" width="240" height="36" fill="#f8fafc" stroke="#e2e8f0" stroke-width="0 0 1 0"/>
+  <text x="16" y="67" fill="#1e293b" font-size="12" font-weight="700">🔬 What-If Explorer</text>
+  <rect x="192" y="52" width="38" height="20" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="211" y="66" fill="#64748b" font-size="9" text-anchor="middle">Reset</text>
+
+  <!-- Active overrides pills -->
+  <rect x="10" y="86" width="60" height="18" rx="9" fill="#eef2ff" stroke="#6366f1" stroke-width="1"/>
+  <text x="40" y="98" fill="#6366f1" font-size="8" text-anchor="middle">env: prod</text>
+  <rect x="76" y="86" width="72" height="18" rx="9" fill="#eef2ff" stroke="#6366f1" stroke-width="1"/>
+  <text x="112" y="98" fill="#6366f1" font-size="8" text-anchor="middle">tests: false</text>
+  <rect x="154" y="86" width="76" height="18" rx="9" fill="#eef2ff" stroke="#6366f1" stroke-width="1"/>
+  <text x="192" y="98" fill="#6366f1" font-size="8" text-anchor="middle">fw: net8.0</text>
+
+  <!-- Divider -->
+  <line x1="10" y1="112" x2="230" y2="112" stroke="#e2e8f0" stroke-width="1"/>
+
+  <!-- Section: Root Pipeline Parameters -->
+  <text x="16" y="130" fill="#64748b" font-size="9" font-weight="600">ROOT PIPELINE PARAMETERS</text>
+
+  <!-- Param: environment (dropdown) -->
+  <text x="16" y="150" fill="#1e293b" font-size="10" font-weight="500">environment</text>
+  <rect x="16" y="155" width="210" height="28" rx="4" fill="white" stroke="#6366f1" stroke-width="2"/>
+  <text x="26" y="173" fill="#1e293b" font-size="11">production</text>
+  <text x="210" y="173" fill="#64748b" font-size="10" text-anchor="end">▾</text>
+  <text x="16" y="196" fill="#6366f1" font-size="8">Changed from: staging</text>
+
+  <!-- Param: runTests (toggle) -->
+  <text x="16" y="214" fill="#1e293b" font-size="10" font-weight="500">runTests</text>
+  <rect x="16" y="220" width="40" height="20" rx="10" fill="#94a3b8"/>
+  <circle cx="28" cy="230" r="8" fill="white"/>
+  <text x="64" y="234" fill="#1e293b" font-size="10">false</text>
+  <text x="16" y="252" fill="#6366f1" font-size="8">Changed from: true</text>
+
+  <!-- Param: targetFramework (dropdown) -->
+  <text x="16" y="270" fill="#1e293b" font-size="10" font-weight="500">targetFramework</text>
+  <rect x="16" y="276" width="210" height="28" rx="4" fill="white" stroke="#6366f1" stroke-width="2"/>
+  <text x="26" y="294" fill="#1e293b" font-size="11">net8.0</text>
+  <text x="210" y="294" fill="#64748b" font-size="10" text-anchor="end">▾</text>
+  <text x="16" y="316" fill="#6366f1" font-size="8">Changed from: net6.0</text>
+
+  <!-- Param: deployRegions (unchanged) -->
+  <text x="16" y="334" fill="#1e293b" font-size="10" font-weight="500">deployRegions</text>
+  <rect x="16" y="340" width="210" height="28" rx="4" fill="white" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="26" y="358" fill="#64748b" font-size="11">["eastus", "westus"]</text>
+
+  <!-- Param: buildConfiguration (unchanged) -->
+  <text x="16" y="382" fill="#1e293b" font-size="10" font-weight="500">buildConfiguration</text>
+  <rect x="16" y="388" width="210" height="28" rx="4" fill="white" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="26" y="406" fill="#64748b" font-size="11">Release</text>
+
+  <!-- Snapshot section -->
+  <line x1="10" y1="426" x2="230" y2="426" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="16" y="444" fill="#64748b" font-size="9" font-weight="600">SNAPSHOTS</text>
+  <rect x="16" y="450" width="105" height="22" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="68" y="464" fill="#64748b" font-size="8" text-anchor="middle">💾 Save snapshot</text>
+  <rect x="127" y="450" width="99" height="22" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="176" y="464" fill="#64748b" font-size="8" text-anchor="middle">📋 Default (dev)</text>
+
+  <!-- ==================== RIGHT SIDE: Template Tree ==================== -->
+
+  <!-- Tree background -->
+  <rect x="241" y="44" width="559" height="414" fill="url(#bg)"/>
+
+  <!-- Root node -->
+  <g filter="url(#shadow)">
+    <rect x="280" y="68" width="160" height="44" rx="6" fill="white" stroke="#94a3b8" stroke-width="1.5"/>
+    <text x="296" y="88" fill="#1e293b" font-size="10" font-weight="600">📄 azure-pipelines.yml</text>
+    <text x="296" y="102" fill="#64748b" font-size="8">Root pipeline</text>
+  </g>
+
+  <!-- Node: build-template (path changed — orange) -->
+  <g filter="url(#shadow)">
+    <rect x="370" y="132" width="170" height="44" rx="6" fill="white" stroke="#f59e0b" stroke-width="2"/>
+    <rect x="524" y="128" width="16" height="16" rx="8" fill="#f59e0b"/>
+    <text x="532" y="139" fill="white" font-size="10" text-anchor="middle" font-weight="700">~</text>
+    <text x="386" y="152" fill="#1e293b" font-size="10" font-weight="600">📄 build-net8.0.yml</text>
+    <text x="386" y="166" fill="#f59e0b" font-size="8">was: build-net6.0.yml</text>
+  </g>
+
+  <!-- Node: test-template (removed — red, faded) -->
+  <g filter="url(#shadow)" opacity="0.5">
+    <rect x="370" y="196" width="170" height="44" rx="6" fill="url(#redGlow)" stroke="#ef4444" stroke-width="2"/>
+    <rect x="524" y="192" width="16" height="16" rx="8" fill="#ef4444"/>
+    <text x="532" y="203" fill="white" font-size="10" text-anchor="middle" font-weight="700">−</text>
+    <text x="386" y="216" fill="#ef4444" font-size="10" font-weight="600" text-decoration="line-through">📄 run-tests.yml</text>
+    <text x="386" y="230" fill="#ef4444" font-size="8">Condition: runTests == true</text>
+  </g>
+
+  <!-- Node: deploy-staging (removed — red, faded) -->
+  <g filter="url(#shadow)" opacity="0.5">
+    <rect x="560" y="132" width="170" height="44" rx="6" fill="url(#redGlow)" stroke="#ef4444" stroke-width="2"/>
+    <rect x="714" y="128" width="16" height="16" rx="8" fill="#ef4444"/>
+    <text x="722" y="139" fill="white" font-size="10" text-anchor="middle" font-weight="700">−</text>
+    <text x="576" y="152" fill="#ef4444" font-size="10" font-weight="600" text-decoration="line-through">📄 deploy-staging.yml</text>
+    <text x="576" y="166" fill="#ef4444" font-size="8">Condition: env != 'production'</text>
+  </g>
+
+  <!-- Node: deploy-production (added — green) -->
+  <g filter="url(#shadow)">
+    <rect x="560" y="196" width="170" height="44" rx="6" fill="url(#greenGlow)" stroke="#22c55e" stroke-width="2"/>
+    <rect x="714" y="192" width="16" height="16" rx="8" fill="#22c55e"/>
+    <text x="722" y="203" fill="white" font-size="10" text-anchor="middle" font-weight="700">+</text>
+    <text x="576" y="216" fill="#1e293b" font-size="10" font-weight="600">📄 deploy-production.yml</text>
+    <text x="576" y="230" fill="#22c55e" font-size="8">Condition: env == 'production' ✓</text>
+  </g>
+
+  <!-- Node: approval-gate (added — green) -->
+  <g filter="url(#shadow)">
+    <rect x="560" y="260" width="170" height="44" rx="6" fill="url(#greenGlow)" stroke="#22c55e" stroke-width="2"/>
+    <rect x="714" y="256" width="16" height="16" rx="8" fill="#22c55e"/>
+    <text x="722" y="267" fill="white" font-size="10" text-anchor="middle" font-weight="700">+</text>
+    <text x="576" y="280" fill="#1e293b" font-size="10" font-weight="600">📄 approval-gate.yml</text>
+    <text x="576" y="294" fill="#22c55e" font-size="8">Condition: env == 'production' ✓</text>
+  </g>
+
+  <!-- Node: security-scan (added — green) -->
+  <g filter="url(#shadow)">
+    <rect x="370" y="312" width="170" height="44" rx="6" fill="url(#greenGlow)" stroke="#22c55e" stroke-width="2"/>
+    <rect x="524" y="308" width="16" height="16" rx="8" fill="#22c55e"/>
+    <text x="532" y="319" fill="white" font-size="10" text-anchor="middle" font-weight="700">+</text>
+    <text x="386" y="332" fill="#1e293b" font-size="10" font-weight="600">📄 security-scan.yml</text>
+    <text x="386" y="346" fill="#22c55e" font-size="8">Condition: env == 'production' ✓</text>
+  </g>
+
+  <!-- Node: notifications (unchanged) -->
+  <g filter="url(#shadow)">
+    <rect x="370" y="260" width="170" height="44" rx="6" fill="white" stroke="#94a3b8" stroke-width="1.5"/>
+    <text x="386" y="280" fill="#1e293b" font-size="10" font-weight="600">📄 notifications.yml</text>
+    <text x="386" y="294" fill="#64748b" font-size="8">Always included</text>
+  </g>
+
+  <!-- ==================== EDGES ==================== -->
+
+  <!-- Root → build-template (orange, changed) -->
+  <line x1="440" y1="112" x2="440" y2="132" stroke="#f59e0b" stroke-width="2"/>
+
+  <!-- Root → test-template (red, removed) -->
+  <line x1="360" y1="112" x2="420" y2="196" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.5"/>
+
+  <!-- Root → notifications (unchanged) -->
+  <line x1="380" y1="112" x2="440" y2="260" stroke="#94a3b8" stroke-width="1.5"/>
+
+  <!-- Root → security-scan (green, added) -->
+  <line x1="360" y1="112" x2="440" y2="312" stroke="#22c55e" stroke-width="2"/>
+
+  <!-- build-template → deploy-staging (red, removed) -->
+  <line x1="540" y1="154" x2="560" y2="154" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.5"/>
+
+  <!-- build-template → deploy-production (green, added) -->
+  <line x1="540" y1="160" x2="560" y2="210" stroke="#22c55e" stroke-width="2"/>
+
+  <!-- deploy-production → approval-gate (green, added) -->
+  <line x1="645" y1="240" x2="645" y2="260" stroke="#22c55e" stroke-width="2"/>
+
+  <!-- ==================== DIFF SUMMARY BAR ==================== -->
+  <rect x="241" y="458" width="559" height="42" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="260" y="483" fill="#1e293b" font-size="11" font-weight="600">📊 What-If Results:</text>
+
+  <!-- Added count -->
+  <rect x="400" y="470" width="90" height="22" rx="4" fill="#dcfce7"/>
+  <text x="445" y="485" fill="#16a34a" font-size="10" text-anchor="middle" font-weight="600">+3 added</text>
+
+  <!-- Removed count -->
+  <rect x="498" y="470" width="100" height="22" rx="4" fill="#fef2f2"/>
+  <text x="548" y="485" fill="#dc2626" font-size="10" text-anchor="middle" font-weight="600">−2 removed</text>
+
+  <!-- Changed count -->
+  <rect x="606" y="470" width="110" height="22" rx="4" fill="#fef9c3"/>
+  <text x="661" y="485" fill="#ca8a04" font-size="10" text-anchor="middle" font-weight="600">~1 path changed</text>
+
+  <!-- Keyboard hint -->
+  <text x="780" y="485" fill="#94a3b8" font-size="8" text-anchor="end">Press P to toggle panel</text>
+</svg>

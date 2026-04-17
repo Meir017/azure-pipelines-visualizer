@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" font-family="Segoe UI, sans-serif">
+  <defs>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.15"/>
+    </filter>
+    <linearGradient id="adoHeader" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0078d4"/>
+      <stop offset="100%" stop-color="#106ebe"/>
+    </linearGradient>
+    <linearGradient id="fabGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0078d4"/>
+      <stop offset="100%" stop-color="#005a9e"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Page background -->
+  <rect width="800" height="500" fill="#f3f2f1" rx="4"/>
+
+  <!-- ADO top navigation bar -->
+  <rect width="800" height="36" fill="#1b1a19" rx="4"/>
+  <rect width="800" height="32" y="4" fill="#1b1a19"/>
+  <text x="20" y="24" fill="#fff" font-size="13" font-weight="600">Azure DevOps</text>
+  <text x="160" y="24" fill="#a19f9d" font-size="12">MyOrg / MyProject / Pipelines</text>
+
+  <!-- === INJECTED: "Why did this run?" Explainer Banner === -->
+  <rect x="16" y="46" width="768" height="42" rx="4" fill="#deecf9" stroke="#0078d4" stroke-width="1"/>
+  <text x="40" y="63" fill="#0078d4" font-size="11" font-weight="700">ℹ WHY DID THIS RUN?</text>
+  <text x="40" y="79" fill="#323130" font-size="12">
+    Triggered by Pipeline
+    <tspan font-weight="700">'Build-Core' #456</tspan>
+     → CI push to
+    <tspan font-weight="700">main</tspan>
+     by
+    <tspan font-weight="700">@alice</tspan>
+     (commit a1b2c3d)
+  </text>
+  <!-- collapse chevron -->
+  <text x="760" y="71" fill="#0078d4" font-size="16" text-anchor="middle">▴</text>
+  <!-- INJECTED label -->
+  <rect x="636" y="49" width="72" height="16" rx="8" fill="#0078d4"/>
+  <text x="672" y="60" fill="#fff" font-size="9" text-anchor="middle" font-weight="600">INJECTED</text>
+
+  <!-- === Native Build Header === -->
+  <rect x="16" y="96" width="768" height="50" rx="4" fill="#fff" filter="url(#shadow)"/>
+  <circle cx="40" cy="121" r="12" fill="#107c10"/>
+  <text x="40" y="126" fill="#fff" font-size="14" text-anchor="middle">✓</text>
+  <text x="60" y="115" fill="#323130" font-size="15" font-weight="700">Deploy-Staging #1001</text>
+  <text x="60" y="132" fill="#605e5c" font-size="11">Completed · 7m 23s · main · a1b2c3d</text>
+  <!-- Cross-project trigger badges (injected) -->
+  <rect x="530" y="106" width="115" height="22" rx="11" fill="#f3f2f1" stroke="#8a8886" stroke-width="1"/>
+  <circle cx="542" cy="117" r="4" fill="#107c10"/>
+  <text x="550" y="121" fill="#323130" font-size="10">OtherProj/Deploy</text>
+  <rect x="652" y="106" width="120" height="22" rx="11" fill="#f3f2f1" stroke="#8a8886" stroke-width="1"/>
+  <circle cx="664" cy="117" r="4" fill="#d83b01"/>
+  <text x="672" y="121" fill="#323130" font-size="10">Shared/Notify-Svc</text>
+
+  <!-- === INJECTED: Trigger Chain Panel === -->
+  <rect x="16" y="154" width="768" height="120" rx="4" fill="#fff" filter="url(#shadow)"/>
+  <rect x="16" y="154" width="768" height="28" rx="4" fill="#faf9f8"/>
+  <rect x="16" y="172" width="768" height="2" fill="#edebe9"/>
+  <text x="36" y="173" fill="#323130" font-size="12" font-weight="600">▾ Trigger Chain</text>
+  <rect x="680" y="158" width="72" height="16" rx="8" fill="#0078d4"/>
+  <text x="716" y="169" fill="#fff" font-size="9" text-anchor="middle" font-weight="600">INJECTED</text>
+
+  <!-- Chain nodes -->
+  <!-- Node 1: Build-Core -->
+  <rect x="60" y="195" width="170" height="56" rx="8" fill="#fff" stroke="#107c10" stroke-width="2"/>
+  <circle cx="80" cy="215" r="8" fill="#107c10"/>
+  <text x="80" y="219" fill="#fff" font-size="10" text-anchor="middle">✓</text>
+  <text x="95" y="215" fill="#323130" font-size="11" font-weight="600">Build-Core #456</text>
+  <text x="95" y="234" fill="#605e5c" font-size="10">✓ Succeeded · 4m 12s</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="230" y1="223" x2="280" y2="223" stroke="#0078d4" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <defs>
+    <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#0078d4"/>
+    </marker>
+  </defs>
+
+  <!-- Node 2: Integration-Tests -->
+  <rect x="285" y="195" width="195" height="56" rx="8" fill="#fff" stroke="#107c10" stroke-width="2"/>
+  <circle cx="305" cy="215" r="8" fill="#107c10"/>
+  <text x="305" y="219" fill="#fff" font-size="10" text-anchor="middle">✓</text>
+  <text x="320" y="215" fill="#323130" font-size="11" font-weight="600">Integration-Tests #789</text>
+  <text x="320" y="234" fill="#605e5c" font-size="10">✓ Succeeded · 12m 05s</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="480" y1="223" x2="530" y2="223" stroke="#0078d4" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- Node 3: This Build (highlighted) -->
+  <rect x="535" y="191" width="195" height="64" rx="8" fill="#deecf9" stroke="#0078d4" stroke-width="3"/>
+  <circle cx="555" cy="215" r="8" fill="#0078d4"/>
+  <text x="555" y="219" fill="#fff" font-size="10" text-anchor="middle">✓</text>
+  <text x="572" y="215" fill="#0078d4" font-size="11" font-weight="700">This Build #1001</text>
+  <text x="572" y="234" fill="#605e5c" font-size="10">✓ Succeeded · 7m 23s</text>
+  <text x="572" y="248" fill="#0078d4" font-size="9" font-weight="600">◀ YOU ARE HERE</text>
+
+  <!-- === Native Build Tabs === -->
+  <rect x="16" y="282" width="768" height="32" rx="0" fill="#fff"/>
+  <rect x="16" y="312" width="768" height="2" fill="#edebe9"/>
+  <rect x="24" y="310" width="64" height="4" fill="#0078d4" rx="2"/>
+  <text x="56" y="302" fill="#0078d4" font-size="12" font-weight="600" text-anchor="middle">Summary</text>
+  <text x="140" y="302" fill="#605e5c" font-size="12" text-anchor="middle">Jobs</text>
+  <text x="220" y="302" fill="#605e5c" font-size="12" text-anchor="middle">Extensions</text>
+  <text x="310" y="302" fill="#605e5c" font-size="12" text-anchor="middle">Tests</text>
+
+  <!-- === Native Build Content (simplified) === -->
+  <rect x="16" y="320" width="768" height="148" rx="4" fill="#fff" filter="url(#shadow)"/>
+  <!-- Stage rows -->
+  <text x="36" y="345" fill="#323130" font-size="12" font-weight="600">Stages</text>
+  <rect x="36" y="354" width="728" height="30" rx="4" fill="#f3f2f1"/>
+  <circle cx="52" cy="369" r="6" fill="#107c10"/>
+  <text x="66" y="373" fill="#323130" font-size="11">Build</text>
+  <text x="700" y="373" fill="#605e5c" font-size="11" text-anchor="end">2m 14s</text>
+
+  <rect x="36" y="390" width="728" height="30" rx="4" fill="#f3f2f1"/>
+  <circle cx="52" cy="405" r="6" fill="#107c10"/>
+  <text x="66" y="409" fill="#323130" font-size="11">Test</text>
+  <text x="700" y="409" fill="#605e5c" font-size="11" text-anchor="end">3m 48s</text>
+
+  <rect x="36" y="426" width="728" height="30" rx="4" fill="#f3f2f1"/>
+  <circle cx="52" cy="441" r="6" fill="#107c10"/>
+  <text x="66" y="445" fill="#323130" font-size="11">Deploy</text>
+  <text x="700" y="445" fill="#605e5c" font-size="11" text-anchor="end">1m 21s</text>
+
+  <!-- === INJECTED: Floating Action Button (Timeline View) === -->
+  <circle cx="752" cy="464" r="24" fill="url(#fabGrad)" filter="url(#shadow)"/>
+  <text x="752" y="460" fill="#fff" font-size="16" text-anchor="middle">⏱</text>
+  <text x="752" y="474" fill="#fff" font-size="7" text-anchor="middle" font-weight="600">Timeline</text>
+
+  <!-- FAB tooltip -->
+  <rect x="650" y="445" width="88" height="20" rx="4" fill="#323130"/>
+  <text x="694" y="459" fill="#fff" font-size="9" text-anchor="middle">Timeline View</text>
+  <polygon points="738,455 744,455 741,460" fill="#323130"/>
+</svg>

@@ -1,0 +1,238 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <filter id="cardShadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.10"/>
+    </filter>
+    <linearGradient id="hdrGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0078d4"/>
+      <stop offset="100%" stop-color="#005a9e"/>
+    </linearGradient>
+    <linearGradient id="latencyFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0078d4" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#0078d4" stop-opacity="0.05"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="500" fill="#f0f2f5" rx="8"/>
+
+  <!-- Header -->
+  <rect width="800" height="48" fill="url(#hdrGrad)" rx="8"/>
+  <rect y="24" width="800" height="24" fill="url(#hdrGrad)"/>
+  <text x="16" y="30" fill="white" font-size="16" font-weight="600">Pipeline Run History Dashboard</text>
+  <text x="580" y="30" fill="white" font-size="11" opacity="0.9">my-app-ci · Last 50 builds</text>
+
+  <!-- Controls bar -->
+  <rect x="16" y="56" width="768" height="30" rx="4" fill="white" filter="url(#cardShadow)"/>
+  <text x="26" y="75" fill="#555" font-size="10">Builds:</text>
+  <rect x="64" y="62" width="36" height="18" rx="3" fill="#0078d4"/>
+  <text x="74" y="75" fill="white" font-size="9" font-weight="600">50</text>
+  <rect x="104" y="62" width="36" height="18" rx="3" fill="#f0f0f0" stroke="#ddd"/>
+  <text x="112" y="75" fill="#666" font-size="9">100</text>
+  <rect x="144" y="62" width="36" height="18" rx="3" fill="#f0f0f0" stroke="#ddd"/>
+  <text x="152" y="75" fill="#666" font-size="9">200</text>
+  <text x="220" y="75" fill="#555" font-size="10">Branch:</text>
+  <rect x="264" y="62" width="80" height="18" rx="3" fill="#f0f0f0" stroke="#ddd"/>
+  <text x="272" y="75" fill="#333" font-size="9">All branches ▾</text>
+  <text x="700" y="75" fill="#0078d4" font-size="10" cursor="pointer">↻ Refresh</text>
+
+  <!-- ============================================ -->
+  <!-- ROW 1: Success Rate + Result Trend           -->
+  <!-- ============================================ -->
+
+  <!-- Card 1: Success Rate -->
+  <rect x="16" y="96" width="180" height="120" rx="6" fill="white" filter="url(#cardShadow)"/>
+  <text x="28" y="116" fill="#888" font-size="10" font-weight="600">SUCCESS RATE</text>
+  <text x="28" y="164" fill="#2da44e" font-size="42" font-weight="700">87%</text>
+  <!-- Sparkline -->
+  <polyline points="28,192 42,188 56,192 70,186 84,190 98,182 112,180 126,184 140,176 154,178 168,174 182,170"
+            fill="none" stroke="#2da44e" stroke-width="1.5" opacity="0.7"/>
+  <text x="28" y="208" fill="#aaa" font-size="8">Last 50 builds</text>
+
+  <!-- Card 2: Build Result Trend -->
+  <rect x="206" y="96" width="378" height="120" rx="6" fill="white" filter="url(#cardShadow)"/>
+  <text x="218" y="116" fill="#888" font-size="10" font-weight="600">BUILD RESULT TREND</text>
+  <!-- Dots representing builds -->
+  <!-- Row of dots at varying heights: top = success, bottom = fail -->
+  <g transform="translate(218, 130)">
+    <!-- Success dots (y=10) -->
+    <circle cx="8" cy="10" r="3" fill="#2da44e"/>
+    <circle cx="20" cy="10" r="3" fill="#2da44e"/>
+    <circle cx="32" cy="10" r="3" fill="#2da44e"/>
+    <circle cx="44" cy="10" r="3" fill="#2da44e"/>
+    <circle cx="56" cy="50" r="3" fill="#cf222e"/>
+    <circle cx="68" cy="10" r="3" fill="#2da44e"/>
+    <circle cx="80" cy="10" r="3" fill="#2da44e"/>
+    <circle cx="92" cy="50" r="3" fill="#cf222e"/>
+    <circle cx="104" cy="10" r="3" fill="#2da44e"/>
+    <circle cx="116" cy="10" r="3" fill="#2da44e"/>
+    <circle cx="128" cy="10" r="3" fill="#2da44e"/>
+    <circle cx="140" cy="30" r="3" fill="#d4a72c"/>
+    <circle cx="152" cy="10" r="3" fill="#2da44e"/>
+    <circle cx="164" cy="10" r="3" fill="#2da44e"/>
+    <circle cx="176" cy="50" r="3" fill="#cf222e"/>
+    <circle cx="188" cy="10" r="3" fill="#2da44e"/>
+    <circle cx="200" cy="10" r="3" fill="#2da44e"/>
+    <circle cx="212" cy="10" r="3" fill="#2da44e"/>
+    <circle cx="224" cy="10" r="3" fill="#2da44e"/>
+    <circle cx="236" cy="10" r="3" fill="#2da44e"/>
+    <circle cx="248" cy="50" r="3" fill="#cf222e"/>
+    <circle cx="260" cy="10" r="3" fill="#2da44e"/>
+    <circle cx="272" cy="10" r="3" fill="#2da44e"/>
+    <circle cx="284" cy="30" r="3" fill="#8b949e"/>
+    <circle cx="296" cy="10" r="3" fill="#2da44e"/>
+    <circle cx="308" cy="10" r="3" fill="#2da44e"/>
+    <circle cx="320" cy="10" r="3" fill="#2da44e"/>
+    <circle cx="332" cy="50" r="3" fill="#cf222e"/>
+    <circle cx="344" cy="10" r="3" fill="#2da44e"/>
+    <circle cx="356" cy="10" r="3" fill="#2da44e"/>
+    <!-- Axis labels -->
+    <text x="0" y="72" fill="#aaa" font-size="8">#4792</text>
+    <text x="340" y="72" fill="#aaa" font-size="8">#4821</text>
+    <text x="355" y="10" fill="#aaa" font-size="8" text-anchor="end">✓</text>
+    <text x="355" y="52" fill="#aaa" font-size="8" text-anchor="end">✗</text>
+  </g>
+
+  <!-- Card 3: Avg Duration -->
+  <rect x="594" y="96" width="190" height="120" rx="6" fill="white" filter="url(#cardShadow)"/>
+  <text x="606" y="116" fill="#888" font-size="10" font-weight="600">AVG DURATION</text>
+  <text x="606" y="158" fill="#333" font-size="36" font-weight="700">4:32</text>
+  <text x="606" y="174" fill="#888" font-size="10">minutes</text>
+  <!-- Mini trend arrow -->
+  <text x="720" y="158" fill="#cf222e" font-size="14">↑</text>
+  <text x="700" y="174" fill="#cf222e" font-size="9">+12%</text>
+  <text x="606" y="208" fill="#aaa" font-size="8">p95: 6m 10s · Median: 4m 05s</text>
+
+  <!-- ============================================ -->
+  <!-- ROW 2: Duration Chart + Queue Latency        -->
+  <!-- ============================================ -->
+
+  <!-- Card 4: Duration Over Time -->
+  <rect x="16" y="226" width="380" height="140" rx="6" fill="white" filter="url(#cardShadow)"/>
+  <text x="28" y="246" fill="#888" font-size="10" font-weight="600">DURATION OVER TIME</text>
+  <!-- Bar chart -->
+  <g transform="translate(28, 255)">
+    <!-- Y axis labels -->
+    <text x="-2" y="8" fill="#bbb" font-size="8" text-anchor="end">6m</text>
+    <text x="-2" y="38" fill="#bbb" font-size="8" text-anchor="end">4m</text>
+    <text x="-2" y="68" fill="#bbb" font-size="8" text-anchor="end">2m</text>
+    <text x="-2" y="98" fill="#bbb" font-size="8" text-anchor="end">0</text>
+    <!-- Grid lines -->
+    <line x1="8" y1="5" x2="355" y2="5" stroke="#f0f0f0"/>
+    <line x1="8" y1="35" x2="355" y2="35" stroke="#f0f0f0"/>
+    <line x1="8" y1="65" x2="355" y2="65" stroke="#f0f0f0"/>
+    <line x1="8" y1="95" x2="355" y2="95" stroke="#eee"/>
+    <!-- Bars -->
+    <rect x="12" y="35" width="8" height="60" rx="1" fill="#2da44e" opacity="0.8"/>
+    <rect x="24" y="30" width="8" height="65" rx="1" fill="#2da44e" opacity="0.8"/>
+    <rect x="36" y="28" width="8" height="67" rx="1" fill="#2da44e" opacity="0.8"/>
+    <rect x="48" y="40" width="8" height="55" rx="1" fill="#2da44e" opacity="0.8"/>
+    <rect x="60" y="15" width="8" height="80" rx="1" fill="#cf222e" opacity="0.8"/>
+    <rect x="72" y="38" width="8" height="57" rx="1" fill="#2da44e" opacity="0.8"/>
+    <rect x="84" y="42" width="8" height="53" rx="1" fill="#2da44e" opacity="0.8"/>
+    <rect x="96" y="10" width="8" height="85" rx="1" fill="#cf222e" opacity="0.8"/>
+    <rect x="108" y="36" width="8" height="59" rx="1" fill="#2da44e" opacity="0.8"/>
+    <rect x="120" y="32" width="8" height="63" rx="1" fill="#2da44e" opacity="0.8"/>
+    <rect x="132" y="34" width="8" height="61" rx="1" fill="#2da44e" opacity="0.8"/>
+    <rect x="144" y="45" width="8" height="50" rx="1" fill="#d4a72c" opacity="0.8"/>
+    <rect x="156" y="38" width="8" height="57" rx="1" fill="#2da44e" opacity="0.8"/>
+    <rect x="168" y="33" width="8" height="62" rx="1" fill="#2da44e" opacity="0.8"/>
+    <rect x="180" y="20" width="8" height="75" rx="1" fill="#cf222e" opacity="0.8"/>
+    <rect x="192" y="36" width="8" height="59" rx="1" fill="#2da44e" opacity="0.8"/>
+    <rect x="204" y="38" width="8" height="57" rx="1" fill="#2da44e" opacity="0.8"/>
+    <rect x="216" y="35" width="8" height="60" rx="1" fill="#2da44e" opacity="0.8"/>
+    <rect x="228" y="30" width="8" height="65" rx="1" fill="#2da44e" opacity="0.8"/>
+    <rect x="240" y="32" width="8" height="63" rx="1" fill="#2da44e" opacity="0.8"/>
+    <rect x="252" y="18" width="8" height="77" rx="1" fill="#cf222e" opacity="0.8"/>
+    <rect x="264" y="35" width="8" height="60" rx="1" fill="#2da44e" opacity="0.8"/>
+    <rect x="276" y="38" width="8" height="57" rx="1" fill="#2da44e" opacity="0.8"/>
+    <rect x="288" y="55" width="8" height="40" rx="1" fill="#8b949e" opacity="0.5"/>
+    <rect x="300" y="36" width="8" height="59" rx="1" fill="#2da44e" opacity="0.8"/>
+    <rect x="312" y="33" width="8" height="62" rx="1" fill="#2da44e" opacity="0.8"/>
+    <rect x="324" y="30" width="8" height="65" rx="1" fill="#2da44e" opacity="0.8"/>
+    <rect x="336" y="22" width="8" height="73" rx="1" fill="#cf222e" opacity="0.8"/>
+    <rect x="348" y="34" width="8" height="61" rx="1" fill="#2da44e" opacity="0.8"/>
+    <!-- Moving average line -->
+    <polyline points="16,40 28,38 40,36 52,42 64,38 76,40 88,42 100,38 112,39 124,37 136,38 148,42 160,40 172,38 184,36 196,39 208,40 220,38 232,36 244,37 256,35 268,38 280,40 292,42 304,39 316,37 328,36 340,35 352,37"
+              fill="none" stroke="#0078d4" stroke-width="1.5" stroke-dasharray="4,2"/>
+  </g>
+
+  <!-- Card 5: Queue-to-Start Latency -->
+  <rect x="406" y="226" width="378" height="140" rx="6" fill="white" filter="url(#cardShadow)"/>
+  <text x="418" y="246" fill="#888" font-size="10" font-weight="600">QUEUE-TO-START LATENCY</text>
+  <!-- Area chart -->
+  <g transform="translate(418, 260)">
+    <text x="-2" y="8" fill="#bbb" font-size="8" text-anchor="end">30s</text>
+    <text x="-2" y="48" fill="#bbb" font-size="8" text-anchor="end">15s</text>
+    <text x="-2" y="88" fill="#bbb" font-size="8" text-anchor="end">0s</text>
+    <line x1="8" y1="88" x2="355" y2="88" stroke="#eee"/>
+    <!-- Area fill -->
+    <polygon points="12,70 40,65 68,72 96,45 124,50 152,68 180,55 208,60 236,40 264,52 292,58 320,62 348,55 348,88 12,88"
+             fill="url(#latencyFill)"/>
+    <!-- Line -->
+    <polyline points="12,70 40,65 68,72 96,45 124,50 152,68 180,55 208,60 236,40 264,52 292,58 320,62 348,55"
+              fill="none" stroke="#0078d4" stroke-width="1.5"/>
+    <!-- Dots on peaks -->
+    <circle cx="96" cy="45" r="3" fill="#0078d4"/>
+    <circle cx="236" cy="40" r="3" fill="#0078d4"/>
+    <text x="96" y="40" fill="#0078d4" font-size="8" text-anchor="middle">22s</text>
+    <text x="236" y="35" fill="#0078d4" font-size="8" text-anchor="middle">25s</text>
+    <text x="180" y="100" fill="#aaa" font-size="8" text-anchor="middle">Avg: 12s</text>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- ROW 3: Branch Breakdown + Requester          -->
+  <!-- ============================================ -->
+
+  <!-- Card 6: Branch Breakdown -->
+  <rect x="16" y="376" width="240" height="114" rx="6" fill="white" filter="url(#cardShadow)"/>
+  <text x="28" y="396" fill="#888" font-size="10" font-weight="600">BRANCH BREAKDOWN</text>
+  <!-- Donut chart -->
+  <g transform="translate(90, 445)">
+    <!-- Donut segments (simplified as arcs) -->
+    <circle cx="0" cy="0" r="32" fill="none" stroke="#0078d4" stroke-width="14" stroke-dasharray="120 201" stroke-dashoffset="0"/>
+    <circle cx="0" cy="0" r="32" fill="none" stroke="#2da44e" stroke-width="14" stroke-dasharray="50 201" stroke-dashoffset="-120"/>
+    <circle cx="0" cy="0" r="32" fill="none" stroke="#d4a72c" stroke-width="14" stroke-dasharray="20 201" stroke-dashoffset="-170"/>
+    <circle cx="0" cy="0" r="32" fill="none" stroke="#8b949e" stroke-width="14" stroke-dasharray="11 201" stroke-dashoffset="-190"/>
+    <text x="0" y="4" fill="#333" font-size="10" font-weight="700" text-anchor="middle">50</text>
+    <text x="0" y="14" fill="#aaa" font-size="7" text-anchor="middle">builds</text>
+  </g>
+  <!-- Legend -->
+  <rect x="148" y="410" width="8" height="8" rx="2" fill="#0078d4"/>
+  <text x="160" y="418" fill="#555" font-size="9">main (60%)</text>
+  <rect x="148" y="424" width="8" height="8" rx="2" fill="#2da44e"/>
+  <text x="160" y="432" fill="#555" font-size="9">develop (25%)</text>
+  <rect x="148" y="438" width="8" height="8" rx="2" fill="#d4a72c"/>
+  <text x="160" y="446" fill="#555" font-size="9">feature/* (10%)</text>
+  <rect x="148" y="452" width="8" height="8" rx="2" fill="#8b949e"/>
+  <text x="160" y="460" fill="#555" font-size="9">other (5%)</text>
+
+  <!-- Card 7: Top Requesters -->
+  <rect x="266" y="376" width="260" height="114" rx="6" fill="white" filter="url(#cardShadow)"/>
+  <text x="278" y="396" fill="#888" font-size="10" font-weight="600">TOP REQUESTERS</text>
+  <!-- Horizontal bars -->
+  <text x="278" y="418" fill="#555" font-size="9">CI/CD Auto</text>
+  <rect x="350" y="408" width="140" height="12" rx="2" fill="#0078d4" opacity="0.7"/>
+  <text x="496" y="418" fill="#888" font-size="8">35</text>
+  <text x="278" y="436" fill="#555" font-size="9">Alice Chen</text>
+  <rect x="350" y="426" width="48" height="12" rx="2" fill="#0078d4" opacity="0.5"/>
+  <text x="404" y="436" fill="#888" font-size="8">8</text>
+  <text x="278" y="454" fill="#555" font-size="9">Bob Smith</text>
+  <rect x="350" y="444" width="24" height="12" rx="2" fill="#0078d4" opacity="0.4"/>
+  <text x="380" y="454" fill="#888" font-size="8">4</text>
+  <text x="278" y="472" fill="#555" font-size="9">Dana Lee</text>
+  <rect x="350" y="462" width="12" height="12" rx="2" fill="#0078d4" opacity="0.3"/>
+  <text x="368" y="472" fill="#888" font-size="8">3</text>
+
+  <!-- Card 8: Quick Stats -->
+  <rect x="536" y="376" width="248" height="114" rx="6" fill="white" filter="url(#cardShadow)"/>
+  <text x="548" y="396" fill="#888" font-size="10" font-weight="600">QUICK STATS</text>
+  <text x="548" y="420" fill="#555" font-size="10">Longest build:</text>
+  <text x="700" y="420" fill="#333" font-size="10" font-weight="600" text-anchor="end">8m 42s</text>
+  <text x="548" y="438" fill="#555" font-size="10">Shortest build:</text>
+  <text x="700" y="438" fill="#333" font-size="10" font-weight="600" text-anchor="end">2m 11s</text>
+  <text x="548" y="456" fill="#555" font-size="10">Consecutive failures:</text>
+  <text x="700" y="456" fill="#cf222e" font-size="10" font-weight="600" text-anchor="end">2</text>
+  <text x="548" y="474" fill="#555" font-size="10">Avg queue wait:</text>
+  <text x="700" y="474" fill="#333" font-size="10" font-weight="600" text-anchor="end">12s</text>
+</svg>
