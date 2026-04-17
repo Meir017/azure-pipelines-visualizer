@@ -495,6 +495,53 @@ export async function getBuild(
  * IFileProvider implementation backed by the Azure DevOps REST API.
  * The `repo` parameter is the repo name (or "org/project/repoName" for cross-project).
  */
+export interface EnvironmentInfo {
+  id: number;
+  name: string;
+  description: string;
+  createdBy: { displayName: string; uniqueName: string } | null;
+  createdOn: string;
+  lastModifiedBy: { displayName: string; uniqueName: string } | null;
+  lastModifiedOn: string;
+}
+
+export interface EnvironmentDeploymentRecord {
+  id: number;
+  environmentId: number;
+  definitionId: number;
+  definitionName: string;
+  ownerId: string;
+  planType: string;
+  planId: string;
+  stageName: string;
+  stageAttempt: number;
+  result: string;
+  startedOn: string;
+  finishedOn: string;
+  queueTime: string;
+}
+
+export async function listEnvironments(
+  org: string,
+  project: string,
+): Promise<EnvironmentInfo[]> {
+  const url = `${baseUrl(org, project)}/pipelines/environments?api-version=${API_VERSION}`;
+  const resp = await adoFetch(url);
+  const data = await resp.json();
+  return data.value;
+}
+
+export async function getEnvironmentDeployments(
+  org: string,
+  project: string,
+  environmentId: number,
+): Promise<EnvironmentDeploymentRecord[]> {
+  const url = `${baseUrl(org, project)}/pipelines/environments/${environmentId}/environmentdeploymentrecords?api-version=${API_VERSION}`;
+  const resp = await adoFetch(url);
+  const data = await resp.json();
+  return data.value;
+}
+
 export class AzureDevOpsFileProvider implements IFileProvider {
   constructor(
     private readonly org: string,

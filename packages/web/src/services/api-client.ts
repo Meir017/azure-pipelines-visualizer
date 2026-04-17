@@ -203,3 +203,46 @@ export function fetchBuild(
   if (isExtensionPage) return directAdo.fetchBuild(org, project, buildId);
   return apiFetch(`/${org}/${project}/builds/${buildId}`);
 }
+
+export interface EnvironmentInfo {
+  id: number;
+  name: string;
+  description: string;
+  createdBy: { displayName: string; uniqueName: string } | null;
+  createdOn: string;
+  lastModifiedBy: { displayName: string; uniqueName: string } | null;
+  lastModifiedOn: string;
+}
+
+export interface EnvironmentDeploymentRecord {
+  id: number;
+  environmentId: number;
+  definitionId: number;
+  definitionName: string;
+  ownerId: string;
+  planType: string;
+  planId: string;
+  stageName: string;
+  stageAttempt: number;
+  result: string;
+  startedOn: string;
+  finishedOn: string;
+  queueTime: string;
+}
+
+export function fetchEnvironments(
+  org: string,
+  project: string,
+): Promise<EnvironmentInfo[]> {
+  return apiFetch(`/${org}/${project}/environments`);
+}
+
+export function fetchEnvironmentDeployments(
+  org: string,
+  project: string,
+  environmentId: number,
+): Promise<EnvironmentDeploymentRecord[]> {
+  return apiFetch(
+    `/${org}/${project}/environments/${environmentId}/deployments`,
+  );
+}

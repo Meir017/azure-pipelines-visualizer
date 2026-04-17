@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { getConfig } from './config.js';
 import { builds } from './routes/builds.js';
+import { environments } from './routes/environments.js';
 import { files } from './routes/files.js';
 import { pipelines } from './routes/pipelines.js';
 import { schema } from './routes/schema.js';
@@ -24,6 +25,7 @@ app.get('/api/config/task-docs', (c) => {
 // Mount API routes
 app.route('/api', pipelines);
 app.route('/api', builds);
+app.route('/api', environments);
 app.route('/api', files);
 app.route('/api', schema);
 
