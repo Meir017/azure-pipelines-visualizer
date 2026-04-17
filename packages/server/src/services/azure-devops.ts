@@ -491,6 +491,17 @@ export async function getBuild(
   return toBuildInfo(data);
 }
 
+export async function getBuildTimeline(
+  org: string,
+  project: string,
+  buildId: number,
+): Promise<unknown[]> {
+  const url = `${baseUrl(org, project)}/build/builds/${buildId}/timeline?api-version=${API_VERSION}`;
+  const resp = await adoFetch(url);
+  const data = await resp.json();
+  return data.records;
+}
+
 /**
  * IFileProvider implementation backed by the Azure DevOps REST API.
  * The `repo` parameter is the repo name (or "org/project/repoName" for cross-project).
