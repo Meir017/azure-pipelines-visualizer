@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import CommitFlowPage from './components/commit-flow/CommitFlowPage.js';
 import DetailPanel from './components/DetailPanel.js';
 import ErrorBoundary from './components/ErrorBoundary.js';
+import OrgTopologyPage from './components/org-topology/OrgTopologyPage.js';
 import PipelineDiagram from './components/PipelineDiagram.js';
 import PipelineSelector, {
   type PipelineSelectorProps,
@@ -17,12 +18,13 @@ import './App.css';
 
 export type AppProps = PipelineSelectorProps;
 
-type AppView = 'pipeline' | 'commit-flow';
+type AppView = 'pipeline' | 'commit-flow' | 'topology';
 
 function useHashRoute(): [AppView, (view: AppView) => void] {
   const getView = (): AppView => {
     const hash = window.location.hash;
     if (hash.startsWith('#/commit-flow')) return 'commit-flow';
+    if (hash.startsWith('#/topology')) return 'topology';
     return 'pipeline';
   };
 
@@ -117,6 +119,13 @@ export default function App(props: AppProps) {
             >
               Commit Flow
             </button>
+            <button
+              className={`app__nav-btn ${view === 'topology' ? 'app__nav-btn--active' : ''}`}
+              onClick={() => setView('topology')}
+              type="button"
+            >
+              Topology
+            </button>
           </nav>
           {view === 'pipeline' && (
             <ErrorBoundary>
@@ -152,6 +161,13 @@ export default function App(props: AppProps) {
             <section className="app__content">
               <ErrorBoundary>
                 <CommitFlowPage />
+              </ErrorBoundary>
+            </section>
+          )}
+          {view === 'topology' && (
+            <section className="app__content">
+              <ErrorBoundary>
+                <OrgTopologyPage />
               </ErrorBoundary>
             </section>
           )}
