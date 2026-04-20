@@ -11,6 +11,7 @@ import {
 } from '@xyflow/react';
 import { useCallback, useEffect, useMemo } from 'react';
 import type { BuildInfo } from '../../services/api-client.js';
+import ExportButton from '../export/ExportButton.js';
 import BuildNode, { type BuildNodeData } from './BuildNode.js';
 
 const NODE_WIDTH = 280;
@@ -200,7 +201,17 @@ export default function CommitFlowDiagram({
   );
 
   return (
-    <div className="commit-flow-diagram">
+    <div className="commit-flow-diagram" style={{ position: 'relative' }}>
+      <div
+        style={{
+          position: 'absolute',
+          top: 10,
+          right: 10,
+          zIndex: 10,
+        }}
+      >
+        <ExportButton nodes={nodes} edges={edges} />
+      </div>
       <ReactFlow
         nodes={nodes}
         edges={edges}

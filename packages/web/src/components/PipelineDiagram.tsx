@@ -36,6 +36,7 @@ import type { FetchFileByRepoNameFn } from '../services/file-fetch-context.js';
 import { useFileFetch } from '../services/file-fetch-context.js';
 import { usePipelineStore } from '../store/pipeline-store.js';
 import { getLayoutedElements } from './diagram-layout.js';
+import ExportButton from './export/ExportButton.js';
 import FileNode, { type FileNodeData, type RepoInfo } from './FileNode.js';
 import TemplateEdge, { type TemplateEdgeData } from './TemplateEdge.js';
 
@@ -906,6 +907,18 @@ export default function PipelineDiagram() {
         />
         <Controls />
       </ReactFlow>
+      <div
+        style={{
+          position: 'absolute',
+          top: 10,
+          right: 10,
+          display: 'flex',
+          gap: 8,
+          alignItems: 'center',
+        }}
+      >
+        <ExportButton nodes={nodes} edges={edges} />
+      </div>
       <label className="auto-expand-toggle">
         <input
           type="checkbox"
