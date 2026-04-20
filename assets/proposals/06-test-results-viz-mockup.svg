@@ -1,0 +1,235 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <defs>
+    <filter id="shadow6" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="500" rx="8" fill="#F8FAFC"/>
+
+  <!-- Header -->
+  <rect width="800" height="44" rx="8" fill="#1E3A5F"/>
+  <text x="20" y="28" font-family="Segoe UI, sans-serif" font-size="15" font-weight="600" fill="white">Test Results — Build #1247</text>
+  <text x="620" y="28" font-family="Segoe UI, sans-serif" font-size="11" fill="#94A3B8">Build-Deploy-Web • main</text>
+
+  <!-- ============================== -->
+  <!-- Panel 4: Summary Counters (top) -->
+  <!-- ============================== -->
+  <rect x="15" y="54" width="185" height="60" rx="8" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow6)"/>
+  <rect x="15" y="54" width="5" height="60" rx="3" fill="#3B82F6"/>
+  <text x="32" y="72" font-family="Segoe UI, sans-serif" font-size="10" fill="#64748B">TOTAL TESTS</text>
+  <text x="32" y="100" font-family="Segoe UI, sans-serif" font-size="26" font-weight="700" fill="#1E3A5F">1,247</text>
+  <text x="100" y="72" font-family="Segoe UI, sans-serif" font-size="18" fill="#3B82F6">📊</text>
+
+  <rect x="210" y="54" width="140" height="60" rx="8" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow6)"/>
+  <rect x="210" y="54" width="5" height="60" rx="3" fill="#22C55E"/>
+  <text x="227" y="72" font-family="Segoe UI, sans-serif" font-size="10" fill="#64748B">PASSED</text>
+  <text x="227" y="100" font-family="Segoe UI, sans-serif" font-size="26" font-weight="700" fill="#22C55E">1,198</text>
+  <text x="310" y="100" font-family="Segoe UI, sans-serif" font-size="12" fill="#22C55E">✓</text>
+
+  <rect x="360" y="54" width="140" height="60" rx="8" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow6)"/>
+  <rect x="360" y="54" width="5" height="60" rx="3" fill="#EF4444"/>
+  <text x="377" y="72" font-family="Segoe UI, sans-serif" font-size="10" fill="#64748B">FAILED</text>
+  <text x="377" y="100" font-family="Segoe UI, sans-serif" font-size="26" font-weight="700" fill="#EF4444">37</text>
+  <text x="420" y="100" font-family="Segoe UI, sans-serif" font-size="12" fill="#EF4444">✗</text>
+
+  <rect x="510" y="54" width="140" height="60" rx="8" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow6)"/>
+  <rect x="510" y="54" width="5" height="60" rx="3" fill="#EAB308"/>
+  <text x="527" y="72" font-family="Segoe UI, sans-serif" font-size="10" fill="#64748B">SKIPPED</text>
+  <text x="527" y="100" font-family="Segoe UI, sans-serif" font-size="26" font-weight="700" fill="#EAB308">12</text>
+  <text x="568" y="100" font-family="Segoe UI, sans-serif" font-size="12" fill="#EAB308">⊘</text>
+
+  <!-- Pass rate bar -->
+  <rect x="660" y="54" width="130" height="60" rx="8" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow6)"/>
+  <text x="675" y="72" font-family="Segoe UI, sans-serif" font-size="10" fill="#64748B">PASS RATE</text>
+  <text x="675" y="96" font-family="Segoe UI, sans-serif" font-size="22" font-weight="700" fill="#22C55E">96.0%</text>
+  <rect x="675" y="103" width="100" height="4" rx="2" fill="#E2E8F0"/>
+  <rect x="675" y="103" width="96" height="4" rx="2" fill="#22C55E"/>
+
+  <!-- ============================== -->
+  <!-- Panel 1: Namespace Treemap     -->
+  <!-- ============================== -->
+  <text x="15" y="135" font-family="Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#334155">Test Treemap by Namespace</text>
+
+  <rect x="15" y="142" width="390" height="195" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow6)"/>
+
+  <!-- Treemap rectangles -->
+  <!-- MyApp.Tests.Auth (large, passed) -->
+  <rect x="20" y="147" width="150" height="100" rx="4" fill="#BBF7D0" stroke="#86EFAC" stroke-width="1"/>
+  <text x="30" y="167" font-family="Segoe UI, sans-serif" font-size="11" font-weight="600" fill="#166534">Auth</text>
+  <text x="30" y="182" font-family="Segoe UI, sans-serif" font-size="9" fill="#166534">312 tests • 45.2s</text>
+  <text x="30" y="195" font-family="Segoe UI, sans-serif" font-size="9" fill="#166534">100% pass</text>
+
+  <!-- MyApp.Tests.Api (large, mostly passed) -->
+  <rect x="175" y="147" width="130" height="100" rx="4" fill="#BBF7D0" stroke="#86EFAC" stroke-width="1"/>
+  <text x="185" y="167" font-family="Segoe UI, sans-serif" font-size="11" font-weight="600" fill="#166534">Api</text>
+  <text x="185" y="182" font-family="Segoe UI, sans-serif" font-size="9" fill="#166534">287 tests • 38.1s</text>
+  <text x="185" y="195" font-family="Segoe UI, sans-serif" font-size="9" fill="#166534">99% pass</text>
+
+  <!-- MyApp.Tests.Data (medium, some failures) -->
+  <rect x="310" y="147" width="90" height="100" rx="4" fill="#FEF9C3" stroke="#FDE047" stroke-width="1"/>
+  <text x="318" y="167" font-family="Segoe UI, sans-serif" font-size="11" font-weight="600" fill="#A16207">Data</text>
+  <text x="318" y="182" font-family="Segoe UI, sans-serif" font-size="9" fill="#A16207">198 tests</text>
+  <text x="318" y="195" font-family="Segoe UI, sans-serif" font-size="9" fill="#A16207">85% pass</text>
+
+  <!-- MyApp.Tests.UI (medium, passed) -->
+  <rect x="20" y="252" width="120" height="80" rx="4" fill="#BBF7D0" stroke="#86EFAC" stroke-width="1"/>
+  <text x="30" y="272" font-family="Segoe UI, sans-serif" font-size="11" font-weight="600" fill="#166534">UI</text>
+  <text x="30" y="287" font-family="Segoe UI, sans-serif" font-size="9" fill="#166534">245 tests • 32.0s</text>
+  <text x="30" y="300" font-family="Segoe UI, sans-serif" font-size="9" fill="#166534">100% pass</text>
+
+  <!-- MyApp.Tests.Integration (failures!) -->
+  <rect x="145" y="252" width="130" height="80" rx="4" fill="#FECACA" stroke="#FCA5A5" stroke-width="1"/>
+  <text x="153" y="272" font-family="Segoe UI, sans-serif" font-size="11" font-weight="600" fill="#DC2626">Integration</text>
+  <text x="153" y="287" font-family="Segoe UI, sans-serif" font-size="9" fill="#DC2626">142 tests • 62.5s</text>
+  <text x="153" y="300" font-family="Segoe UI, sans-serif" font-size="9" fill="#DC2626">78% pass</text>
+
+  <!-- MyApp.Tests.Utils (small, passed) -->
+  <rect x="280" y="252" width="60" height="40" rx="4" fill="#BBF7D0" stroke="#86EFAC" stroke-width="1"/>
+  <text x="288" y="270" font-family="Segoe UI, sans-serif" font-size="10" font-weight="600" fill="#166534">Utils</text>
+  <text x="288" y="282" font-family="Segoe UI, sans-serif" font-size="8" fill="#166534">63 tests</text>
+
+  <!-- MyApp.Tests.Config (tiny, skipped) -->
+  <rect x="345" y="252" width="55" height="40" rx="4" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="352" y="270" font-family="Segoe UI, sans-serif" font-size="10" font-weight="600" fill="#94A3B8">Config</text>
+  <text x="352" y="282" font-family="Segoe UI, sans-serif" font-size="8" fill="#94A3B8">skipped</text>
+
+  <!-- Zoom hint -->
+  <rect x="280" y="297" width="120" height="18" rx="4" fill="#EBF5FF"/>
+  <text x="290" y="310" font-family="Segoe UI, sans-serif" font-size="9" fill="#3B82F6">🔍 Click to zoom in</text>
+
+  <!-- ============================== -->
+  <!-- Panel 2: Slowest Tests Bar     -->
+  <!-- ============================== -->
+  <text x="420" y="135" font-family="Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#334155">Top 5 Slowest Tests</text>
+
+  <rect x="420" y="142" width="370" height="195" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow6)"/>
+
+  <!-- Bar 1 -->
+  <text x="430" y="166" font-family="Segoe UI, sans-serif" font-size="9" fill="#475569">Integration.FullSync</text>
+  <rect x="560" y="155" width="200" height="16" rx="3" fill="#EF4444"/>
+  <text x="766" y="166" font-family="Segoe UI, sans-serif" font-size="9" font-weight="600" fill="#DC2626">12.4s</text>
+
+  <!-- Bar 2 -->
+  <text x="430" y="194" font-family="Segoe UI, sans-serif" font-size="9" fill="#475569">Data.BulkImport</text>
+  <rect x="560" y="183" width="162" height="16" rx="3" fill="#22C55E"/>
+  <text x="728" y="194" font-family="Segoe UI, sans-serif" font-size="9" font-weight="600" fill="#166534">10.1s</text>
+
+  <!-- Bar 3 -->
+  <text x="430" y="222" font-family="Segoe UI, sans-serif" font-size="9" fill="#475569">Integration.E2ELogin</text>
+  <rect x="560" y="211" width="140" height="16" rx="3" fill="#EF4444"/>
+  <text x="706" y="222" font-family="Segoe UI, sans-serif" font-size="9" font-weight="600" fill="#DC2626">8.7s</text>
+
+  <!-- Bar 4 -->
+  <text x="430" y="250" font-family="Segoe UI, sans-serif" font-size="9" fill="#475569">Api.StressTest</text>
+  <rect x="560" y="239" width="112" height="16" rx="3" fill="#22C55E"/>
+  <text x="678" y="250" font-family="Segoe UI, sans-serif" font-size="9" font-weight="600" fill="#166534">7.0s</text>
+
+  <!-- Bar 5 -->
+  <text x="430" y="278" font-family="Segoe UI, sans-serif" font-size="9" fill="#475569">Data.MigrationRollback</text>
+  <rect x="560" y="267" width="96" height="16" rx="3" fill="#22C55E"/>
+  <text x="662" y="278" font-family="Segoe UI, sans-serif" font-size="9" font-weight="600" fill="#166534">6.0s</text>
+
+  <!-- Axis label -->
+  <text x="650" y="300" font-family="Segoe UI, sans-serif" font-size="9" fill="#94A3B8">Duration (seconds) →</text>
+
+  <!-- Duration scale markers -->
+  <line x1="560" y1="305" x2="560" y2="310" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="558" y="320" font-family="Segoe UI, sans-serif" font-size="8" fill="#94A3B8">0</text>
+  <line x1="660" y1="305" x2="660" y2="310" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="655" y="320" font-family="Segoe UI, sans-serif" font-size="8" fill="#94A3B8">6s</text>
+  <line x1="760" y1="305" x2="760" y2="310" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="753" y="320" font-family="Segoe UI, sans-serif" font-size="8" fill="#94A3B8">12s</text>
+
+  <!-- ============================== -->
+  <!-- Panel 3: Flaky Tests List      -->
+  <!-- ============================== -->
+  <text x="15" y="355" font-family="Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#334155">Flaky Tests (last 10 runs)</text>
+
+  <rect x="15" y="362" width="470" height="128" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow6)"/>
+
+  <!-- Table header -->
+  <rect x="15" y="362" width="470" height="22" rx="6" fill="#F1F5F9"/>
+  <rect x="15" y="375" width="470" height="9" fill="#F1F5F9"/>
+  <text x="25" y="378" font-family="Segoe UI, sans-serif" font-size="9" font-weight="600" fill="#64748B">TEST NAME</text>
+  <text x="200" y="378" font-family="Segoe UI, sans-serif" font-size="9" font-weight="600" fill="#64748B">FLIPS</text>
+  <text x="245" y="378" font-family="Segoe UI, sans-serif" font-size="9" font-weight="600" fill="#64748B">PATTERN (newest → oldest)</text>
+  <text x="430" y="378" font-family="Segoe UI, sans-serif" font-size="9" font-weight="600" fill="#64748B">NOW</text>
+
+  <!-- Row 1 -->
+  <text x="25" y="402" font-family="Segoe UI, sans-serif" font-size="10" fill="#334155">Integration.DbConnection</text>
+  <rect x="200" y="392" width="28" height="16" rx="8" fill="#FEE2E2"/>
+  <text x="209" y="403" font-family="Segoe UI, sans-serif" font-size="10" font-weight="700" fill="#DC2626">5</text>
+  <text x="245" y="402" font-family="Consolas, monospace" font-size="11" fill="#22C55E">✓</text>
+  <text x="259" y="402" font-family="Consolas, monospace" font-size="11" fill="#EF4444">✗</text>
+  <text x="273" y="402" font-family="Consolas, monospace" font-size="11" fill="#22C55E">✓</text>
+  <text x="287" y="402" font-family="Consolas, monospace" font-size="11" fill="#EF4444">✗</text>
+  <text x="301" y="402" font-family="Consolas, monospace" font-size="11" fill="#22C55E">✓</text>
+  <text x="315" y="402" font-family="Consolas, monospace" font-size="11" fill="#EF4444">✗</text>
+  <text x="329" y="402" font-family="Consolas, monospace" font-size="11" fill="#22C55E">✓</text>
+  <text x="343" y="402" font-family="Consolas, monospace" font-size="11" fill="#22C55E">✓</text>
+  <text x="357" y="402" font-family="Consolas, monospace" font-size="11" fill="#EF4444">✗</text>
+  <text x="371" y="402" font-family="Consolas, monospace" font-size="11" fill="#22C55E">✓</text>
+  <rect x="430" y="392" width="38" height="16" rx="8" fill="#DCFCE7"/>
+  <text x="437" y="403" font-family="Segoe UI, sans-serif" font-size="9" font-weight="600" fill="#166534">PASS</text>
+
+  <!-- Row 2 -->
+  <text x="25" y="427" font-family="Segoe UI, sans-serif" font-size="10" fill="#334155">Api.TimeoutHandler</text>
+  <rect x="200" y="417" width="28" height="16" rx="8" fill="#FEF9C3"/>
+  <text x="209" y="428" font-family="Segoe UI, sans-serif" font-size="10" font-weight="700" fill="#A16207">3</text>
+  <text x="245" y="427" font-family="Consolas, monospace" font-size="11" fill="#EF4444">✗</text>
+  <text x="259" y="427" font-family="Consolas, monospace" font-size="11" fill="#22C55E">✓</text>
+  <text x="273" y="427" font-family="Consolas, monospace" font-size="11" fill="#22C55E">✓</text>
+  <text x="287" y="427" font-family="Consolas, monospace" font-size="11" fill="#EF4444">✗</text>
+  <text x="301" y="427" font-family="Consolas, monospace" font-size="11" fill="#22C55E">✓</text>
+  <text x="315" y="427" font-family="Consolas, monospace" font-size="11" fill="#22C55E">✓</text>
+  <text x="329" y="427" font-family="Consolas, monospace" font-size="11" fill="#EF4444">✗</text>
+  <text x="343" y="427" font-family="Consolas, monospace" font-size="11" fill="#22C55E">✓</text>
+  <text x="357" y="427" font-family="Consolas, monospace" font-size="11" fill="#22C55E">✓</text>
+  <text x="371" y="427" font-family="Consolas, monospace" font-size="11" fill="#22C55E">✓</text>
+  <rect x="430" y="417" width="38" height="16" rx="8" fill="#FEE2E2"/>
+  <text x="440" y="428" font-family="Segoe UI, sans-serif" font-size="9" font-weight="600" fill="#DC2626">FAIL</text>
+
+  <!-- Row 3 -->
+  <text x="25" y="452" font-family="Segoe UI, sans-serif" font-size="10" fill="#334155">Data.CacheInvalidation</text>
+  <rect x="200" y="442" width="28" height="16" rx="8" fill="#FEF9C3"/>
+  <text x="209" y="453" font-family="Segoe UI, sans-serif" font-size="10" font-weight="700" fill="#A16207">2</text>
+  <text x="245" y="452" font-family="Consolas, monospace" font-size="11" fill="#22C55E">✓</text>
+  <text x="259" y="452" font-family="Consolas, monospace" font-size="11" fill="#22C55E">✓</text>
+  <text x="273" y="452" font-family="Consolas, monospace" font-size="11" fill="#EF4444">✗</text>
+  <text x="287" y="452" font-family="Consolas, monospace" font-size="11" fill="#22C55E">✓</text>
+  <text x="301" y="452" font-family="Consolas, monospace" font-size="11" fill="#22C55E">✓</text>
+  <text x="315" y="452" font-family="Consolas, monospace" font-size="11" fill="#22C55E">✓</text>
+  <text x="329" y="452" font-family="Consolas, monospace" font-size="11" fill="#EF4444">✗</text>
+  <text x="343" y="452" font-family="Consolas, monospace" font-size="11" fill="#22C55E">✓</text>
+  <text x="357" y="452" font-family="Consolas, monospace" font-size="11" fill="#22C55E">✓</text>
+  <text x="371" y="452" font-family="Consolas, monospace" font-size="11" fill="#22C55E">✓</text>
+  <rect x="430" y="442" width="38" height="16" rx="8" fill="#DCFCE7"/>
+  <text x="437" y="453" font-family="Segoe UI, sans-serif" font-size="9" font-weight="600" fill="#166534">PASS</text>
+
+  <!-- Row bottom border hint -->
+  <line x1="15" y1="466" x2="485" y2="466" stroke="#E2E8F0" stroke-width="0.5"/>
+  <text x="200" y="483" font-family="Segoe UI, sans-serif" font-size="9" fill="#94A3B8">Showing 3 of 8 flaky tests</text>
+
+  <!-- ============================== -->
+  <!-- Color Legend (bottom right)     -->
+  <!-- ============================== -->
+  <rect x="500" y="362" width="290" height="128" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow6)"/>
+  <text x="515" y="382" font-family="Segoe UI, sans-serif" font-size="11" font-weight="600" fill="#334155">Treemap Color Legend</text>
+
+  <rect x="515" y="392" width="16" height="16" rx="3" fill="#BBF7D0" stroke="#86EFAC" stroke-width="1"/>
+  <text x="538" y="404" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">100% pass rate</text>
+
+  <rect x="515" y="414" width="16" height="16" rx="3" fill="#FEF9C3" stroke="#FDE047" stroke-width="1"/>
+  <text x="538" y="426" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">50–99% pass rate</text>
+
+  <rect x="515" y="436" width="16" height="16" rx="3" fill="#FECACA" stroke="#FCA5A5" stroke-width="1"/>
+  <text x="538" y="448" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">&lt;50% pass rate</text>
+
+  <rect x="515" y="458" width="16" height="16" rx="3" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="538" y="470" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">All skipped</text>
+
+  <text x="650" y="404" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">Rectangle size =</text>
+  <text x="650" y="418" font-family="Segoe UI, sans-serif" font-size="10" font-weight="600" fill="#334155">total duration</text>
+</svg>

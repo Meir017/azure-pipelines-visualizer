@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <defs>
+    <filter id="shadow4" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.1"/>
+    </filter>
+    <linearGradient id="infoBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#EBF5FF"/>
+      <stop offset="100%" stop-color="#DBEAFE"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="500" rx="8" fill="#F8FAFC"/>
+
+  <!-- Title bar -->
+  <rect width="800" height="44" rx="8" fill="#1E3A5F"/>
+  <text x="20" y="28" font-family="Segoe UI, sans-serif" font-size="15" font-weight="600" fill="white">Build Detail — Pipeline: Build-Deploy-App / Run #1247</text>
+  <circle cx="760" cy="22" r="8" fill="none" stroke="#94A3B8" stroke-width="1.5"/>
+  <text x="756" y="26" font-family="Segoe UI, sans-serif" font-size="12" fill="#94A3B8">✕</text>
+
+  <!-- "Why did this run?" banner -->
+  <rect x="20" y="58" width="760" height="80" rx="8" fill="url(#infoBg)" stroke="#93C5FD" stroke-width="1.5"/>
+
+  <!-- Info icon -->
+  <circle cx="48" cy="82" r="14" fill="#3B82F6"/>
+  <text x="44" y="87" font-family="Segoe UI, sans-serif" font-size="14" font-weight="700" fill="white">i</text>
+
+  <!-- Section title -->
+  <text x="72" y="80" font-family="Segoe UI, sans-serif" font-size="13" font-weight="700" fill="#1E40AF">Why did this run?</text>
+
+  <!-- Narrative text -->
+  <text x="72" y="98" font-family="Segoe UI, sans-serif" font-size="12" fill="#1E3A5F">Triggered by completion of Pipeline "</text>
+  <text x="292" y="98" font-family="Segoe UI, sans-serif" font-size="12" font-weight="700" fill="#1E40AF">Build-Core</text>
+  <text x="362" y="98" font-family="Segoe UI, sans-serif" font-size="12" fill="#1E3A5F">" (build #456, succeeded) → Pipeline Completion trigger</text>
+
+  <!-- Trigger chain label -->
+  <text x="72" y="120" font-family="Segoe UI, sans-serif" font-size="11" fill="#6B7280">Trigger chain:</text>
+
+  <!-- Trigger Chain Breadcrumb -->
+  <!-- Node 1: Pipeline A -->
+  <rect x="160" y="108" width="150" height="24" rx="12" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1"/>
+  <circle cx="174" cy="120" r="6" fill="#22C55E"/>
+  <text x="184" y="124" font-family="Segoe UI, sans-serif" font-size="11" fill="#1E40AF">CI-Validate (CI push)</text>
+
+  <!-- Arrow 1 -->
+  <text x="318" y="124" font-family="Segoe UI, sans-serif" font-size="14" fill="#93C5FD">→</text>
+
+  <!-- Node 2: Pipeline B -->
+  <rect x="336" y="108" width="140" height="24" rx="12" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1"/>
+  <circle cx="350" cy="120" r="6" fill="#22C55E"/>
+  <text x="360" y="124" font-family="Segoe UI, sans-serif" font-size="11" fill="#1E40AF">Build-Core (#456)</text>
+
+  <!-- Arrow 2 -->
+  <text x="484" y="124" font-family="Segoe UI, sans-serif" font-size="14" fill="#93C5FD">→</text>
+
+  <!-- Node 3: This Build -->
+  <rect x="502" y="108" width="130" height="24" rx="12" fill="#1E40AF"/>
+  <text x="520" y="124" font-family="Segoe UI, sans-serif" font-size="11" font-weight="600" fill="white">This Build (#1247)</text>
+
+  <!-- Divider -->
+  <line x1="20" y1="152" x2="780" y2="152" stroke="#E2E8F0" stroke-width="1"/>
+
+  <!-- Build Details Section -->
+  <text x="20" y="175" font-family="Segoe UI, sans-serif" font-size="13" font-weight="600" fill="#334155">Build Details</text>
+
+  <!-- Detail rows -->
+  <text x="30" y="200" font-family="Segoe UI, sans-serif" font-size="11" fill="#6B7280">Status</text>
+  <rect x="120" y="189" width="70" height="18" rx="9" fill="#DCFCE7"/>
+  <text x="134" y="202" font-family="Segoe UI, sans-serif" font-size="10" font-weight="600" fill="#166534">Succeeded</text>
+
+  <text x="30" y="222" font-family="Segoe UI, sans-serif" font-size="11" fill="#6B7280">Branch</text>
+  <text x="120" y="222" font-family="Segoe UI Semibold, sans-serif" font-size="11" fill="#334155">refs/heads/main</text>
+
+  <text x="30" y="244" font-family="Segoe UI, sans-serif" font-size="11" fill="#6B7280">Requested by</text>
+  <text x="120" y="244" font-family="Segoe UI, sans-serif" font-size="11" fill="#334155">@alice (Alice Johnson)</text>
+
+  <text x="30" y="266" font-family="Segoe UI, sans-serif" font-size="11" fill="#6B7280">Duration</text>
+  <text x="120" y="266" font-family="Segoe UI, sans-serif" font-size="11" fill="#334155">4m 32s</text>
+
+  <text x="30" y="288" font-family="Segoe UI, sans-serif" font-size="11" fill="#6B7280">Queued</text>
+  <text x="120" y="288" font-family="Segoe UI, sans-serif" font-size="11" fill="#334155">2024-01-15 14:23:01 UTC</text>
+
+  <!-- Right panel: Raw trigger data -->
+  <rect x="400" y="162" width="380" height="150" rx="6" fill="#F1F5F9" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="415" y="182" font-family="Segoe UI, sans-serif" font-size="11" font-weight="600" fill="#475569">Raw Trigger Data</text>
+  <text x="735" y="182" font-family="Segoe UI, sans-serif" font-size="10" fill="#3B82F6" text-decoration="underline">▾ Collapse</text>
+
+  <text x="415" y="200" font-family="Consolas, monospace" font-size="10" fill="#64748B">{</text>
+  <text x="425" y="214" font-family="Consolas, monospace" font-size="10" fill="#64748B">"reason": "buildCompletion",</text>
+  <text x="425" y="228" font-family="Consolas, monospace" font-size="10" fill="#64748B">"triggerInfo": {</text>
+  <text x="435" y="242" font-family="Consolas, monospace" font-size="10" fill="#64748B">"pipelineId": "42",</text>
+  <text x="435" y="256" font-family="Consolas, monospace" font-size="10" fill="#64748B">"buildId": "456",</text>
+  <text x="435" y="270" font-family="Consolas, monospace" font-size="10" fill="#64748B">"buildResult": "succeeded"</text>
+  <text x="425" y="284" font-family="Consolas, monospace" font-size="10" fill="#64748B">}</text>
+  <text x="415" y="298" font-family="Consolas, monospace" font-size="10" fill="#64748B">}</text>
+
+  <!-- Divider -->
+  <line x1="20" y1="322" x2="780" y2="322" stroke="#E2E8F0" stroke-width="1"/>
+
+  <!-- Example narratives section -->
+  <text x="20" y="345" font-family="Segoe UI, sans-serif" font-size="13" font-weight="600" fill="#334155">Narrative Examples by Trigger Type</text>
+
+  <!-- CI -->
+  <rect x="20" y="358" width="245" height="56" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow4)"/>
+  <rect x="20" y="358" width="4" height="56" rx="2" fill="#3B82F6"/>
+  <text x="34" y="375" font-family="Segoe UI, sans-serif" font-size="10" font-weight="600" fill="#1E40AF">CI Push</text>
+  <text x="34" y="390" font-family="Segoe UI, sans-serif" font-size="9" fill="#475569">Triggered by CI push to main</text>
+  <text x="34" y="403" font-family="Segoe UI, sans-serif" font-size="9" fill="#475569">by @alice (abc1234: "Fix login")</text>
+
+  <!-- PR -->
+  <rect x="278" y="358" width="245" height="56" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow4)"/>
+  <rect x="278" y="358" width="4" height="56" rx="2" fill="#8B5CF6"/>
+  <text x="292" y="375" font-family="Segoe UI, sans-serif" font-size="10" font-weight="600" fill="#6D28D9">Pull Request</text>
+  <text x="292" y="390" font-family="Segoe UI, sans-serif" font-size="9" fill="#475569">Triggered by PR #89 — "Add auth"</text>
+  <text x="292" y="403" font-family="Segoe UI, sans-serif" font-size="9" fill="#475569">by @bob targeting develop</text>
+
+  <!-- Schedule -->
+  <rect x="536" y="358" width="244" height="56" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow4)"/>
+  <rect x="536" y="358" width="4" height="56" rx="2" fill="#F59E0B"/>
+  <text x="550" y="375" font-family="Segoe UI, sans-serif" font-size="10" font-weight="600" fill="#B45309">Schedule</text>
+  <text x="550" y="390" font-family="Segoe UI, sans-serif" font-size="9" fill="#475569">Scheduled run (0 2 * * *)</text>
+  <text x="550" y="403" font-family="Segoe UI, sans-serif" font-size="9" fill="#475569">on refs/heads/main</text>
+
+  <!-- Manual + Completion row -->
+  <rect x="20" y="424" width="245" height="56" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow4)"/>
+  <rect x="20" y="424" width="4" height="56" rx="2" fill="#22C55E"/>
+  <text x="34" y="441" font-family="Segoe UI, sans-serif" font-size="10" font-weight="600" fill="#166534">Manual</text>
+  <text x="34" y="456" font-family="Segoe UI, sans-serif" font-size="9" fill="#475569">Manually queued by @carol</text>
+  <text x="34" y="469" font-family="Segoe UI, sans-serif" font-size="9" fill="#475569">on refs/heads/feature/auth</text>
+
+  <rect x="278" y="424" width="245" height="56" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow4)"/>
+  <rect x="278" y="424" width="4" height="56" rx="2" fill="#EF4444"/>
+  <text x="292" y="441" font-family="Segoe UI, sans-serif" font-size="10" font-weight="600" fill="#DC2626">Pipeline Completion</text>
+  <text x="292" y="456" font-family="Segoe UI, sans-serif" font-size="9" fill="#475569">Triggered by "Build-Core" (#456,</text>
+  <text x="292" y="469" font-family="Segoe UI, sans-serif" font-size="9" fill="#475569">succeeded) → Completion trigger</text>
+
+  <rect x="536" y="424" width="244" height="56" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow4)"/>
+  <rect x="536" y="424" width="4" height="56" rx="2" fill="#06B6D4"/>
+  <text x="550" y="441" font-family="Segoe UI, sans-serif" font-size="10" font-weight="600" fill="#0E7490">Resource Trigger</text>
+  <text x="550" y="456" font-family="Segoe UI, sans-serif" font-size="9" fill="#475569">Triggered by resource "core-lib"</text>
+  <text x="550" y="469" font-family="Segoe UI, sans-serif" font-size="9" fill="#475569">(pipeline) — version 2.1.0</text>
+</svg>

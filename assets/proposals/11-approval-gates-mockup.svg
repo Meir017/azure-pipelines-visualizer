@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <pattern id="hatch-yellow" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+      <rect width="6" height="6" fill="#ffeaa7"/>
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#fdcb6e" stroke-width="2"/>
+    </pattern>
+    <pattern id="hatch-gray" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+      <rect width="6" height="6" fill="#dfe6e9"/>
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#b2bec3" stroke-width="2"/>
+    </pattern>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="500" fill="#f8f9fa" rx="8"/>
+
+  <!-- Header -->
+  <rect x="10" y="10" width="780" height="50" rx="6" fill="#ffffff" stroke="#dee2e6" stroke-width="1" filter="url(#shadow)"/>
+  <text x="24" y="32" font-size="14" font-weight="700" fill="#2d3436">Approval &amp; Check Gate Timeline</text>
+  <text x="24" y="48" font-size="11" fill="#636e72">Run #4821 • deploy-prod • Production environment</text>
+  <rect x="600" y="18" width="90" height="30" rx="15" fill="#d63031" fill-opacity="0.1" stroke="#d63031" stroke-width="1"/>
+  <text x="614" y="38" font-size="12" font-weight="600" fill="#d63031">16h 15m 3s</text>
+  <text x="700" y="38" font-size="10" fill="#636e72">total wait</text>
+
+  <!-- Time axis -->
+  <rect x="200" y="70" width="580" height="24" rx="4" fill="#ffffff" stroke="#dee2e6" stroke-width="1"/>
+  <text x="205" y="86" font-size="9" fill="#636e72">Mon 14:30</text>
+  <line x1="290" y1="72" x2="290" y2="92" stroke="#dee2e6" stroke-width="1"/>
+  <text x="295" y="86" font-size="9" fill="#636e72">16:00</text>
+  <line x1="380" y1="72" x2="380" y2="92" stroke="#dee2e6" stroke-width="1"/>
+  <text x="385" y="86" font-size="9" fill="#636e72">18:00</text>
+  <line x1="435" y1="70" x2="435" y2="94" stroke="#e17055" stroke-width="1.5" stroke-dasharray="3,2"/>
+  <text x="440" y="86" font-size="8" fill="#e17055">EOD</text>
+  <line x1="470" y1="72" x2="470" y2="92" stroke="#dee2e6" stroke-width="1"/>
+  <text x="475" y="86" font-size="9" fill="#636e72">Tue 08:00</text>
+  <line x1="560" y1="72" x2="560" y2="92" stroke="#dee2e6" stroke-width="1"/>
+  <text x="565" y="86" font-size="9" fill="#636e72">10:00</text>
+  <line x1="650" y1="72" x2="650" y2="92" stroke="#dee2e6" stroke-width="1"/>
+  <text x="655" y="86" font-size="9" fill="#636e72">12:00</text>
+  <line x1="740" y1="72" x2="740" y2="92" stroke="#dee2e6" stroke-width="1"/>
+  <text x="745" y="86" font-size="9" fill="#636e72">14:00</text>
+
+  <!-- Column headers -->
+  <text x="15" y="112" font-size="10" font-weight="600" fill="#636e72">Gate / Check</text>
+  <text x="200" y="112" font-size="10" font-weight="600" fill="#636e72">Timeline</text>
+  <text x="720" y="112" font-size="10" font-weight="600" fill="#636e72">Wait</text>
+
+  <!-- Separator -->
+  <line x1="10" y1="120" x2="790" y2="120" stroke="#dee2e6" stroke-width="1"/>
+
+  <!-- Row 1: Branch Policy -->
+  <rect x="10" y="126" width="780" height="54" rx="4" fill="#ffffff" stroke="#dee2e6" stroke-width="0.5"/>
+  <circle cx="28" cy="153" r="10" fill="#00b894" fill-opacity="0.15"/>
+  <text x="23" y="157" font-size="12" fill="#00b894">✓</text>
+  <text x="46" y="149" font-size="11" font-weight="600" fill="#2d3436">Branch policy</text>
+  <text x="46" y="164" font-size="9" fill="#636e72">Protected branch check</text>
+  <!-- Bar: instant, tiny green -->
+  <rect x="205" y="142" width="8" height="20" rx="3" fill="#00b894"/>
+  <text x="218" y="156" font-size="9" fill="#00b894">instant</text>
+  <text x="725" y="156" font-size="11" fill="#b2bec3">&lt; 1s</text>
+
+  <!-- Row 2: Required Reviewer -->
+  <rect x="10" y="186" width="780" height="64" rx="4" fill="#ffffff" stroke="#dee2e6" stroke-width="0.5"/>
+  <circle cx="28" cy="218" r="10" fill="#00b894" fill-opacity="0.15"/>
+  <text x="23" y="222" font-size="12" fill="#00b894">✓</text>
+  <text x="46" y="210" font-size="11" font-weight="600" fill="#2d3436">Required reviewer</text>
+  <text x="46" y="225" font-size="9" fill="#636e72">@alice — approved with comment</text>
+  <text x="46" y="240" font-size="8" fill="#b2bec3">"LGTM, verified staging metrics"</text>
+  <!-- Bar: waiting (hatched) then approved (solid green) -->
+  <rect x="205" y="207" width="165" height="20" rx="3" fill="url(#hatch-yellow)"/>
+  <rect x="370" y="207" width="14" height="20" rx="3" fill="#00b894"/>
+  <text x="390" y="221" font-size="8" fill="#636e72">approved Mon 16:45</text>
+  <!-- Avatar circle -->
+  <circle cx="213" y="217" r="8" fill="#6c5ce7" fill-opacity="0.2" stroke="#6c5ce7" stroke-width="1"/>
+  <text x="209" y="221" font-size="8" fill="#6c5ce7">A</text>
+  <text x="725" y="221" font-size="11" font-weight="600" fill="#e17055">2h 15m</text>
+
+  <!-- Row 3: Business Hours -->
+  <rect x="10" y="256" width="780" height="54" rx="4" fill="#ffffff" stroke="#dee2e6" stroke-width="0.5"/>
+  <circle cx="28" cy="283" r="10" fill="#fdcb6e" fill-opacity="0.25"/>
+  <text x="22" y="287" font-size="12" fill="#e17055">◷</text>
+  <text x="46" y="279" font-size="11" font-weight="600" fill="#2d3436">Business hours</text>
+  <text x="46" y="294" font-size="9" fill="#636e72">Mon–Fri 09:00–17:00 UTC • Delayed overnight</text>
+  <!-- Bar: long hatched gray block from EOD to next morning -->
+  <rect x="384" y="272" width="90" height="20" rx="3" fill="url(#hatch-gray)"/>
+  <text x="395" y="286" font-size="8" fill="#636e72">overnight</text>
+  <text x="725" y="286" font-size="11" font-weight="600" fill="#d63031">14h 00m</text>
+
+  <!-- Row 4: Azure Function Check -->
+  <rect x="10" y="316" width="780" height="54" rx="4" fill="#ffffff" stroke="#dee2e6" stroke-width="0.5"/>
+  <circle cx="28" cy="343" r="10" fill="#00b894" fill-opacity="0.15"/>
+  <text x="23" y="347" font-size="12" fill="#00b894">✓</text>
+  <text x="46" y="339" font-size="11" font-weight="600" fill="#2d3436">Azure Function check</text>
+  <text x="46" y="354" font-size="9" fill="#636e72">validate-deployment-health • HTTP 200</text>
+  <!-- Bar: tiny green near the end -->
+  <rect x="478" y="332" width="10" height="20" rx="3" fill="#0984e3"/>
+  <text x="492" y="346" font-size="9" fill="#0984e3">3s</text>
+  <text x="725" y="346" font-size="11" fill="#b2bec3">3s</text>
+
+  <!-- Row 5: Exclusive Lock -->
+  <rect x="10" y="376" width="780" height="54" rx="4" fill="#ffffff" stroke="#dee2e6" stroke-width="0.5"/>
+  <circle cx="28" cy="403" r="10" fill="#00b894" fill-opacity="0.15"/>
+  <text x="23" y="407" font-size="12" fill="#00b894">✓</text>
+  <text x="46" y="399" font-size="11" font-weight="600" fill="#2d3436">Exclusive lock</text>
+  <text x="46" y="414" font-size="9" fill="#636e72">lockBehavior: sequential • Queue position: 2 → 1 → acquired</text>
+  <!-- Bar: waiting then acquired -->
+  <rect x="205" y="392" width="50" height="20" rx="3" fill="url(#hatch-yellow)"/>
+  <rect x="255" y="392" width="6" height="20" rx="3" fill="#00b894"/>
+  <text x="267" y="406" font-size="8" fill="#636e72">lock acquired</text>
+  <text x="725" y="406" font-size="11" fill="#636e72">12m</text>
+
+  <!-- Summary bar -->
+  <rect x="10" y="440" width="780" height="50" rx="6" fill="#2d3436" filter="url(#shadow)"/>
+  <text x="24" y="464" font-size="12" fill="#dfe6e9">Total pipeline wait time:</text>
+  <text x="190" y="464" font-size="16" font-weight="700" fill="#ff7675">16h 15m 3s</text>
+  <text x="340" y="464" font-size="10" fill="#636e72">across 5 gates</text>
+
+  <!-- Breakdown mini badges -->
+  <rect x="470" y="450" width="75" height="22" rx="11" fill="#e17055" fill-opacity="0.15"/>
+  <text x="481" y="465" font-size="9" fill="#e17055">🕐 14h biz hrs</text>
+  <rect x="552" y="450" width="80" height="22" rx="11" fill="#fdcb6e" fill-opacity="0.3"/>
+  <text x="562" y="465" font-size="9" fill="#d35400">👤 2h 15m human</text>
+  <rect x="640" y="450" width="65" height="22" rx="11" fill="#0984e3" fill-opacity="0.15"/>
+  <text x="651" y="465" font-size="9" fill="#0984e3">⚡ 3s auto</text>
+  <rect x="712" y="450" width="65" height="22" rx="11" fill="#00b894" fill-opacity="0.15"/>
+  <text x="723" y="465" font-size="9" fill="#00b894">🔒 12m lock</text>
+</svg>
