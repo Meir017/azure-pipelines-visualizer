@@ -18,7 +18,7 @@
     },
     "packages/cli": {
       "name": "@meirblachman/azure-pipelines-visualizer",
-      "version": "0.2.2",
+      "version": "0.2.4",
       "bin": {
         "apv": "dist/index.min.js",
       },
@@ -52,7 +52,7 @@
     },
     "packages/web": {
       "name": "@meirblachman/azure-pipelines-visualizer-web",
-      "version": "0.2.2",
+      "version": "0.2.4",
       "dependencies": {
         "@dagrejs/dagre": "^2.0.4",
         "@monaco-editor/react": "^4.7.0",
