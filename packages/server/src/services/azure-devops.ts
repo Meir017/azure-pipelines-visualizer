@@ -170,6 +170,20 @@ export async function resolveCommitSha(
   });
 }
 
+export interface ProjectInfo {
+  id: string;
+  name: string;
+  description: string;
+  state: string;
+}
+
+export async function listProjects(org: string): Promise<ProjectInfo[]> {
+  const url = `https://dev.azure.com/${encodeURIComponent(org)}/_apis/projects?api-version=${API_VERSION}&$top=500`;
+  const resp = await adoFetch(url);
+  const data = await resp.json();
+  return data.value;
+}
+
 export async function listPipelines(
   org: string,
   project: string,
