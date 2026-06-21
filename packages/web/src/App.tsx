@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import CommitFlowPage from './components/commit-flow/CommitFlowPage.js';
 import DetailPanel from './components/DetailPanel.js';
 import ErrorBoundary from './components/ErrorBoundary.js';
+import HealthScorecardPage from './components/health-scorecard/HealthScorecardPage.js';
 import PipelineDiagram from './components/PipelineDiagram.js';
 import PipelineSelector, {
   type PipelineSelectorProps,
@@ -17,12 +18,13 @@ import './App.css';
 
 export type AppProps = PipelineSelectorProps;
 
-type AppView = 'pipeline' | 'commit-flow';
+type AppView = 'pipeline' | 'commit-flow' | 'health';
 
 function useHashRoute(): [AppView, (view: AppView) => void] {
   const getView = (): AppView => {
     const hash = window.location.hash;
     if (hash.startsWith('#/commit-flow')) return 'commit-flow';
+    if (hash.startsWith('#/health')) return 'health';
     return 'pipeline';
   };
 
@@ -117,6 +119,13 @@ export default function App(props: AppProps) {
             >
               Commit Flow
             </button>
+            <button
+              className={`app__nav-btn ${view === 'health' ? 'app__nav-btn--active' : ''}`}
+              onClick={() => setView('health')}
+              type="button"
+            >
+              Health
+            </button>
           </nav>
           {view === 'pipeline' && (
             <ErrorBoundary>
@@ -152,6 +161,13 @@ export default function App(props: AppProps) {
             <section className="app__content">
               <ErrorBoundary>
                 <CommitFlowPage />
+              </ErrorBoundary>
+            </section>
+          )}
+          {view === 'health' && (
+            <section className="app__content">
+              <ErrorBoundary>
+                <HealthScorecardPage />
               </ErrorBoundary>
             </section>
           )}
