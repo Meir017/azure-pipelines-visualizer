@@ -480,6 +480,29 @@ export async function getCommitFlowGraph(
   return all;
 }
 
+export async function listTestRunsForBuild(
+  org: string,
+  project: string,
+  buildId: number,
+) {
+  const url = `${baseUrl(org, project)}/test/runs?buildUri=vstfs:///Build/Build/${buildId}&api-version=${API_VERSION}`;
+  const resp = await adoFetch(url);
+  const data = await resp.json();
+  return data.value;
+}
+
+export async function getTestRunResults(
+  org: string,
+  project: string,
+  runId: number,
+  top = 1000,
+) {
+  const url = `${baseUrl(org, project)}/test/runs/${runId}/results?$top=${top}&api-version=${API_VERSION}`;
+  const resp = await adoFetch(url);
+  const data = await resp.json();
+  return data.value;
+}
+
 export async function getBuild(
   org: string,
   project: string,
