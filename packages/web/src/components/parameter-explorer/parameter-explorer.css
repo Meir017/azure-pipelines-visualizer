@@ -1,0 +1,346 @@
+/* Parameter Explorer */
+.param-explorer {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+}
+
+.param-explorer__editor {
+  width: 40%;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  padding: 16px;
+  gap: 8px;
+}
+
+.param-explorer__yaml {
+  flex: 1;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  resize: none;
+  tab-size: 2;
+}
+
+.param-explorer__yaml:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.param-explorer__error {
+  background: color-mix(in srgb, var(--error) 15%, transparent);
+  color: var(--error);
+  border: 1px solid var(--error);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.param-explorer__panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 16px;
+  gap: 24px;
+}
+
+.param-explorer__title {
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.param-explorer__subtitle {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-muted);
+}
+
+.param-explorer__count {
+  background: var(--accent);
+  color: var(--bg);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 10px;
+}
+
+.param-explorer__form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.param-explorer__form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.param-explorer__reset {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 4px;
+  padding: 3px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.param-explorer__reset:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.param-explorer__empty {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.param-explorer__empty code {
+  background: var(--bg);
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+/* Parameter field */
+.param-explorer-field {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.param-explorer-field__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.param-explorer-field__name {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.param-explorer-field__type {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--surface);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+.param-explorer-field__badge {
+  font-size: 10px;
+  color: var(--success);
+  margin-left: auto;
+}
+
+.param-explorer-field__input {
+  width: 100%;
+}
+
+.param-explorer-input,
+.param-explorer-select {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  padding: 5px 8px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.param-explorer-input:focus,
+.param-explorer-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.param-explorer-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.param-explorer-toggle--on {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.param-explorer-readonly {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 12px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.param-explorer-readonly pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Template ref list */
+.param-explorer__ref-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.param-explorer__ref {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.param-explorer__ref-path {
+  flex: 1;
+  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.param-explorer__ref-loc {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.param-explorer__ref-loc--extends {
+  background: color-mix(in srgb, var(--badge-extends) 20%, transparent);
+  color: var(--badge-extends);
+}
+.param-explorer__ref-loc--stages {
+  background: color-mix(in srgb, var(--badge-stage) 20%, transparent);
+  color: var(--badge-stage);
+}
+.param-explorer__ref-loc--jobs {
+  background: color-mix(in srgb, var(--badge-job) 20%, transparent);
+  color: var(--badge-job);
+}
+.param-explorer__ref-loc--steps {
+  background: color-mix(in srgb, var(--badge-step) 20%, transparent);
+  color: var(--badge-step);
+}
+.param-explorer__ref-loc--variables {
+  background: color-mix(in srgb, var(--badge-variables) 20%, transparent);
+  color: var(--badge-variables);
+}
+
+.param-explorer__ref-cond {
+  font-size: 10px;
+  color: var(--accent);
+  font-style: italic;
+}
+
+/* Changes */
+.param-explorer__changes {
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.param-explorer__change {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.param-explorer__change--added {
+  background: color-mix(in srgb, var(--success) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--success) 30%, transparent);
+}
+
+.param-explorer__change--removed {
+  background: color-mix(in srgb, var(--error) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--error) 30%, transparent);
+}
+
+.param-explorer__change--path-changed {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.param-explorer__change-icon {
+  font-weight: 700;
+  width: 16px;
+  text-align: center;
+}
+
+.param-explorer__change--added .param-explorer__change-icon {
+  color: var(--success);
+}
+
+.param-explorer__change--removed .param-explorer__change-icon {
+  color: var(--error);
+}
+
+.param-explorer__change--path-changed .param-explorer__change-icon {
+  color: var(--accent);
+}
+
+.param-explorer__change-text {
+  flex: 1;
+  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-size: 12px;
+}
+
+.param-explorer__change-text s {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.param-explorer__change-loc {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.param-explorer__results {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
